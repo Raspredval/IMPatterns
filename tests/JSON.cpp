@@ -47,7 +47,8 @@ namespace grammar::JSON {
                     imp::Str<",">(), imp::Fn<spacing>(),
                     imp::Fn<field>(), imp::Fn<spacing>()
                 ))
-            )), imp::Str<"}">()
+            )),
+            imp::Str<"}">()
         )
     ))
 
@@ -60,15 +61,15 @@ namespace grammar::JSON {
                     imp::Str<",">(), imp::Fn<spacing>(),
                     imp::Fn<value>(), imp::Fn<spacing>()
                 ))
-            )), imp::Str<"]">()
+            )),
+            imp::Str<"]">()
         )
     ))
 
     IMP_MAKE_CPATTERN(field, (
         imp::Join(
             imp::Fn<string>(), imp::Fn<spacing>(),
-            imp::Str<":">(),
-            imp::Fn<spacing>(),
+            imp::Str<":">(), imp::Fn<spacing>(),
             imp::Fn<value>()
         )
     ))
@@ -96,7 +97,8 @@ namespace grammar::JSON {
             imp::Str<"\"">(), imp::Fn<strfill>(),
             imp::AtLeast<0>(imp::Join(
                 imp::Fn<escseq>(), imp::Fn<strfill>()
-            )), imp::Str<"\"">()
+            )),
+            imp::Str<"\"">()
         )
     ))
 
