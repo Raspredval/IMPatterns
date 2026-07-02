@@ -22,9 +22,9 @@ namespace imp {
     using CapturesView =
         std::span<const Match>;
 
-    template<typename T>
+    template<typename Fn>
     concept Pattern =
-        std::same_as<std::invoke_result_t<const T, FILE*, CapturesList&, const std::any&>, Match>;
+        std::same_as<std::invoke_result_t<const Fn, FILE*, CapturesList&, const std::any&>, Match>;
 
     namespace __impl {
         class StreamPos {
