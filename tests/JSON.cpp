@@ -27,13 +27,10 @@ namespace grammar::JSON {
             imp::None()
         ),
         [] (FILE* hFile, const imp::Match& m, imp::CapturesView, const std::any&) {
-            if (!m) {
+            if (!m)
                 fprintf(stderr, "failed to parse JSON at %zi\n", ftell(hFile));
-                return;
-            }
-
-            m.ExportTo(hFile, stdout);
-            printf("\n");
+            else
+                printf("success\n");
         })
     ))
 
