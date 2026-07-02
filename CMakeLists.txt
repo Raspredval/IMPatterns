@@ -10,9 +10,9 @@ set(ASSETS_DIR  "${CMAKE_SOURCE_DIR}/assets")
 set(ASSETS_LINK "${CMAKE_BINARY_DIR}/assets")
 file (CREATE_LINK ${ASSETS_DIR} ${ASSETS_LINK} SYMBOLIC)
 
-add_executable(IMPatterns
+add_executable(tests
     "tests/JSON.cpp")
-target_include_directories(IMPatterns
+target_include_directories(tests
     PRIVATE "include/")
-target_compile_options(IMPatterns
+target_compile_options(tests
     PRIVATE "-Wall" "-Wextra" "-Wconversion" "-Werror")
