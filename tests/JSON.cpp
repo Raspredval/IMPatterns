@@ -26,11 +26,12 @@ namespace grammar::JSON {
             )),
             imp::None()
         ),
-        [] (FILE* hFile, const imp::Match& m, imp::CapturesView, const std::any&) {
+        [] (FILE* hFile, const imp::Match& m, imp::CapturesView, const std::any&) -> imp::Match {
             if (!m)
                 fprintf(stderr, "failed to parse JSON at %zi\n", ftell(hFile));
             else
                 printf("success\n");
+            return m;
         })
     ))
 
