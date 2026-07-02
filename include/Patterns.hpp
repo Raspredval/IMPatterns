@@ -371,10 +371,8 @@ namespace imp {
         };
     }
 
-    namespace __impl {
-        using CPattern =
-            Match(*)(FILE*, CapturesList&, const std::any&);
-    }
+    using CPattern =
+        Match(*)(FILE*, CapturesList&, const std::any&);
 
     template<__impl::CPattern fn>
     inline Pattern auto
