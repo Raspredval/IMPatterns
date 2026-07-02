@@ -3,26 +3,26 @@
 #include <Patterns.hpp>
 
 namespace grammar::JSON {
-    IMP_DECL(spacing);
-    IMP_DECL(object);
-    IMP_DECL(array);
-    IMP_DECL(field);
-    IMP_DECL(value);
-    IMP_DECL(boolean);
-    IMP_DECL(null);
-    IMP_DECL(string);
-    IMP_DECL(strfill);
-    IMP_DECL(escseq);
-    IMP_DECL(number);
-    IMP_DECL(numint);
-    IMP_DECL(numfract);
-    IMP_DECL(numexp);
+    IMP_DECL_CPATTERN(spacing);
+    IMP_DECL_CPATTERN(object);
+    IMP_DECL_CPATTERN(array);
+    IMP_DECL_CPATTERN(field);
+    IMP_DECL_CPATTERN(value);
+    IMP_DECL_CPATTERN(boolean);
+    IMP_DECL_CPATTERN(null);
+    IMP_DECL_CPATTERN(string);
+    IMP_DECL_CPATTERN(strfill);
+    IMP_DECL_CPATTERN(escseq);
+    IMP_DECL_CPATTERN(number);
+    IMP_DECL_CPATTERN(numint);
+    IMP_DECL_CPATTERN(numfract);
+    IMP_DECL_CPATTERN(numexp);
 
-    IMP_PROXY(eval, (
+    IMP_MAKE_CPATTERN(eval, (
         imp::Handle(imp::Join(
-            spacing,
+            imp::Fn<spacing>(),
             imp::UpTo<1>(imp::Join(
-                value, spacing
+                imp::Fn<value>(), imp::Fn<spacing>()
             )),
             imp::None()
         ),
@@ -34,76 +34,80 @@ namespace grammar::JSON {
         })
     ))
 
-    IMP_PROXY(spacing, (
+    IMP_MAKE_CPATTERN(spacing, (
         imp::AtLeast<0>(imp::SpaceOrNewLine())
     ))
 
-    IMP_PROXY(object, (
+    IMP_MAKE_CPATTERN(object, (
         imp::Join(
-            imp::Str<"{">(), spacing,
+            imp::Str<"{">(), imp::Fn<spacing>(),
             imp::UpTo<1>(imp::Join(
-                field, spacing,
+                imp::Fn<field>(), imp::Fn<spacing>(),
                 imp::AtLeast<0>(imp::Join(
-                    imp::Str<",">(), spacing,
-                    field, spacing
+                    imp::Str<",">(), imp::Fn<spacing>(),
+                    imp::Fn<field>(), imp::Fn<spacing>()
                 ))
             )), imp::Str<"}">()
         )
     ))
 
-    IMP_PROXY(array, (
+    IMP_MAKE_CPATTERN(array, (
         imp::Join(
-            imp::Str<"[">(), spacing,
+            imp::Str<"[">(), imp::Fn<spacing>(),
             imp::UpTo<1>(imp::Join(
-                value, spacing,
+                imp::Fn<value>(), imp::Fn<spacing>(),
                 imp::AtLeast<0>(imp::Join(
-                    imp::Str<",">(), spacing, value, spacing
+                    imp::Str<",">(), imp::Fn<spacing>(),
+                    imp::Fn<value>(), imp::Fn<spacing>()
                 ))
             )), imp::Str<"]">()
         )
     ))
 
-    IMP_PROXY(field, (
+    IMP_MAKE_CPATTERN(field, (
         imp::Join(
-            string, spacing,
-            imp::Str<":">(), spacing,
-            value
+            imp::Fn<string>(), imp::Fn<spacing>(),
+            imp::Str<":">(),
+            imp::Fn<spacing>(),
+            imp::Fn<value>()
         )
     ))
 
-    IMP_PROXY(value, (
+    IMP_MAKE_CPATTERN(value, (
         imp::Choice(
-            object, array, string, number, boolean, null
+            imp::Fn<object>(), imp::Fn<array>(),
+            imp::Fn<string>(), imp::Fn<number>(),
+            imp::Fn<boolean>(), imp::Fn<null>()
         )
     ))
 
-    IMP_PROXY(boolean, (
+    IMP_MAKE_CPATTERN(boolean, (
         imp::Choice(
             imp::Str<"true">(), imp::Str<"false">()
         )
     ))
 
-    IMP_PROXY(null, (
+    IMP_MAKE_CPATTERN(null, (
         imp::Str<"null">()
     ))
 
-    IMP_PROXY(string, (
+    IMP_MAKE_CPATTERN(string, (
         imp::Join(
-            imp::Str<"\"">(), strfill,
+            imp::Str<"\"">(), imp::Fn<strfill>(),
             imp::AtLeast<0>(imp::Join(
-                escseq, strfill
+                imp::Fn<escseq>(), imp::Fn<strfill>()
             )), imp::Str<"\"">()
         )
     ))
 
-    IMP_PROXY(strfill, (
+    IMP_MAKE_CPATTERN(strfill, (
         imp::AtLeast<0>(imp::Join(
             imp::LookAhead(imp::Any()),
             imp::Not(imp::Set<"\"\\">())
         ))
     ))
 
-    IMP_PROXY(escseq, (
+    IMP_MAKE_CPATTERN(escseq, (
         imp::Join(
             imp::Str<"\\">(),
             imp::Choice(
@@ -115,32 +119,32 @@ namespace grammar::JSON {
         )
     ))
 
-    IMP_PROXY(number, (
+    IMP_MAKE_CPATTERN(number, (
         imp::Join(
-            numint,
+            imp::Fn<numint>(),
             imp::UpTo<1>(imp::Join(
-                imp::Str<".">(), numfract
+                imp::Str<".">(), imp::Fn<numfract>()
             ))
         )
     ))
 
-    IMP_PROXY(numint, (
+    IMP_MAKE_CPATTERN(numint, (
         imp::Join(
             imp::UpTo<1>(imp::Str<"-">()),
             imp::AtLeast<1>(imp::Digit())
         )
     ))
 
-    IMP_PROXY(numfract, (
+    IMP_MAKE_CPATTERN(numfract, (
         imp::Join(
             imp::AtLeast<1>(imp::Digit()),
             imp::UpTo<1>(imp::Join(
-                imp::Set<"eE">(), numexp
+                imp::Set<"eE">(), imp::Fn<numexp>()
             ))
         )
     ))
 
-    IMP_PROXY(numexp, (
+    IMP_MAKE_CPATTERN(numexp, (
         imp::Join(
             imp::UpTo<1>(imp::Set<"+-">()),
             imp::AtLeast<1>(imp::Digit())
@@ -164,6 +168,6 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    return (imp::Eval(grammar::JSON::eval, uptrFile.get()))
+    return (imp::Eval(imp::Fn<grammar::JSON::eval>(), uptrFile.get()))
         ? EXIT_SUCCESS : EXIT_FAILURE;
 }
