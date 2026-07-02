@@ -289,9 +289,10 @@ namespace imp {
         };
     }
 
-    template<typename T>
+    template<typename Fn>
     concept Handler =
-        std::same_as<std::invoke_result_t<T, FILE*, const Match&, CapturesView, const std::any&>, void>;
+        std::is_class_v<Fn> &&
+        std::same_as<std::invoke_result_t<Fn, FILE*, const Match&, CapturesView, const std::any&>, Match>;
 
     inline Pattern auto
     Handle(const Pattern auto& fn, const Handler auto& handler) {
@@ -301,7 +302,7 @@ namespace imp {
             CapturesView
                 spnCapt = (groups.empty())
                     ? CapturesView{} : CapturesView{groups.back()};
-            handler(hFile, mCur, spnCapt, usr_val);
+            mCur        = handler(hFile, mCur, spnCapt, usr_val);
             return mCur;
         };
     }
@@ -326,7 +327,7 @@ namespace imp {
             CapturesView
                 spnCapt = (groups.empty())
                     ? CapturesView{} : CapturesView{groups.back()};
-            handler(hFile, mCur, spnCapt, usr_val);
+            mCur        = handler(hFile, mCur, spnCapt, usr_val);
             groups.pop_back();
             return mCur;
         };
