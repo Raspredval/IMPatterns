@@ -374,7 +374,7 @@ namespace imp {
     using CPattern =
         Match(*)(FILE*, CapturesList&, const std::any&);
 
-    template<__impl::CPattern fn>
+    template<CPattern fn>
     inline Pattern auto
     Fn() {
         return [] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
