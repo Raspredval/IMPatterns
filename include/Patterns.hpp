@@ -26,14 +26,56 @@ namespace imp {
     concept Pattern =
         std::same_as<std::invoke_result_t<const T, FILE*, CapturesList&, const std::any&>, Match>;
 
+    namespace __impl {
+        class StreamPos {
+        public:
+            StreamPos(FILE* hStream, CapturesList& groups) :
+                iCurPos(ftell(hStream)),
+                uCaptN((!groups.empty() ? groups.back().size() : 0)) {}
+
+            StreamPos(intptr_t iCurPos, CapturesList& groups) :
+                iCurPos(iCurPos),
+                uCaptN((!groups.empty() ? groups.back().size() : 0)) {}
+
+            StreamPos(intptr_t iCurPos, size_t uCaptN) :
+                iCurPos(iCurPos),
+                uCaptN(uCaptN) {}
+
+            void
+            RestoreStream(FILE* hStream, CapturesList& groups) {
+                fseek(hStream, this->iCurPos, SEEK_SET);
+                if (!groups.empty()) {
+                    while (groups.back().size() > this->uCaptN)
+                        groups.back().pop_back();
+                }
+            }
+
+            intptr_t
+            CurrentPos() const noexcept {
+                return this->iCurPos;
+            }
+
+            size_t
+            CaptureCount() const noexcept {
+                return this->uCaptN;
+            }
+
+        private:
+            intptr_t
+                iCurPos;
+            size_t
+                uCaptN;
+        };
+    }
+
     inline constexpr Pattern auto
     Join(const Pattern auto&... args) {
         return [tplArgs = std::make_tuple(args...)]
-        (FILE* hFile, CapturesList& captures, const std::any& usr_val) -> Match {
+        (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
                 mAcc    = Match(ftell(hFile), 0uz);
             template for (const Pattern auto& fn : tplArgs) {
-                mAcc    += fn(hFile, captures, usr_val);
+                mAcc    += fn(hFile, groups, usr_val);
                 if (!mAcc)
                     break;
             }
@@ -45,19 +87,19 @@ namespace imp {
     inline constexpr Pattern auto
     Choice(const Pattern auto&... args) {
         return [tplArgs = std::make_tuple(args...)]
-        (FILE* hFile, CapturesList& captures, const std::any& usr_val) -> Match {
-            intptr_t
-                iCur    = ftell(hFile);
+        (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+            __impl::StreamPos
+                p   = {hFile, groups};
             template for (const Pattern auto& fn : tplArgs) {
                 Match
-                    mCur    = fn(hFile, captures, usr_val);
+                    mCur    = fn(hFile, groups, usr_val);
                 if (mCur)
                     return mCur;
                 else
-                    fseek(hFile, iCur, SEEK_SET);
+                    p.RestoreStream(hFile, groups);
             }
 
-            return Match(iCur, 0uz, false);
+            return Match(p.CurrentPos(), 0uz, false);
         };
     }
 
@@ -181,14 +223,16 @@ namespace imp {
     template<size_t n>
     inline constexpr Pattern auto
     UpTo(const Pattern auto& fn) {
-        return [fn] (FILE* hFile, CapturesList& captures, const std::any& usr_val) -> Match {
+        return [fn] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
                 mAcc    = Match(ftell(hFile), 0uz);
             for (size_t i = 0; i != n; ++i) {
+                __impl::StreamPos
+                    p       = {mAcc.End(), groups};
                 Match
-                    mCur    = fn(hFile, captures, usr_val);
+                    mCur    = fn(hFile, groups, usr_val);
                 if (!mCur) {
-                    fseek(hFile, mAcc.End(), SEEK_SET);
+                    p.RestoreStream(hFile, groups);
                     break;
                 }
 
@@ -202,20 +246,22 @@ namespace imp {
     template<size_t n>
     inline Pattern auto
     AtLeast(const Pattern auto& fn) {
-        return [fn] (FILE* hFile, CapturesList& captures, const std::any& usr_val) -> Match {
+        return [fn] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
                 mAcc    = Match(ftell(hFile), 0uz);
             for (size_t i = 0; i != n; ++i) {
-                mAcc    += fn(hFile, captures, usr_val);
+                mAcc    += fn(hFile, groups, usr_val);
                 if (!mAcc)
                     return mAcc;
             }
 
             while (true) {
+                __impl::StreamPos
+                    p       = {mAcc.End(), groups};
                 Match
-                    mCur    = fn(hFile, captures, usr_val);
+                    mCur    = fn(hFile, groups, usr_val);
                 if (!mCur) {
-                    fseek(hFile, mAcc.End(), SEEK_SET);
+                    p.RestoreStream(hFile, groups);
                     break;
                 }
 
@@ -229,11 +275,11 @@ namespace imp {
     template<size_t n>
     inline Pattern auto
     Exactly(const Pattern auto& fn) {
-        return [fn] (FILE* hFile, CapturesList& captures, const std::any& usr_val) -> Match {
+        return [fn] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
                 mAcc    = Match(ftell(hFile), 0uz);
             for (size_t i = 0; i != n; ++i) {
-                mAcc    += fn(hFile, captures, usr_val);
+                mAcc    += fn(hFile, groups, usr_val);
                 if (!mAcc)
                     break;
             }
@@ -248,12 +294,12 @@ namespace imp {
 
     inline Pattern auto
     Handle(const Pattern auto& fn, const Handler auto& handler) {
-        return [fn, handler] (FILE* hFile, CapturesList& captures, const std::any& usr_val) -> Match {
+        return [fn, handler] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
-                mCur    = fn(hFile, captures, usr_val);
+                mCur    = fn(hFile, groups, usr_val);
             CapturesView
-                spnCapt = (captures.empty())
-                    ? CapturesView{} : CapturesView{captures.back()};
+                spnCapt = (groups.empty())
+                    ? CapturesView{} : CapturesView{groups.back()};
             handler(hFile, mCur, spnCapt, usr_val);
             return mCur;
         };
@@ -261,37 +307,37 @@ namespace imp {
 
     inline Pattern auto
     CaptGr(const Pattern auto& fn) {
-        return [fn] (FILE* hFile, CapturesList& captures, const std::any& usr_val) -> Match {
-            captures.emplace_back();
+        return [fn] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+            groups.emplace_back();
             Match
-                mCur    = fn(hFile, captures, usr_val);
-            captures.pop_back();
+                mCur    = fn(hFile, groups, usr_val);
+            groups.pop_back();
             return mCur;
         };
     }
 
     inline Pattern auto
     CaptGr(const Pattern auto& fn, const Handler auto& handler) {
-        return [fn, handler] (FILE* hFile, CapturesList& captures, const std::any& usr_val) -> Match {
-            captures.emplace_back();
+        return [fn, handler] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+            groups.emplace_back();
             Match
-                mCur    = fn(hFile, captures, usr_val);
+                mCur    = fn(hFile, groups, usr_val);
             CapturesView
-                spnCapt = (captures.empty())
-                    ? CapturesView{} : CapturesView{captures.back()};
+                spnCapt = (groups.empty())
+                    ? CapturesView{} : CapturesView{groups.back()};
             handler(hFile, mCur, spnCapt, usr_val);
-            captures.pop_back();
+            groups.pop_back();
             return mCur;
         };
     }
 
     inline Pattern auto
     Capt(const Pattern auto& fn) {
-        return [fn] (FILE* hFile, CapturesList& captures, const std::any& usr_val) -> Match {
+        return [fn] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
-                mCur    = fn(hFile, captures, usr_val);
+                mCur    = fn(hFile, groups, usr_val);
             if (mCur) {
-                captures.at(captures.size() - 1)
+                groups.at(groups.size() - 1)
                     .push_back(mCur);
             }
 
@@ -301,35 +347,38 @@ namespace imp {
 
     inline Pattern auto
     LookAhead(const Pattern auto& fn) {
-        return [fn] (FILE* hFile, CapturesList& captures, const std::any& usr_val) -> Match {
-            intptr_t
-                iCur    = ftell(hFile);
+        return [fn] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+            size_t
+                uCaptN  = (!groups.empty())
+                            ? groups.back().size() : 0;
             Match
-                mCur    = fn(hFile, captures, usr_val);
-            fseek(hFile, iCur, SEEK_SET);
-            return Match(iCur, 0uz, mCur.Good());
+                mCur    = fn(
+                            hFile, groups, usr_val);
+            __impl::StreamPos{mCur.Begin(), uCaptN}
+                .RestoreStream(hFile, groups);
+            return Match(mCur.Begin(), 0uz, mCur.Good());
         };
     }
 
     inline Pattern auto
     Not(const Pattern auto& fn) {
-        return [fn] (FILE* hFile, CapturesList& captures, const std::any& usr_val) -> Match {
+        return [fn] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
-                mCur    = fn(hFile, captures, usr_val);
+                mCur    = fn(hFile, groups, usr_val);
             mCur.ToggleGood();
             return mCur;
         };
     }
 
     inline Match
-    Eval(const Pattern auto& fn, FILE* hFile, CapturesList& captures, const std::any& usr_val = {}) {
-        return fn(hFile, captures, usr_val);
+    Eval(const Pattern auto& fn, FILE* hFile, CapturesList& groups, const std::any& usr_val = {}) {
+        return fn(hFile, groups, usr_val);
     }
 
     inline Match
     Eval(const Pattern auto& fn, FILE* hFile, const std::any& usr_val = {}) {
         CapturesList
-            captures;
-        return Eval(fn, hFile, captures, usr_val);
+            groups;
+        return Eval(fn, hFile, groups, usr_val);
     }
 }
