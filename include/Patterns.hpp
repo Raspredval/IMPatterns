@@ -373,7 +373,7 @@ namespace imp {
 
     namespace __impl {
         using CPattern =
-            Match(*)(FILE*, CaptureList&, const std::any&);
+            Match(*)(FILE*, CapturesList&, const std::any&);
     }
 
     template<__impl::CPattern fn>
@@ -381,7 +381,7 @@ namespace imp {
     Fn() {
         return [] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
             return fn(hFile, groups, usr_val);
-        }
+        };
     }
 
     inline Match
