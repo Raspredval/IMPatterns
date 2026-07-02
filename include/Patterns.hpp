@@ -11,8 +11,8 @@ static_assert(__cplusplus >= 202506, "requires C++26 minimum version");
 #include "Match.hpp"
 #include "FixedString.hpp"
 
-#define IMP_DECL(name) static imp::Match name (FILE* f, imp::CapturesList& c, const std::any& u)
-#define IMP_PROXY(name, fn) IMP_DECL(name) { return (fn)(f, c, u); }
+#define IMP_DECL(name) static imp::Match name (FILE* f, imp::CapturesList& g, const std::any& u)
+#define IMP_PROXY(name, fn) IMP_DECL(name) { return (fn)(f, g, u); }
 
 namespace imp {
     using Captures =
