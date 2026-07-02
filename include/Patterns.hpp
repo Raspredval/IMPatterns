@@ -24,6 +24,7 @@ namespace imp {
 
     template<typename Fn>
     concept Pattern =
+        std::is_class_v<Fn> &&
         std::same_as<std::invoke_result_t<const Fn, FILE*, CapturesList&, const std::any&>, Match>;
 
     namespace __impl {
@@ -368,6 +369,19 @@ namespace imp {
             mCur.ToggleGood();
             return mCur;
         };
+    }
+
+    namespace __impl {
+        using CPattern =
+            Match(*)(FILE*, CaptureList&, const std::any&);
+    }
+
+    template<CPattern fn>
+    inline Pattern auto
+    Proxy() {
+        return [] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+            return fn(hFile, groups, usr_val);
+        }
     }
 
     inline Match
