@@ -2,7 +2,7 @@
 #include <memory>
 #include <Patterns.hpp>
 
-namespace grammar::JSON {
+namespace grammJSON {
     IMP_DECL_PATTERN(spacing);
     IMP_DECL_PATTERN(object);
     IMP_DECL_PATTERN(array);
@@ -122,32 +122,24 @@ namespace grammar::JSON {
     IMP_MAKE_PATTERN(number, (
         imp::Join(
             imp::Fn<numint>(),
-            imp::UpTo<1>(imp::Join(
-                imp::Str<".">(), imp::Fn<numfract>()
-            ))
+            imp::UpTo<1>(imp::Fn<numfract>())
         )
     ))
 
     IMP_MAKE_PATTERN(numint, (
         imp::Join(
-            imp::UpTo<1>(imp::Str<"-">()),
+            imp::UpTo<1>(imp::Set<"+-">()),
             imp::AtLeast<1>(imp::Digit())
         )
     ))
 
     IMP_MAKE_PATTERN(numfract, (
         imp::Join(
+            imp::Str<".">(),
             imp::AtLeast<1>(imp::Digit()),
             imp::UpTo<1>(imp::Join(
-                imp::Set<"eE">(), imp::Fn<numexp>()
+                imp::Set<"eE">(), imp::Fn<numint>()
             ))
-        )
-    ))
-
-    IMP_MAKE_PATTERN(numexp, (
-        imp::Join(
-            imp::UpTo<1>(imp::Set<"+-">()),
-            imp::AtLeast<1>(imp::Digit())
         )
     ))
 }
@@ -168,6 +160,6 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    return (bool)imp::Eval(imp::Fn<grammar::JSON::eval>(), uptrFile.get())
+    return (bool)imp::Eval(imp::Fn<grammJSON::eval>(), uptrFile.get())
         ? EXIT_SUCCESS : EXIT_FAILURE;
 }
