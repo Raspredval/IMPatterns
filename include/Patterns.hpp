@@ -120,25 +120,39 @@ namespace imp {
         };
     }
 
+    namespace __impl {
+        template<FixedString strSet, bool bSet>
+        inline constexpr Pattern auto
+        SetOrNegSet() {
+            return [] (FILE* hFile, CapturesList&, const std::any&) -> Match {
+                intptr_t
+                    iBegin  = ftell(hFile);
+
+                int
+                    optc    = fgetc(hFile);
+                if (optc == EOF)
+                    return Match(iBegin, 0uz, false);
+
+                Match
+                    mCur    = Match(iBegin, 1uz, bSet);
+                if (!strSet.contains((char)optc))
+                    mCur.ToggleGood();
+
+                return mCur;
+            };
+        }
+    }
+
     template<FixedString strSet>
     inline constexpr Pattern auto
     Set() {
-        return [] (FILE* hFile, CapturesList&, const std::any&) -> Match {
-            intptr_t
-                iBegin  = ftell(hFile);
+        return __impl::SetOrNegSet<strSet, true>();
+    }
 
-            int
-                optc    = fgetc(hFile);
-            if (optc == EOF)
-                return Match(iBegin, 0uz, false);
-
-            Match
-                mCur    = Match(iBegin, 1uz);
-            if (!strSet.contains((char)optc))
-                mCur.ToggleGood();
-
-            return mCur;
-        };
+    template<FixedString strSet>
+    inline constexpr Pattern auto
+    NegSet() {
+        return __impl::SetOrNegSet<strSet, false>();
     }
 
     namespace __impl {
