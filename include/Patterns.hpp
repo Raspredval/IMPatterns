@@ -11,8 +11,8 @@ static_assert(__cplusplus >= 202506, "requires C++26 minimum version");
 #include "Match.hpp"
 #include "FixedString.hpp"
 
-#define IMP_DECL_CPATTERN(name) static imp::Match name (FILE* f, imp::CapturesList& g, const std::any& u)
-#define IMP_MAKE_CPATTERN(name, fn) IMP_DECL_CPATTERN(name) { return (fn)(f, g, u); }
+#define IMP_DECL_PATTERN(name) imp::Match name (FILE* f, imp::CapturesList& g, const std::any& u)
+#define IMP_MAKE_PATTERN(name, fn) IMP_DECL_PATTERN(name) { return (fn)(f, g, u); }
 
 namespace imp {
     using Captures =
@@ -372,10 +372,10 @@ namespace imp {
         };
     }
 
-    using CPattern =
+    using UserPattern =
         Match(*)(FILE*, CapturesList&, const std::any&);
 
-    template<CPattern fn>
+    template<UserPattern fn>
     inline Pattern auto
     Fn() {
         return [] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {

@@ -3,22 +3,22 @@
 #include <Patterns.hpp>
 
 namespace grammar::JSON {
-    IMP_DECL_CPATTERN(spacing);
-    IMP_DECL_CPATTERN(object);
-    IMP_DECL_CPATTERN(array);
-    IMP_DECL_CPATTERN(field);
-    IMP_DECL_CPATTERN(value);
-    IMP_DECL_CPATTERN(boolean);
-    IMP_DECL_CPATTERN(null);
-    IMP_DECL_CPATTERN(string);
-    IMP_DECL_CPATTERN(strfill);
-    IMP_DECL_CPATTERN(escseq);
-    IMP_DECL_CPATTERN(number);
-    IMP_DECL_CPATTERN(numint);
-    IMP_DECL_CPATTERN(numfract);
-    IMP_DECL_CPATTERN(numexp);
+    IMP_DECL_PATTERN(spacing);
+    IMP_DECL_PATTERN(object);
+    IMP_DECL_PATTERN(array);
+    IMP_DECL_PATTERN(field);
+    IMP_DECL_PATTERN(value);
+    IMP_DECL_PATTERN(boolean);
+    IMP_DECL_PATTERN(null);
+    IMP_DECL_PATTERN(string);
+    IMP_DECL_PATTERN(strfill);
+    IMP_DECL_PATTERN(escseq);
+    IMP_DECL_PATTERN(number);
+    IMP_DECL_PATTERN(numint);
+    IMP_DECL_PATTERN(numfract);
+    IMP_DECL_PATTERN(numexp);
 
-    IMP_MAKE_CPATTERN(eval, (
+    IMP_MAKE_PATTERN(eval, (
         imp::Handle(imp::Join(
             imp::Fn<spacing>(),
             imp::UpTo<1>(imp::Join(
@@ -35,11 +35,11 @@ namespace grammar::JSON {
         })
     ))
 
-    IMP_MAKE_CPATTERN(spacing, (
+    IMP_MAKE_PATTERN(spacing, (
         imp::AtLeast<0>(imp::SpaceOrNewLine())
     ))
 
-    IMP_MAKE_CPATTERN(object, (
+    IMP_MAKE_PATTERN(object, (
         imp::Join(
             imp::Str<"{">(), imp::Fn<spacing>(),
             imp::UpTo<1>(imp::Join(
@@ -53,7 +53,7 @@ namespace grammar::JSON {
         )
     ))
 
-    IMP_MAKE_CPATTERN(array, (
+    IMP_MAKE_PATTERN(array, (
         imp::Join(
             imp::Str<"[">(), imp::Fn<spacing>(),
             imp::UpTo<1>(imp::Join(
@@ -67,7 +67,7 @@ namespace grammar::JSON {
         )
     ))
 
-    IMP_MAKE_CPATTERN(field, (
+    IMP_MAKE_PATTERN(field, (
         imp::Join(
             imp::Fn<string>(), imp::Fn<spacing>(),
             imp::Str<":">(), imp::Fn<spacing>(),
@@ -75,7 +75,7 @@ namespace grammar::JSON {
         )
     ))
 
-    IMP_MAKE_CPATTERN(value, (
+    IMP_MAKE_PATTERN(value, (
         imp::Choice(
             imp::Fn<object>(), imp::Fn<array>(),
             imp::Fn<string>(), imp::Fn<number>(),
@@ -83,17 +83,17 @@ namespace grammar::JSON {
         )
     ))
 
-    IMP_MAKE_CPATTERN(boolean, (
+    IMP_MAKE_PATTERN(boolean, (
         imp::Choice(
             imp::Str<"true">(), imp::Str<"false">()
         )
     ))
 
-    IMP_MAKE_CPATTERN(null, (
+    IMP_MAKE_PATTERN(null, (
         imp::Str<"null">()
     ))
 
-    IMP_MAKE_CPATTERN(string, (
+    IMP_MAKE_PATTERN(string, (
         imp::Join(
             imp::Str<"\"">(), imp::Fn<strfill>(),
             imp::AtLeast<0>(imp::Join(
@@ -103,14 +103,14 @@ namespace grammar::JSON {
         )
     ))
 
-    IMP_MAKE_CPATTERN(strfill, (
+    IMP_MAKE_PATTERN(strfill, (
         imp::AtLeast<0>(imp::Join(
             imp::LookAhead(imp::Any()),
             imp::Not(imp::Set<"\"\\">())
         ))
     ))
 
-    IMP_MAKE_CPATTERN(escseq, (
+    IMP_MAKE_PATTERN(escseq, (
         imp::Join(
             imp::Str<"\\">(),
             imp::Choice(
@@ -122,7 +122,7 @@ namespace grammar::JSON {
         )
     ))
 
-    IMP_MAKE_CPATTERN(number, (
+    IMP_MAKE_PATTERN(number, (
         imp::Join(
             imp::Fn<numint>(),
             imp::UpTo<1>(imp::Join(
@@ -131,14 +131,14 @@ namespace grammar::JSON {
         )
     ))
 
-    IMP_MAKE_CPATTERN(numint, (
+    IMP_MAKE_PATTERN(numint, (
         imp::Join(
             imp::UpTo<1>(imp::Str<"-">()),
             imp::AtLeast<1>(imp::Digit())
         )
     ))
 
-    IMP_MAKE_CPATTERN(numfract, (
+    IMP_MAKE_PATTERN(numfract, (
         imp::Join(
             imp::AtLeast<1>(imp::Digit()),
             imp::UpTo<1>(imp::Join(
@@ -147,7 +147,7 @@ namespace grammar::JSON {
         )
     ))
 
-    IMP_MAKE_CPATTERN(numexp, (
+    IMP_MAKE_PATTERN(numexp, (
         imp::Join(
             imp::UpTo<1>(imp::Set<"+-">()),
             imp::AtLeast<1>(imp::Digit())
