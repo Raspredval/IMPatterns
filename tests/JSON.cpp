@@ -171,6 +171,6 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    return (imp::Eval(imp::Fn<grammar::JSON::eval>(), uptrFile.get()))
+    return (bool)imp::Eval(imp::Fn<grammar::JSON::eval>(), uptrFile.get())
         ? EXIT_SUCCESS : EXIT_FAILURE;
 }
