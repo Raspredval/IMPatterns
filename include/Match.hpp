@@ -69,15 +69,26 @@ namespace imp {
             return this->Good();
         }
 
+        template<size_t temp_buff_size = BUFSIZ>
         void
         ExportTo(FILE* hFrom, FILE* hTo) const {
+            char
+                lpcBuffer[temp_buff_size];
             intptr_t
                 iCur    = ftell(hFrom);
             fseek(hFrom, this->iBegin, SEEK_SET);
-            for (size_t i = 0; i != this->Length(); ++i) {
-                int
-                    optc    = fgetc(hFrom);
-                if (optc == EOF || fputc(optc, hTo) == EOF)
+
+            size_t
+                uTotal  = this->uLength;
+            while (uTotal != 0) {
+                uTotal -=   fwrite(
+                                lpcBuffer, 1,
+                                fread(
+                                    lpcBuffer, 1,
+                                    std::min(uTotal, temp_buff_size),
+                                    hFrom),
+                                hTo);
+                if (ferror(hFrom) || ferror(hTo) || feof(hFrom))
                     break;
             }
 
@@ -90,17 +101,15 @@ namespace imp {
                 iCur    = ftell(hFrom);
             std::string
                 strResult;
-            strResult.reserve(this->uLength);
-            fseek(hFrom, this->iBegin, SEEK_SET);
-            for (size_t i = 0; i != this->Length(); ++i) {
-                int
-                    optc    = fgetc(hFrom);
-                if (optc == EOF)
-                    break;
-                strResult.push_back((char)optc);
-            }
+            strResult.resize(this->uLength);
 
+            fseek(hFrom, this->iBegin, SEEK_SET);
+            strResult.resize(
+                fread(
+                    strResult.data(), 1,
+                    this->uLength, hFrom));
             fseek(hFrom, iCur, SEEK_SET);
+
             return strResult;
         }
 
