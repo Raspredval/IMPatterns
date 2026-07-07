@@ -104,10 +104,7 @@ namespace grammar::JSON {
     ))
 
     IMP_MAKE_PATTERN(strfill, (
-        imp::AtLeast<0>(imp::Join(
-            imp::LookAhead(imp::Any()),
-            imp::Not(imp::Set<"\"\\">())
-        ))
+        imp::AtLeast<0>(imp::NegSet<"\"\\">())
     ))
 
     IMP_MAKE_PATTERN(escseq, (
