@@ -7,14 +7,6 @@ static_assert(__cplusplus >= 202506, "requires C++26 minimum version");
 #include <string>
 
 namespace imp {
-    namespace __impl {
-        template<size_t bitn, std::integral I>
-        inline constexpr I
-        mask_bit(I num) {
-            return num & ~(I{1} << bitn);
-        }
-    }
-
     class Match {
     public:
         Match(intptr_t iBegin, size_t uLength, bool bGood = true) :
