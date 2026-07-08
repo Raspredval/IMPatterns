@@ -2,6 +2,8 @@
 /.cache/*
 /.vscode
 /.vscode/*
+/assets
+/assets/*
 /build
 /build/*
 /compile_commands.json

@@ -30,9 +30,18 @@ install(
 cpack_add_component(imp-headers
     DISPLAY "Header files")
 
+set(CXX_WARNINGS "-Wall" "-Wextra" "-Wconversion" "-Werror")
+
 add_executable(tests
     "tests/JSON.cpp")
 target_include_directories(tests
     PRIVATE "include/")
 target_compile_options(tests
-    PRIVATE "-Wall" "-Wextra" "-Wconversion" "-Werror")
+    PRIVATE ${CXX_WARNINGS})
+
+add_executable(make_json
+    "tests/MakeJSON.cpp")
+target_include_directories(tests
+    PRIVATE "include/")
+target_compile_options(tests
+    PRIVATE ${CXX_WARNINGS})
