@@ -8,7 +8,7 @@ using CFile = std::unique_ptr<FILE,
     decltype([] (FILE* hFile) { if (hFile) fclose(hFile); })>;
 
 constexpr const char*
-    szFilename  = "./assets/test.json"
+    szFilename  = "./assets/test.json";
 
 int main() {
     if (access(szFilename, F_OK) == 0) {
@@ -49,7 +49,7 @@ int main() {
     fprintf(uptrJSON.get(), "{\n\t\"scores\": [\n");
     for (size_t i = 0; i != 1'000'000'000; ++i) {
         int iRnd    = rand();
-        fprintf(uptrJSON, "\t\t{ \"%s %s\": %f },\n",
+        fprintf(uptrJSON.get(), "\t\t{ \"%s %s\": %f },\n",
             lpPrefixes[iRnd % 8], lpPostfixes[iRnd % 8],
             (double)iRnd / (double)RAND_MAX);
     }
