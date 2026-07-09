@@ -38,6 +38,8 @@ target_include_directories(tests
     PRIVATE "include/")
 target_compile_options(tests
     PRIVATE ${CXX_WARNINGS})
+target_compile_options(tests
+    PRIVATE $<$<CONFIG:Release>:-march=native>)
 
 add_executable(make_json
     "tests/MakeJSON.cpp")
@@ -45,3 +47,5 @@ target_include_directories(tests
     PRIVATE "include/")
 target_compile_options(tests
     PRIVATE ${CXX_WARNINGS})
+target_compile_options(tests
+    PRIVATE $<$<CONFIG:Release>:-march=native>)

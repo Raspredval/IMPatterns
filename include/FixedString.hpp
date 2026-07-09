@@ -2,11 +2,12 @@
 static_assert(__cplusplus >= 202506, "requires C++26 minimum version");
 
 #include <algorithm>
+#include <bit>
 
 namespace imp {
     template<size_t n>
         requires (n != 0)
-    struct FixedString {
+    struct alignas(64) FixedString {
         constexpr FixedString(const char (&szData)[n]) {
             std::ranges::copy(szData, this->lpcData);
         }
@@ -38,8 +39,8 @@ namespace imp {
 
         constexpr bool
         contains(char c) const noexcept {
-            for (auto it = this->begin(); it != this->end(); ++it) {
-                if (*it == c)
+            for (size_t i = 0; i != FixedString::size(); ++i) {
+                if (this->lpcData[i] == c)
                     return true;
             }
 
