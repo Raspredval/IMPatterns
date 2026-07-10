@@ -389,11 +389,22 @@ namespace imp {
     using UserPattern =
         Match(*)(FILE*, CapturesList&, const std::any&);
 
+    using UserHandler =
+        Match(*)(FILE*, const Match&, CapturesView, const std::any&);
+
     template<UserPattern fn>
     inline Pattern auto
     Fn() {
-        return [] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
-            return fn(hFile, groups, usr_val);
+        return [] (FILE* f, CapturesList& g, const std::any& u) -> Match {
+            return fn(f, g, u);
+        };
+    }
+
+    template<UserHandler fn>
+    inline Handler auto
+    Fn() {
+        return [] (FILE* f, const Match& m, CapturesView c, const std::any& u) -> Match {
+            return fn(f, m, c, u);
         };
     }
 
