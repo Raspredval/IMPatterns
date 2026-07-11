@@ -11,8 +11,8 @@ static_assert(__cplusplus >= 202506, "requires C++26 minimum version");
 #include "Match.hpp"
 #include "FixedString.hpp"
 
-#define IMP_DECL_PATTERN(name) imp::Match name (FILE* f, imp::CapturesList& g, const std::any& u)
-#define IMP_MAKE_PATTERN(name, fn) IMP_DECL_PATTERN(name) { return (fn)(f, g, u); }
+#define IMP_DECL_PATTERN(name) imp::Match name (FILE* f, intptr_t i, imp::CapturesList& g, const std::any& u)
+#define IMP_MAKE_PATTERN(name, fn) IMP_DECL_PATTERN(name) { return (fn)(f, i, g, u); }
 
 namespace imp {
     using Captures =
@@ -25,7 +25,7 @@ namespace imp {
     template<typename Fn>
     concept Pattern =
         std::is_class_v<Fn> &&
-        std::same_as<std::invoke_result_t<const Fn, FILE*, CapturesList&, const std::any&>, Match>;
+        std::same_as<std::invoke_result_t<const Fn, FILE*, intptr_t, CapturesList&, const std::any&>, Match>;
 
     namespace __impl {
         class StreamPos {
@@ -72,11 +72,11 @@ namespace imp {
     inline constexpr Pattern auto
     Join(const Pattern auto&... args) {
         return [tplArgs = std::make_tuple(args...)]
-        (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+        (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
-                mAcc    = Match(ftell(hFile), 0uz);
+                mAcc    = Match(iBegin, 0uz);
             template for (const Pattern auto& fn : tplArgs) {
-                mAcc    += fn(hFile, groups, usr_val);
+                mAcc    += fn(hFile, mAcc.End(), groups, usr_val);
                 if (!mAcc)
                     break;
             }
@@ -88,12 +88,12 @@ namespace imp {
     inline constexpr Pattern auto
     Choice(const Pattern auto&... args) {
         return [tplArgs = std::make_tuple(args...)]
-        (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+        (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             __impl::StreamPos
-                p   = {hFile, groups};
+                p   = {iBegin, groups};
             template for (const Pattern auto& fn : tplArgs) {
                 Match
-                    mCur    = fn(hFile, groups, usr_val);
+                    mCur    = fn(hFile, p.CurrentPos(), groups, usr_val);
                 if (mCur)
                     return mCur;
                 else
@@ -107,9 +107,7 @@ namespace imp {
     template<FixedString strMatch>
     inline constexpr Pattern auto
     Str() {
-        return [] (FILE* hFile, CapturesList&, const std::any&) -> Match {
-            intptr_t
-                iBegin  = ftell(hFile);
+        return [] (FILE* hFile, intptr_t iBegin, CapturesList&, const std::any&) -> Match {
             for (size_t i = 0; i != strMatch.size(); ++i) {
                 int optc    = fgetc(hFile);
                 if (optc == EOF || strMatch[i] != (char)optc)
@@ -124,10 +122,7 @@ namespace imp {
         template<FixedString strSet, bool bSet>
         inline constexpr Pattern auto
         SetOrNegSet() {
-            return [] (FILE* hFile, CapturesList&, const std::any&) -> Match {
-                intptr_t
-                    iBegin  = ftell(hFile);
-
+            return [] (FILE* hFile, intptr_t iBegin, CapturesList&, const std::any&) -> Match {
                 int
                     optc    = fgetc(hFile);
                 if (optc == EOF)
@@ -162,10 +157,7 @@ namespace imp {
         template<CTypeProc fnCheck>
         inline constexpr Pattern auto
         CType() {
-            return [] (FILE* hFile, CapturesList&, const std::any&) -> Match {
-                intptr_t
-                    iBegin  = ftell(hFile);
-
+            return [] (FILE* hFile, intptr_t iBegin, CapturesList&, const std::any&) -> Match {
                 int
                     optc    = fgetc(hFile);
                 if (optc == EOF)
@@ -215,9 +207,7 @@ namespace imp {
         template<bool bAny>
         inline constexpr Pattern auto
         AnyOrNone() {
-            return [] (FILE* hFile, CapturesList&, const std::any&) -> Match {
-                intptr_t
-                    iBegin  = ftell(hFile);
+            return [] (FILE* hFile, intptr_t iBegin, CapturesList&, const std::any&) -> Match {
                 return (fgetc(hFile) == EOF)
                     ? Match(iBegin, 0uz, !bAny)
                     : Match(iBegin, 1uz, bAny);
@@ -238,14 +228,14 @@ namespace imp {
     template<size_t n>
     inline constexpr Pattern auto
     UpTo(const Pattern auto& fn) {
-        return [fn] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+        return [fn] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
-                mAcc    = Match(ftell(hFile), 0uz);
+                mAcc    = Match(iBegin, 0uz);
             for (size_t i = 0; i != n; ++i) {
                 __impl::StreamPos
                     p       = {mAcc.End(), groups};
                 Match
-                    mCur    = fn(hFile, groups, usr_val);
+                    mCur    = fn(hFile, p.CurrentPos(), groups, usr_val);
                 if (!mCur) {
                     p.RestoreStream(hFile, groups);
                     break;
@@ -261,11 +251,11 @@ namespace imp {
     template<size_t n>
     inline Pattern auto
     AtLeast(const Pattern auto& fn) {
-        return [fn] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+        return [fn] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
-                mAcc    = Match(ftell(hFile), 0uz);
+                mAcc    = Match(iBegin, 0uz);
             for (size_t i = 0; i != n; ++i) {
-                mAcc    += fn(hFile, groups, usr_val);
+                mAcc    += fn(hFile, mAcc.End(), groups, usr_val);
                 if (!mAcc)
                     return mAcc;
             }
@@ -274,7 +264,7 @@ namespace imp {
                 __impl::StreamPos
                     p       = {mAcc.End(), groups};
                 Match
-                    mCur    = fn(hFile, groups, usr_val);
+                    mCur    = fn(hFile, p.CurrentPos(), groups, usr_val);
                 if (!mCur) {
                     p.RestoreStream(hFile, groups);
                     break;
@@ -290,11 +280,11 @@ namespace imp {
     template<size_t n>
     inline Pattern auto
     Exactly(const Pattern auto& fn) {
-        return [fn] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+        return [fn] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
-                mAcc    = Match(ftell(hFile), 0uz);
+                mAcc    = Match(iBegin, 0uz);
             for (size_t i = 0; i != n; ++i) {
-                mAcc    += fn(hFile, groups, usr_val);
+                mAcc    += fn(hFile, mAcc.End(), groups, usr_val);
                 if (!mAcc)
                     break;
             }
@@ -310,9 +300,9 @@ namespace imp {
 
     inline Pattern auto
     Handle(const Pattern auto& fn, const Handler auto& handler) {
-        return [fn, handler] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+        return [fn, handler] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
-                mCur    = fn(hFile, groups, usr_val);
+                mCur    = fn(hFile, iBegin, groups, usr_val);
             CapturesView
                 spnCapt = (groups.empty())
                     ? CapturesView{} : CapturesView{groups.back()};
@@ -323,10 +313,10 @@ namespace imp {
 
     inline Pattern auto
     CaptGr(const Pattern auto& fn) {
-        return [fn] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+        return [fn] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             groups.emplace_back();
             Match
-                mCur    = fn(hFile, groups, usr_val);
+                mCur    = fn(hFile, iBegin, groups, usr_val);
             groups.pop_back();
             return mCur;
         };
@@ -334,10 +324,10 @@ namespace imp {
 
     inline Pattern auto
     CaptGr(const Pattern auto& fn, const Handler auto& handler) {
-        return [fn, handler] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+        return [fn, handler] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             groups.emplace_back();
             Match
-                mCur    = fn(hFile, groups, usr_val);
+                mCur    = fn(hFile, iBegin, groups, usr_val);
             CapturesView
                 spnCapt = (groups.empty())
                     ? CapturesView{} : CapturesView{groups.back()};
@@ -349,9 +339,9 @@ namespace imp {
 
     inline Pattern auto
     Capt(const Pattern auto& fn) {
-        return [fn] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+        return [fn] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
-                mCur    = fn(hFile, groups, usr_val);
+                mCur    = fn(hFile, iBegin, groups, usr_val);
             if (mCur) {
                 groups.at(groups.size() - 1)
                     .push_back(mCur);
@@ -363,31 +353,31 @@ namespace imp {
 
     inline Pattern auto
     LookAhead(const Pattern auto& fn) {
-        return [fn] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+        return [fn] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             size_t
                 uCaptN  = (!groups.empty())
                             ? groups.back().size() : 0;
             Match
                 mCur    = fn(
                             hFile, groups, usr_val);
-            __impl::StreamPos{mCur.Begin(), uCaptN}
+            __impl::StreamPos{iBegin, uCaptN}
                 .RestoreStream(hFile, groups);
-            return Match(mCur.Begin(), 0uz, mCur.Good());
+            return Match(iBegin, 0uz, mCur.Good());
         };
     }
 
     inline Pattern auto
     Not(const Pattern auto& fn) {
-        return [fn] (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+        return [fn] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
-                mCur    = fn(hFile, groups, usr_val);
+                mCur    = fn(hFile, iBegin, groups, usr_val);
             mCur.ToggleGood();
             return mCur;
         };
     }
 
     using UserPattern =
-        Match(*)(FILE*, CapturesList&, const std::any&);
+        Match(*)(FILE*, intptr_t, CapturesList&, const std::any&);
 
     using UserHandler =
         Match(*)(FILE*, const Match&, CapturesView, const std::any&);
@@ -395,8 +385,8 @@ namespace imp {
     template<UserPattern fn>
     inline Pattern auto
     Fn() {
-        return [] (FILE* f, CapturesList& g, const std::any& u) -> Match {
-            return fn(f, g, u);
+        return [] (FILE* f, intptr_t i, CapturesList& g, const std::any& u) -> Match {
+            return fn(f, i, g, u);
         };
     }
 
@@ -410,7 +400,7 @@ namespace imp {
 
     inline Match
     Eval(const Pattern auto& fn, FILE* hFile, CapturesList& groups, const std::any& usr_val = {}) {
-        return fn(hFile, groups, usr_val);
+        return fn(hFile, ftell(hFile), groups, usr_val);
     }
 
     inline Match
