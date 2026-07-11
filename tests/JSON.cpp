@@ -18,23 +18,6 @@ namespace grammJSON {
     IMP_DECL_PATTERN(numfract);
     IMP_DECL_PATTERN(numexp);
 
-    IMP_MAKE_PATTERN(eval, (
-        imp::Handle(imp::Join(
-            imp::Fn<spacing>(),
-            imp::UpTo<1>(imp::Join(
-                imp::Fn<value>(), imp::Fn<spacing>()
-            )),
-            imp::None()
-        ),
-        [] (FILE* hFile, const imp::Match& m, imp::CapturesView, const std::any&) -> imp::Match {
-            if (!m)
-                fprintf(stderr, "failed to parse JSON at %zi\n", ftell(hFile));
-            else
-                printf("success\n");
-            return m;
-        })
-    ))
-
     IMP_MAKE_PATTERN(spacing, (
         imp::AtLeast<0>(imp::SpaceOrNewLine())
     ))
@@ -141,6 +124,23 @@ namespace grammJSON {
                 imp::Set<"eE">(), imp::Fn<numint>()
             ))
         )
+    ))
+
+    IMP_MAKE_PATTERN(eval, (
+        imp::Handle(imp::Join(
+            imp::Fn<spacing>(),
+            imp::UpTo<1>(imp::Join(
+                imp::Fn<value>(), imp::Fn<spacing>()
+            )),
+            imp::None()
+        ),
+        [] (FILE* hFile, const imp::Match& m, imp::CapturesView, const std::any&) -> imp::Match {
+            if (!m)
+                fprintf(stderr, "failed to parse JSON at %zi\n", ftell(hFile));
+            else
+                printf("success\n");
+            return m;
+        })
     ))
 }
 
