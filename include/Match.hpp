@@ -4,6 +4,7 @@ static_assert(__cplusplus >= 202506, "requires C++26 minimum version");
 #include <cmath>
 #include <cstdio>
 #include <cstdint>
+#include <memory>
 #include <string>
 
 namespace imp {
@@ -64,22 +65,19 @@ namespace imp {
         template<size_t temp_buff_size = BUFSIZ>
         void
         ExportTo(FILE* hFrom, FILE* hTo) const {
-            char
-                lpcBuffer[temp_buff_size];
+            auto
+                uptrBuff    = std::make_unique<char[]>(temp_buff_size);
             intptr_t
-                iCur    = ftell(hFrom);
+                iCur        = ftell(hFrom);
             fseek(hFrom, this->iBegin, SEEK_SET);
 
             size_t
-                uTotal  = this->uLength;
+                uTotal      = this->uLength;
             while (uTotal != 0) {
-                uTotal -=   fwrite(
-                                lpcBuffer, 1,
-                                fread(
-                                    lpcBuffer, 1,
-                                    std::min(uTotal, temp_buff_size),
-                                    hFrom),
-                                hTo);
+                uTotal      -=  fwrite(uptrBuff.get(), 1,
+                                    fread(uptrBuff.get(), 1,
+                                        std::min(uTotal, temp_buff_size),
+                                        hFrom), hTo);
                 if (ferror(hFrom) || ferror(hTo) || feof(hFrom))
                     break;
             }
@@ -97,8 +95,7 @@ namespace imp {
 
             fseek(hFrom, this->iBegin, SEEK_SET);
             strResult.resize(
-                fread(
-                    strResult.data(), 1,
+                fread(strResult.data(), 1,
                     this->uLength, hFrom));
             fseek(hFrom, iCur, SEEK_SET);
 
