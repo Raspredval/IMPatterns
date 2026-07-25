@@ -92,8 +92,10 @@ namespace imp {
                 head{std::forward<_Head>(head)},
                 tail{std::forward<_Tail>(tail)...} {}
 
+            [[no_unique_address]]
             std::decay_t<Head>
                 head;
+            [[no_unique_address]]
             tuple<Tail...>
                 tail;
         };
