@@ -12,7 +12,7 @@ namespace imp {
     public:
         Match(intptr_t iBegin, size_t uLength, bool bGood = true) :
             iBegin(iBegin),
-            uLength(uLength & ~(1uz << (sizeof(size_t) * 8 - 1))),
+            uLength((uLength << 1) >> 1),
             bGood(bGood) {}
 
         Match(intptr_t iBegin, intptr_t iEnd, bool bGood = true) :
