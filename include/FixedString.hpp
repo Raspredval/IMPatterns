@@ -1,8 +1,7 @@
 #pragma once
-static_assert(__cplusplus >= 202506, "requires C++26 minimum version");
+static_assert(__cplusplus >= 202207L, "requires C++23 minimum version");
 
 #include <algorithm>
-#include <bit>
 
 namespace imp {
     template<size_t n>

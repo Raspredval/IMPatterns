@@ -1,5 +1,5 @@
 #pragma once
-static_assert(__cplusplus >= 202506, "requires C++26 minimum version");
+static_assert(__cplusplus >= 202207L, "requires C++23 minimum version");
 
 #include <cstdio>
 #include <cctype>
@@ -69,38 +69,79 @@ namespace imp {
         };
     }
 
-    inline constexpr Pattern auto
-    Join(const Pattern auto&... args) {
-        return [tplArgs = std::make_tuple(args...)]
-        (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
-            Match
-                mAcc    = Match(iBegin, 0uz);
-            template for (const Pattern auto& fn : tplArgs) {
-                mAcc    += fn(hFile, mAcc.End(), groups, usr_val);
-                if (!mAcc)
-                    break;
+    namespace __impl {
+        template<typename... Args>
+        struct tuple {
+            static constexpr size_t
+            count() noexcept {
+                return sizeof...(Args);
+            }
+        };
+
+        template<typename Head, typename... Tail>
+        struct tuple<Head, Tail...> {
+            static constexpr size_t
+            count() noexcept {
+                return sizeof...(Tail) + 1;
             }
 
-            return mAcc;
+            tuple() = default;
+
+            template<typename _Head, typename... _Tail>
+            tuple(_Head&& head, _Tail&&... tail) :
+                head{std::forward<_Head>(head)},
+                tail{std::forward<_Tail>(tail)...} {}
+
+            std::decay_t<Head>
+                head;
+            tuple<Tail...>
+                tail;
+        };
+    }
+
+    inline constexpr Pattern auto
+    Join(const Pattern auto&... args) {
+        return [tpl = __impl::tuple<decltype(args)...>{args...}]
+        (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
+            return [hFile, &groups, &usr_val]
+            (this const auto& self, const auto& tpl, intptr_t iBegin) -> Match {
+                if constexpr (tpl.count() != 0) {
+                    Match
+                        mCur    = tpl.head(hFile, iBegin, groups, usr_val);
+                    if (mCur) {
+                        mCur    += self(tpl.tail, mCur.End());
+                    }
+
+                    return mCur;
+                }
+                else
+                    return Match(iBegin, 0uz, true);
+            } (tpl, iBegin);
         };
     }
 
     inline constexpr Pattern auto
     Choice(const Pattern auto&... args) {
-        return [tplArgs = std::make_tuple(args...)]
+        return [tpl = __impl::tuple<decltype(args)...>{args...}]
         (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             __impl::StreamPos
-                p   = {iBegin, groups};
-            template for (const Pattern auto& fn : tplArgs) {
-                Match
-                    mCur    = fn(hFile, p.CurrentPos(), groups, usr_val);
-                if (mCur)
-                    return mCur;
-                else
-                    p.RestoreStream(hFile, groups);
-            }
+                p       = {iBegin, groups};
 
-            return Match(p.CurrentPos(), 0uz, false);
+            return [hFile, &groups, &usr_val]
+            (this const auto& self, const auto& tpl, __impl::StreamPos& p) -> Match {
+                if constexpr (tpl.count() != 0) {
+                    Match
+                        mCur    = tpl.head(hFile, p.CurrentPos(), groups, usr_val);
+                    if (!mCur) {
+                        p.RestoreStream(hFile, groups);
+                        mCur    = self(tpl.tail, p);
+                    }
+
+                    return mCur;
+                }
+                else
+                    return Match(p.CurrentPos(), 0uz, false);
+            } (tpl, p);
         };
     }
 
