@@ -69,81 +69,30 @@ namespace imp {
         };
     }
 
-    namespace __impl {
-        template<typename... Args>
-        struct tuple {
-            static constexpr size_t
-            count() noexcept {
-                return sizeof...(Args);
-            }
-        };
-
-        template<typename Head, typename... Tail>
-        struct tuple<Head, Tail...> {
-            static constexpr size_t
-            count() noexcept {
-                return sizeof...(Tail) + 1;
-            }
-
-            tuple() = default;
-
-            template<typename _Head, typename... _Tail>
-            tuple(_Head&& head, _Tail&&... tail) :
-                head{std::forward<_Head>(head)},
-                tail{std::forward<_Tail>(tail)...} {}
-
-            [[no_unique_address]]
-            std::decay_t<Head>
-                head;
-            [[no_unique_address]]
-            tuple<Tail...>
-                tail;
-        };
-    }
-
     inline constexpr Pattern auto
-    Join(const Pattern auto&... args) {
-        return [tpl = __impl::tuple<decltype(args)...>{args...}]
+    operator>>(const Pattern auto& lhs, const Pattern auto& rhs) {
+        return [lhs, rhs]
         (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
-            return [hFile, &groups, &usr_val]
-            (this const auto& self, const auto& tpl, intptr_t iBegin) -> Match {
-                if constexpr (tpl.count() != 0) {
-                    Match
-                        mCur    = tpl.head(hFile, iBegin, groups, usr_val);
-                    if (mCur) {
-                        mCur    += self(tpl.tail, mCur.End());
-                    }
-
-                    return mCur;
-                }
-                else
-                    return Match(iBegin, 0uz, true);
-            } (tpl, iBegin);
+            Match
+                mLhs    = lhs(hFile, iBegin, groups, usr_val);
+            if (!mLhs)
+                return mLhs;
+            return mLhs + rhs(hFile, mLhs.End(), groups, usr_val);
         };
     }
 
     inline constexpr Pattern auto
-    Choice(const Pattern auto&... args) {
-        return [tpl = __impl::tuple<decltype(args)...>{args...}]
+    operator|(const Pattern auto& lhs, const Pattern auto& rhs) {
+        return [lhs, rhs]
         (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             __impl::StreamPos
-                p       = {iBegin, groups};
-
-            return [hFile, &groups, &usr_val]
-            (this const auto& self, const auto& tpl, __impl::StreamPos& p) -> Match {
-                if constexpr (tpl.count() != 0) {
-                    Match
-                        mCur    = tpl.head(hFile, p.CurrentPos(), groups, usr_val);
-                    if (!mCur) {
-                        p.RestoreStream(hFile, groups);
-                        mCur    = self(tpl.tail, p);
-                    }
-
-                    return mCur;
-                }
-                else
-                    return Match(p.CurrentPos(), 0uz, false);
-            } (tpl, p);
+                p       = { iBegin, groups };
+            Match
+                mLhs    = lhs(hFile, p.CurrentPos(), groups, usr_val);
+            if (mLhs)
+                return mLhs;
+            p.RestoreStream(hFile, groups);
+            return rhs(hFile, p.CurrentPos(), groups, usr_val);
         };
     }
 
@@ -342,7 +291,7 @@ namespace imp {
         std::same_as<std::invoke_result_t<Fn, FILE*, const Match&, CapturesView, const std::any&>, Match>;
 
     inline Pattern auto
-    Handle(const Pattern auto& fn, const Handler auto& handler) {
+    operator/(const Pattern auto& fn, const Handler auto& handler) {
         return [fn, handler] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
                 mCur    = fn(hFile, iBegin, groups, usr_val);
