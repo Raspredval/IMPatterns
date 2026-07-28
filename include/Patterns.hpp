@@ -71,28 +71,28 @@ namespace imp {
 
     inline constexpr Pattern auto
     operator>>(const Pattern auto& lhs, const Pattern auto& rhs) {
-        return [lhs, rhs]
+        return [tpl = std::make_tuple(lhs, rhs)]
         (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
-                mLhs    = lhs(hFile, iBegin, groups, usr_val);
+                mLhs    = std::get<0>(tpl)(hFile, iBegin, groups, usr_val);
             if (!mLhs)
                 return mLhs;
-            return mLhs + rhs(hFile, mLhs.End(), groups, usr_val);
+            return mLhs + std::get<1>(tpl)(hFile, mLhs.End(), groups, usr_val);
         };
     }
 
     inline constexpr Pattern auto
     operator|(const Pattern auto& lhs, const Pattern auto& rhs) {
-        return [lhs, rhs]
+        return [tpl = std::make_tuple(lhs, rhs)]
         (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             __impl::StreamPos
                 p       = { iBegin, groups };
             Match
-                mLhs    = lhs(hFile, p.CurrentPos(), groups, usr_val);
+                mLhs    = std::get<0>(tpl)(hFile, p.CurrentPos(), groups, usr_val);
             if (mLhs)
                 return mLhs;
             p.RestoreStream(hFile, groups);
-            return rhs(hFile, p.CurrentPos(), groups, usr_val);
+            return std::get<1>(tpl)(hFile, p.CurrentPos(), groups, usr_val);
         };
     }
 
@@ -292,13 +292,13 @@ namespace imp {
 
     inline Pattern auto
     operator/(const Pattern auto& fn, const Handler auto& handler) {
-        return [fn, handler] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
+        return [tpl = std::make_tuple(fn, handler)] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
-                mCur    = fn(hFile, iBegin, groups, usr_val);
+                mCur    = std::get<0>(tpl)(hFile, iBegin, groups, usr_val);
             CapturesView
                 spnCapt = (groups.empty())
                     ? CapturesView{} : CapturesView{groups.back()};
-            mCur        = handler(hFile, mCur, spnCapt, usr_val);
+            mCur        = std::get<1>(tpl)(hFile, mCur, spnCapt, usr_val);
             return mCur;
         };
     }
@@ -316,14 +316,14 @@ namespace imp {
 
     inline Pattern auto
     CaptGr(const Pattern auto& fn, const Handler auto& handler) {
-        return [fn, handler] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
+        return [tpl = std::make_tuple(fn, handler)] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
             groups.emplace_back();
             Match
-                mCur    = fn(hFile, iBegin, groups, usr_val);
+                mCur    = std::get<0>(tpl)(hFile, iBegin, groups, usr_val);
             CapturesView
                 spnCapt = (groups.empty())
                     ? CapturesView{} : CapturesView{groups.back()};
-            mCur        = handler(hFile, mCur, spnCapt, usr_val);
+            mCur        = std::get<1>(tpl)(hFile, mCur, spnCapt, usr_val);
             groups.pop_back();
             return mCur;
         };
