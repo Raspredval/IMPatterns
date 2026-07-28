@@ -217,7 +217,7 @@ namespace imp {
         return __impl::AnyOrNone<false>();
     }
 
-    template<size_t n>
+    template<size_t n> requires (n > 0)
     inline constexpr Pattern auto
     UpTo(const Pattern auto& fn) {
         return [fn] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
@@ -269,7 +269,7 @@ namespace imp {
         };
     }
 
-    template<size_t n>
+    template<size_t n> requires (n > 0)
     inline Pattern auto
     Exactly(const Pattern auto& fn) {
         return [fn] (FILE* hFile, intptr_t iBegin, CapturesList& groups, const std::any& usr_val) -> Match {
