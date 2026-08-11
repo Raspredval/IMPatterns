@@ -79,7 +79,10 @@ namespace imp {
 
             static inline bool
             unmap_file(std::span<const char> spnFileView) noexcept {
-                return UnmapViewOfFile((LPCVOID)spnFileView.data());
+                if (spnFileView.data())
+                    return UnmapViewOfFile((LPCVOID)spnFileView.data());
+                else
+                    return false;
             }
         };
         #else
@@ -125,7 +128,10 @@ namespace imp {
 
             static inline bool
             unmap_file(std::span<const char> spnFileView) noexcept {
-                return !munmap((void*)spnFileView.data(), spnFileView.size());
+                if (spnFileView.data())
+                    return !munmap((void*)spnFileView.data(), spnFileView.size());
+                else
+                    return false;
             }
         };
         #endif
