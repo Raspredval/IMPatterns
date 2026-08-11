@@ -1,0 +1,55 @@
+#include <span>
+#include <cstdint>
+#include <optional>
+
+namespace imp {
+    class MemStream {
+    public:
+        MemStream(std::span<const char> spnData) :
+            spnData(spnData), iPos(0)
+        {
+            if (spnData.data() == nullptr)
+                this->iPos  = -1;
+        }
+
+        inline bool
+        Bad() const noexcept {
+            return this->iPos < 0;
+        }
+
+        inline
+        operator bool() const noexcept {
+            return !this->Bad();
+        }
+
+        inline std::optional<char>
+        Read() noexcept {
+            if (this->iPos < 0 || (size_t)this->iPos == this->spnData.size())
+                return std::nullopt;
+            return this->spnData[(size_t)this->iPos++];
+        }
+
+        inline void
+        SetPos(intptr_t iNewPos) noexcept {
+            this->iPos  = std::max<intptr_t>(
+                            0, std::min<intptr_t>(
+                                (intptr_t)this->StreamSize(), iNewPos));
+        }
+
+        inline intptr_t
+        GetPos() const noexcept {
+            return this->iPos;
+        }
+
+        inline size_t
+        StreamSize() const noexcept {
+            return this->spnData.size();
+        }
+
+    private:
+        std::span<const char>
+            spnData;
+        intptr_t
+            iPos;
+    };
+}
