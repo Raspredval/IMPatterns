@@ -70,6 +70,16 @@ namespace imp {
             return this->spnData;
         }
 
+        inline bool
+        Bad() const noexcept {
+            return this->spnData.data() == nullptr;
+        }
+
+        inline
+        operator bool() const noexcept {
+            return !this->Bad();
+        }
+
     private:
         std::span<const char>
             spnData;
