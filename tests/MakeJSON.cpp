@@ -43,7 +43,7 @@ int main() {
 
     srand(time(nullptr));
     fprintf(uptrJSON.get(), "{\n\t\"scores\": [\n");
-    for (size_t i = 0; i != 5'000'000; ++i) {
+    for (size_t i = 0; i != 4'000'000'000; ++i) {
         fprintf(uptrJSON.get(), "\t\t{ \"%s %s\": %d },\n",
             lpPrefixes[rand() % 8], lpPostfixes[rand() % 8], rand() % 100 + 1);
     }
