@@ -20,6 +20,37 @@ namespace imp {
         struct mmap_windows {
             static inline std::span<const char>
             map_file(std::string_view strvFilename) noexcept {
+                HANDLE
+                    hFile   = CreateFileA(
+                                    strvFilename.data(),
+                                    GENERIC_READ,
+                                    0, nullptr,
+                                    OPEN_EXISTING, 0);
+                return map_file_handle(hFile);
+            }
+
+            static inline std::span<const char>
+            map_file(std::wstring_view strvFilename) noexcept {
+                HANDLE
+                    hFile   = CreateFileW(
+                                    strvFilename.data(),
+                                    GENERIC_READ,
+                                    0, nullptr,
+                                    OPEN_EXISTING, 0);
+                return map_file_handle(hFile);
+            }
+
+            static inline bool
+            unmap_file(std::span<const char> spnFileView) noexcept {
+                if (spnFileView.data())
+                    return UnmapViewOfFile((LPCVOID)spnFileView.data());
+                else
+                    return false;
+            }
+
+        private:
+            static inline std::span<const char>
+            map_file_handle(HANDLE hFile) noexcept {
                 void*
                     lpFileView  = nullptr;
                 uint64_t
@@ -29,15 +60,8 @@ namespace imp {
                 std::span<const char>
                     spnResult   = {};
                 HANDLE
-                    hFile       = INVALID_HANDLE_VALUE;
-                HANDLE
                     hFileMap    = NULL;
 
-                hFile           = CreateFileA(
-                                    strvFilename.data(),
-                                    GENERIC_READ,
-                                    0, nullptr,
-                                    OPEN_EXISTING, 0);
                 if (hFile == INVALID_HANDLE_VALUE)
                     goto finally;
 
@@ -69,20 +93,12 @@ namespace imp {
                 }
 
             finally:
-                if (hFile != INVALID_HANDLE_VALUE)
-                    CloseHandle(hFile);
                 if (hFileMap != NULL)
                     CloseHandle(hFileMap);
+                if (hFile != INVALID_HANDLE_VALUE)
+                    CloseHandle(hFile);
 
                 return spnResult;
-            }
-
-            static inline bool
-            unmap_file(std::span<const char> spnFileView) noexcept {
-                if (spnFileView.data())
-                    return UnmapViewOfFile((LPCVOID)spnFileView.data());
-                else
-                    return false;
             }
         };
         #else
