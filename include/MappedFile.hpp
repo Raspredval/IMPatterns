@@ -168,7 +168,7 @@ namespace imp {
             }
 
             inline std::span<const char>
-            Range() const noexcept {
+            GetView() const noexcept {
                 return this->spnData;
             }
 
