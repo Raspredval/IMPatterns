@@ -130,7 +130,7 @@ int main() {
     }
 
     imp::MemStream
-        stream      = mmfileJSON.Range();
+        stream      = mmfileJSON.GetView();
     return (bool)imp::Eval(imp::Fn<grammJSON::eval>(), stream)
         ? EXIT_SUCCESS : EXIT_FAILURE;
 }
