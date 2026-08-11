@@ -33,7 +33,7 @@ namespace imp {
         SetPos(intptr_t iNewPos) noexcept {
             this->iPos  = std::max<intptr_t>(
                             0, std::min<intptr_t>(
-                                (intptr_t)this->StreamSize(), iNewPos));
+                                (intptr_t)this->StreamData().size(), iNewPos));
         }
 
         inline intptr_t
@@ -41,9 +41,9 @@ namespace imp {
             return this->iPos;
         }
 
-        inline size_t
-        StreamSize() const noexcept {
-            return this->spnData.size();
+        inline std::span<const char>
+        StreamData() const noexcept {
+            return this->spnData;
         }
 
     private:
