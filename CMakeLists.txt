@@ -19,6 +19,8 @@ set(CPACK_INSTALL_PREFIX "/usr/local/")
 
 set(LIBRARY_HEADERS
     "${CMAKE_SOURCE_DIR}/include/FixedString.hpp"
+    "${CMAKE_SOURCE_DIR}/include/MappedFile.hpp"
+    "${CMAKE_SOURCE_DIR}/include/MemStream.hpp"
     "${CMAKE_SOURCE_DIR}/include/Patterns.hpp"
     "${CMAKE_SOURCE_DIR}/include/Match.hpp")
 add_library(IMPatterns
