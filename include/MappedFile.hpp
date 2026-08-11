@@ -15,6 +15,8 @@
 namespace imp {
     namespace __impl {
         #ifdef _WIN32
+        // !!! NOT TESTED, NOT SURE IF IT EVEN COMPILES !!!
+        // TODO: test in actual windows environment
         struct mmap_windows {
             static inline std::span<const char>
             map_file(std::string_view strvFilename) noexcept {
