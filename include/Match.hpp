@@ -2,10 +2,11 @@
 static_assert(__cplusplus >= 202207L, "requires C++23 minimum version");
 
 #include <cmath>
-#include <cstdio>
 #include <cstdint>
-#include <memory>
-#include <string>
+#include <string_view>
+
+#include "MemStream.hpp"
+
 
 namespace imp {
     class Match {
@@ -62,44 +63,14 @@ namespace imp {
             return this->Good();
         }
 
-        template<size_t temp_buff_size = BUFSIZ>
-        void
-        ExportTo(FILE* hFrom, FILE* hTo) const {
-            auto
-                uptrBuff    = std::make_unique<char[]>(temp_buff_size);
-            intptr_t
-                iCur        = ftell(hFrom);
-            fseek(hFrom, this->iBegin, SEEK_SET);
-
-            size_t
-                uTotal      = this->uLength;
-            while (uTotal != 0) {
-                uTotal      -=  fwrite(uptrBuff.get(), 1,
-                                    fread(uptrBuff.get(), 1,
-                                        std::min(uTotal, temp_buff_size),
-                                        hFrom), hTo);
-                if (ferror(hFrom) || ferror(hTo) || feof(hFrom))
-                    break;
-            }
-
-            fseek(hFrom, iCur, SEEK_SET);
-        }
-
-        std::string
-        GetString(FILE* hFrom) const {
-            intptr_t
-                iCur    = ftell(hFrom);
-            std::string
-                strResult;
-            strResult.resize(this->uLength);
-
-            fseek(hFrom, this->iBegin, SEEK_SET);
-            strResult.resize(
-                fread(strResult.data(), 1,
-                    this->uLength, hFrom));
-            fseek(hFrom, iCur, SEEK_SET);
-
-            return strResult;
+        std::string_view
+        GetStringView(MemStream& stream) const noexcept {
+            std::span<const char>
+                spnData = stream.StreamData();
+            return {
+                spnData.data() + this->iBegin,
+                this->uLength
+            };
         }
 
     private:
