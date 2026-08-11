@@ -2,6 +2,8 @@
 #include <memory>
 #include <Patterns.hpp>
 
+#include "MappedFile.hpp"
+
 namespace grammJSON {
     IMP_DECL_PATTERN(static spacing);
     IMP_DECL_PATTERN(static object);
@@ -100,9 +102,9 @@ namespace grammJSON {
         (imp::Fn<spacing>() >> imp::UpTo<1>(
             imp::Fn<value>() >> imp::Fn<spacing>()
         ) >> imp::None()) /
-        [] (FILE* hFile, const imp::Match& m, imp::CapturesView, const std::any&) -> imp::Match {
+        [] (imp::MemStream& stream, const imp::Match& m, imp::CapturesView, const std::any&) -> imp::Match {
             if (!m)
-                fprintf(stderr, "failed to parse JSON at %zi\n", ftell(hFile));
+                fprintf(stderr, "failed to parse JSON at %zi\n", stream.GetPos());
             else
                 printf("success\n");
             return m;
@@ -117,16 +119,18 @@ int main() {
     static constexpr std::string_view
         strvFile    = "./assets/test.json";
 
-    CFile
-        uptrFile    = CFile(fopen(strvFile.data(), "rb"));
+    imp::MappedFile
+        mmfileJSON  = {strvFile};
 
-    if (!uptrFile) {
+    if (!mmfileJSON) {
         fprintf(stderr, "failed to open file: %s\n",
             strvFile.data());
 
         return EXIT_FAILURE;
     }
 
-    return (bool)imp::Eval(imp::Fn<grammJSON::eval>(), uptrFile.get())
+    imp::MemStream
+        stream      = mmfileJSON.Range();
+    return (bool)imp::Eval(imp::Fn<grammJSON::eval>(), stream)
         ? EXIT_SUCCESS : EXIT_FAILURE;
 }
