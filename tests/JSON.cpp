@@ -123,6 +123,7 @@ int main() {
     if (!uptrFile) {
         fprintf(stderr, "failed to open file: %s\n",
             strvFile.data());
+
         return EXIT_FAILURE;
     }
 
