@@ -12,8 +12,8 @@ static_assert(__cplusplus >= 202207L, "requires C++23 minimum version");
 #include "MemStream.hpp"
 #include "FixedString.hpp"
 
-#define IMP_DECL_PATTERN(name) imp::Match name (imp::MemStream& s, imp::CapturesList& g, const std::any& u)
-#define IMP_MAKE_PATTERN(name, fn) IMP_DECL_PATTERN(name) { return (fn)(s, g, u); }
+#define IMP_DECL_RULE(name) imp::Match name (imp::MemStream& s, imp::CapturesList& g, const std::any& u)
+#define IMP_MAKE_RULE(name, fn) IMP_DECL_RULE(name) { return (fn)(s, g, u); }
 
 namespace imp {
     using Captures =
@@ -363,13 +363,13 @@ namespace imp {
         };
     }
 
-    using UserPattern =
+    using Rule =
         Match(*)(MemStream&, CapturesList&, const std::any&);
 
-    using UserHandler =
+    using CHandler =
         Match(*)(MemStream&, const Match&, CapturesView, const std::any&);
 
-    template<UserPattern fn>
+    template<Rule fn>
     inline Pattern auto
     Fn() {
         return []
@@ -378,7 +378,7 @@ namespace imp {
         };
     }
 
-    template<UserHandler fn>
+    template<CHandler fn>
     inline Handler auto
     Fn() {
         return []
