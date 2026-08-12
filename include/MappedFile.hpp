@@ -15,8 +15,6 @@
 namespace imp {
     namespace __impl {
         #ifdef _WIN32
-        // !!! NOT TESTED, NOT SURE IF IT EVEN COMPILES !!!
-        // TODO: test in actual windows environment
         struct mmap_windows {
             static inline std::span<const char>
             map_file(std::string_view strvFilename) noexcept {
@@ -25,7 +23,8 @@ namespace imp {
                                     strvFilename.data(),
                                     GENERIC_READ,
                                     0, nullptr,
-                                    OPEN_EXISTING, 0);
+                                    OPEN_EXISTING,
+                                    0, nullptr);
                 return map_file_handle(hFile);
             }
 
@@ -36,7 +35,8 @@ namespace imp {
                                     strvFilename.data(),
                                     GENERIC_READ,
                                     0, nullptr,
-                                    OPEN_EXISTING, 0);
+                                    OPEN_EXISTING,
+                                    0, nullptr);
                 return map_file_handle(hFile);
             }
 
@@ -87,10 +87,10 @@ namespace imp {
                 if (lpFileView == NULL)
                     goto finally;
 
-                spnFileInfo = {
+                spnResult = {
                     (const char*)lpFileView,
-                    file_info.
-                }
+                    uFileSize
+                };
 
             finally:
                 if (hFileMap != NULL)
