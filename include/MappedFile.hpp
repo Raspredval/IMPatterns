@@ -51,6 +51,8 @@ namespace imp {
         private:
             static inline std::span<const char>
             map_file_handle(HANDLE hFile) noexcept {
+                HANDLE
+                    hFileMap    = nullptr;
                 void*
                     lpFileView  = nullptr;
                 uint64_t
@@ -59,8 +61,6 @@ namespace imp {
                     file_info   = {};
                 std::span<const char>
                     spnResult   = {};
-                HANDLE
-                    hFileMap    = NULL;
 
                 if (hFile == INVALID_HANDLE_VALUE)
                     goto finally;
@@ -73,8 +73,8 @@ namespace imp {
                 hFileMap    = CreateFileMappingA(
                                 hFile, nullptr,
                                 PAGE_READONLY,
-                                (uint32_t)(uFileSize >> 32),
-                                (uint32_t)uFileSize,
+                                (DWORD)(uFileSize >> 32),
+                                (DWORD)(uFileSize),
                                 nullptr);
                 if (hFileMap == NULL)
                     goto finally;
@@ -83,7 +83,7 @@ namespace imp {
                                 hFileMap,
                                 FILE_MAP_READ,
                                 0, 0,
-                                uFileSize);
+                                (SIZE_T)uFileSize);
                 if (lpFileView == NULL)
                     goto finally;
 
@@ -114,9 +114,7 @@ namespace imp {
                 std::span<const char>
                     spnResult   = {};
                 int
-                    hFile       = -1;
-
-                hFile           = open(strvFilename.data(), O_RDONLY);
+                    hFile       = open(strvFilename.data(), O_RDONLY);
                 if (hFile < 0)
                     goto finally;
 
