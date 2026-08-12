@@ -363,13 +363,13 @@ namespace imp {
         };
     }
 
-    using Rule =
+    using CRule =
         Match(*)(MemStream&, CapturesList&, const std::any&);
 
     using CHandler =
         Match(*)(MemStream&, const Match&, CapturesView, const std::any&);
 
-    template<Rule fn>
+    template<CRule fn>
     inline Pattern auto
     Fn() {
         return []
