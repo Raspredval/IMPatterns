@@ -5,25 +5,25 @@
 #include "MappedFile.hpp"
 
 namespace grammJSON {
-    IMP_DECL_PATTERN(static spacing);
-    IMP_DECL_PATTERN(static object);
-    IMP_DECL_PATTERN(static array);
-    IMP_DECL_PATTERN(static field);
-    IMP_DECL_PATTERN(static value);
-    IMP_DECL_PATTERN(static boolean);
-    IMP_DECL_PATTERN(static null);
-    IMP_DECL_PATTERN(static string);
-    IMP_DECL_PATTERN(static strfill);
-    IMP_DECL_PATTERN(static escseq);
-    IMP_DECL_PATTERN(static number);
-    IMP_DECL_PATTERN(static numint);
-    IMP_DECL_PATTERN(static numfract);
+    IMP_DECL_RULE(static spacing);
+    IMP_DECL_RULE(static object);
+    IMP_DECL_RULE(static array);
+    IMP_DECL_RULE(static field);
+    IMP_DECL_RULE(static value);
+    IMP_DECL_RULE(static boolean);
+    IMP_DECL_RULE(static null);
+    IMP_DECL_RULE(static string);
+    IMP_DECL_RULE(static strfill);
+    IMP_DECL_RULE(static escseq);
+    IMP_DECL_RULE(static number);
+    IMP_DECL_RULE(static numint);
+    IMP_DECL_RULE(static numfract);
 
-    IMP_MAKE_PATTERN(spacing,
+    IMP_MAKE_RULE(spacing,
         imp::AtLeast<0>(imp::SpaceOrNewLine())
     )
 
-    IMP_MAKE_PATTERN(object,
+    IMP_MAKE_RULE(object,
         imp::Str<"{">() >> imp::Fn<spacing>() >>
         imp::UpTo<1>(
             imp::Fn<field>() >> imp::Fn<spacing>() >>
@@ -34,7 +34,7 @@ namespace grammJSON {
         ) >> imp::Str<"}">()
     )
 
-    IMP_MAKE_PATTERN(array,
+    IMP_MAKE_RULE(array,
         imp::Str<"[">() >> imp::Fn<spacing>() >>
         imp::UpTo<1>(
             imp::Fn<value>() >> imp::Fn<spacing>() >>
@@ -45,60 +45,60 @@ namespace grammJSON {
         ) >> imp::Str<"]">()
     )
 
-    IMP_MAKE_PATTERN(field,
+    IMP_MAKE_RULE(field,
         imp::Fn<string>() >> imp::Fn<spacing>() >>
         imp::Str<":">() >> imp::Fn<spacing>() >>
         imp::Fn<value>()
     )
 
-    IMP_MAKE_PATTERN(value,
+    IMP_MAKE_RULE(value,
         imp::Fn<object>()  | imp::Fn<array>()  |
         imp::Fn<string>()  | imp::Fn<number>() |
         imp::Fn<boolean>() | imp::Fn<null>()
     )
 
-    IMP_MAKE_PATTERN(boolean,
+    IMP_MAKE_RULE(boolean,
         imp::Str<"true">() | imp::Str<"false">()
     )
 
-    IMP_MAKE_PATTERN(null,
+    IMP_MAKE_RULE(null,
         imp::Str<"null">()
     )
 
-    IMP_MAKE_PATTERN(string,
+    IMP_MAKE_RULE(string,
         imp::Str<"\"">() >> imp::Fn<strfill>() >>
         imp::AtLeast<0>(
             imp::Fn<escseq>() >> imp::Fn<strfill>()
         ) >> imp::Str<"\"">()
     )
 
-    IMP_MAKE_PATTERN(strfill,
+    IMP_MAKE_RULE(strfill,
         imp::AtLeast<0>(imp::NegSet<"\"\\">())
     )
 
-    IMP_MAKE_PATTERN(escseq,
+    IMP_MAKE_RULE(escseq,
         imp::Str<"\\">() >> (
             imp::Set<"/\"\\bfnrt">() |
             imp::Set<"uU">() >> imp::Exactly<4>(imp::HexDigit())
         )
     )
 
-    IMP_MAKE_PATTERN(number,
+    IMP_MAKE_RULE(number,
         imp::Fn<numint>() >> imp::UpTo<1>(imp::Fn<numfract>())
     )
 
-    IMP_MAKE_PATTERN(numint,
+    IMP_MAKE_RULE(numint,
         imp::UpTo<1>(imp::Set<"+-">()) >> imp::AtLeast<1>(imp::Digit())
     )
 
-    IMP_MAKE_PATTERN(numfract,
+    IMP_MAKE_RULE(numfract,
         imp::Str<".">() >> imp::AtLeast<1>(imp::Digit()) >>
         imp::UpTo<1>(
             imp::Set<"eE">() >> imp::Fn<numint>()
         )
     )
 
-    IMP_MAKE_PATTERN(eval,
+    IMP_MAKE_RULE(eval,
         (imp::Fn<spacing>() >> imp::UpTo<1>(
             imp::Fn<value>() >> imp::Fn<spacing>()
         ) >> imp::None()) /
