@@ -48,7 +48,7 @@ set_target_properties(IMPatterns_Static
         OUTPUT_NAME         "impatterns"
         OUTPUT_NAME_DEBUG   "impatterns-debug")
 
-if (WIN32)
+if (NOT WIN32)
 install(
     FILES       ${LIBRARY_HEADERS}
     DESTINATION "include/IMPatterns"
