@@ -1,152 +1,27 @@
 #pragma once
 #include <span>
-#include <cstdint>
 #include <string_view>
-
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#endif
 
 namespace imp {
     namespace __impl {
         #ifdef _WIN32
         struct mmap_windows {
-            static inline std::span<const char>
-            map_file(std::string_view strvFilename) noexcept {
-                HANDLE
-                    hFile   = CreateFileA(
-                                    strvFilename.data(),
-                                    GENERIC_READ,
-                                    0, nullptr,
-                                    OPEN_EXISTING,
-                                    0, nullptr);
-                return map_file_handle(hFile);
-            }
+            static std::span<const char>
+            map_file(std::string_view strvFilename) noexcept;
 
-            static inline std::span<const char>
-            map_file(std::wstring_view strvFilename) noexcept {
-                HANDLE
-                    hFile   = CreateFileW(
-                                    strvFilename.data(),
-                                    GENERIC_READ,
-                                    0, nullptr,
-                                    OPEN_EXISTING,
-                                    0, nullptr);
-                return map_file_handle(hFile);
-            }
+            static std::span<const char>
+            map_file(std::wstring_view strvFilename) noexcept;
 
-            static inline bool
-            unmap_file(std::span<const char> spnFileView) noexcept {
-                if (spnFileView.data())
-                    return UnmapViewOfFile((LPCVOID)spnFileView.data());
-                else
-                    return false;
-            }
-
-        private:
-            static inline std::span<const char>
-            map_file_handle(HANDLE hFile) noexcept {
-                HANDLE
-                    hFileMap    = nullptr;
-                void*
-                    lpFileView  = nullptr;
-                uint64_t
-                    uFileSize   = 0;
-                BY_HANDLE_FILE_INFORMATION
-                    file_info   = {};
-                std::span<const char>
-                    spnResult   = {};
-
-                if (hFile == INVALID_HANDLE_VALUE)
-                    goto finally;
-
-                if (!GetFileInformationByHandle(hFile, &file_info))
-                    goto finally;
-                uFileSize   = (uint64_t)file_info.nFileSizeLow |
-                                (uint64_t)file_info.nFileSizeHigh << 32;
-
-                hFileMap    = CreateFileMappingA(
-                                hFile, nullptr,
-                                PAGE_READONLY,
-                                (DWORD)(uFileSize >> 32),
-                                (DWORD)(uFileSize),
-                                nullptr);
-                if (hFileMap == NULL)
-                    goto finally;
-
-                lpFileView  = MapViewOfFile(
-                                hFileMap,
-                                FILE_MAP_READ,
-                                0, 0,
-                                (SIZE_T)uFileSize);
-                if (lpFileView == NULL)
-                    goto finally;
-
-                spnResult = {
-                    (const char*)lpFileView,
-                    uFileSize
-                };
-
-            finally:
-                if (hFileMap != NULL)
-                    CloseHandle(hFileMap);
-                if (hFile != INVALID_HANDLE_VALUE)
-                    CloseHandle(hFile);
-
-                return spnResult;
-            }
+            static bool
+            unmap_file(std::span<const char> spnFileView) noexcept;
         };
         #else
         struct mmap_posix {
-            static inline std::span<const char>
-            map_file(std::string_view strvFilename) noexcept {
-                void*
-                    lpFileView  = nullptr;
-                uint64_t
-                    uFileSize   = 0;
-                struct stat
-                    file_info   = {};
-                std::span<const char>
-                    spnResult   = {};
-                int
-                    hFile       = open(strvFilename.data(), O_RDONLY);
-                if (hFile < 0)
-                    goto finally;
+            static std::span<const char>
+            map_file(std::string_view strvFilename) noexcept;
 
-                if (fstat(hFile, &file_info) < 0)
-                    goto finally;
-                uFileSize       = (size_t)file_info.st_size;
-
-                lpFileView      = mmap(
-                                    NULL, uFileSize,
-                                    PROT_READ, MAP_PRIVATE,
-                                    hFile, 0);
-                if (lpFileView == MAP_FAILED)
-                    goto finally;
-
-                spnResult       = {
-                    (const char*)lpFileView, uFileSize
-                };
-
-            finally:
-                if (hFile > 0)
-                    close(hFile);
-
-                return spnResult;
-            }
-
-            static inline bool
-            unmap_file(std::span<const char> spnFileView) noexcept {
-                if (spnFileView.data())
-                    return !munmap((void*)spnFileView.data(), spnFileView.size());
-                else
-                    return false;
-            }
+            static bool
+            unmap_file(std::span<const char> spnFileView) noexcept;
         };
         #endif
 
@@ -157,6 +32,13 @@ namespace imp {
             MappedFile(std::string_view strvFilename) noexcept {
                 this->spnData   = impl::map_file(strvFilename);
             }
+
+            #ifdef _WIN32
+            inline
+            MappedFile(std::wstring_view strvFilename) noexcept {
+                this->spnData   = impl::map_file(strvFilename);
+            }
+            #endif
 
             inline
             ~MappedFile() noexcept {

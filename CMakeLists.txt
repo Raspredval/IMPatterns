@@ -10,6 +10,49 @@ set(ASSETS_DIR  "${CMAKE_SOURCE_DIR}/assets")
 set(ASSETS_LINK "${CMAKE_BINARY_DIR}/assets")
 file (CREATE_LINK ${ASSETS_DIR} ${ASSETS_LINK} SYMBOLIC)
 
+set(CXX_WARNINGS "-Wall" "-Wextra" "-Wconversion" "-Werror")
+
+set(LIBRARY_SOURCES
+    "${CMAKE_SOURCE_DIR}/source/mmap_windows.cpp"
+    "${CMAKE_SOURCE_DIR}/source/mmap_posix.cpp")
+set(LIBRARY_HEADERS
+    "${CMAKE_SOURCE_DIR}/include/FixedString.hpp"
+    "${CMAKE_SOURCE_DIR}/include/MappedFile.hpp"
+    "${CMAKE_SOURCE_DIR}/include/MemStream.hpp"
+    "${CMAKE_SOURCE_DIR}/include/Patterns.hpp"
+    "${CMAKE_SOURCE_DIR}/include/Match.hpp")
+
+add_library(IMPatterns_Shared
+    SHARED  ${LIBRARY_SOURCES})
+target_compile_options(IMPatterns_Shared
+    PRIVATE ${CXX_WARNINGS})
+target_include_directories(IMPatterns_Shared
+    PRIVATE "include/")
+set_target_properties(IMPatterns_Shared
+    PROPERTIES
+        OUTPUT_NAME         "impatterns"
+        OUTPUT_NAME_DEBUG   "impatterns-debug")
+
+add_library(IMPatterns_Static
+    STATIC  ${LIBRARY_SOURCES})
+target_compile_options(IMPatterns_Static
+    PRIVATE ${CXX_WARNINGS})
+target_include_directories(IMPatterns_Static
+    PRIVATE "include/")
+set_target_properties(IMPatterns_Static
+    PROPERTIES
+        OUTPUT_NAME         "impatterns"
+        OUTPUT_NAME_DEBUG   "impatterns-debug")
+
+install(
+    FILES       ${LIBRARY_HEADERS}
+    DESTINATION "include/IMPatterns"
+    COMPONENT   imp-headers)
+install(
+    TARGETS     IMPatterns_Shared IMPatterns_Static
+    DESTINATION "lib/"
+    COMPONENT   imp-binaries)
+
 include(CPack)
 
 set(CPACK_PACKAGE_NAME "IMPatterns")
@@ -17,22 +60,10 @@ set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 set(CPACK_PACKAGE_DESCTIPTION_SUMMARY "an immediate mode text-pattern recognition library, heavily influenced by LPeg, reworked from classy-patterns")
 set(CPACK_INSTALL_PREFIX "/usr/local/")
 
-set(LIBRARY_HEADERS
-    "${CMAKE_SOURCE_DIR}/include/FixedString.hpp"
-    "${CMAKE_SOURCE_DIR}/include/MappedFile.hpp"
-    "${CMAKE_SOURCE_DIR}/include/MemStream.hpp"
-    "${CMAKE_SOURCE_DIR}/include/Patterns.hpp"
-    "${CMAKE_SOURCE_DIR}/include/Match.hpp")
-add_library(IMPatterns
-    INTERFACE ${LIBRARY_HEADERS})
-install(
-    FILES       ${LIBRARY_HEADERS}
-    DESTINATION "include/IMPatterns"
-    COMPONENT   imp-headers)
 cpack_add_component(imp-headers
     DISPLAY "Header files")
-
-set(CXX_WARNINGS "-Wall" "-Wextra" "-Wconversion" "-Werror")
+cpack_add_component(imp-binaries
+    DISPLAY "Binary files")
 
 add_executable(tests
     "tests/JSON.cpp")
@@ -42,6 +73,8 @@ target_compile_options(tests
     PRIVATE ${CXX_WARNINGS})
 target_compile_options(tests
     PRIVATE $<$<CONFIG:Release>:-march=native>)
+target_link_libraries(tests
+    IMPatterns_Shared)
 
 add_executable(make_json
     "tests/MakeJSON.cpp")
