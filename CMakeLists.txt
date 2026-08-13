@@ -10,7 +10,11 @@ set(ASSETS_DIR  "${CMAKE_SOURCE_DIR}/assets")
 set(ASSETS_LINK "${CMAKE_BINARY_DIR}/assets")
 file (CREATE_LINK ${ASSETS_DIR} ${ASSETS_LINK} SYMBOLIC)
 
-set(CXX_WARNINGS "-Wall" "-Wextra" "-Wconversion" "-Werror")
+if (MSVC)
+    set(CXX_WARNINGS "/W4 /WX /WL")
+else()
+    set(CXX_WARNINGS "-Wall" "-Wextra" "-Wconversion" "-Werror")
+endif()
 
 set(LIBRARY_SOURCES
     "${CMAKE_SOURCE_DIR}/source/mmap_windows.cpp"
@@ -44,6 +48,7 @@ set_target_properties(IMPatterns_Static
         OUTPUT_NAME         "impatterns"
         OUTPUT_NAME_DEBUG   "impatterns-debug")
 
+if (WIN32)
 install(
     FILES       ${LIBRARY_HEADERS}
     DESTINATION "include/IMPatterns"
@@ -64,6 +69,7 @@ cpack_add_component(imp-headers
     DISPLAY "Header files")
 cpack_add_component(imp-binaries
     DISPLAY "Binary files")
+endif()
 
 add_executable(tests
     "tests/JSON.cpp")
