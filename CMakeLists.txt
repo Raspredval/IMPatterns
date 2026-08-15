@@ -77,8 +77,6 @@ target_include_directories(tests
     PRIVATE "include/")
 target_compile_options(tests
     PRIVATE ${CXX_WARNINGS})
-target_compile_options(tests
-    PRIVATE $<$<CONFIG:Release>:-march=native>)
 target_link_libraries(tests
     IMPatterns_Shared)
 
@@ -88,5 +86,3 @@ target_include_directories(tests
     PRIVATE "include/")
 target_compile_options(tests
     PRIVATE ${CXX_WARNINGS})
-target_compile_options(tests
-    PRIVATE $<$<CONFIG:Release>:-march=native>)
