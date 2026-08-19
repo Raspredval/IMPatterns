@@ -28,11 +28,17 @@ namespace imp {
         template<typename impl>
         class MappedFile {
         public:
-            template<typename char_t>
             inline
-            MappedFile(std::basic_string_view<char_t> strvFilename) noexcept {
+            MappedFile(std::string_view strvFilename) noexcept {
                 this->spnData   = impl::map_file(strvFilename);
             }
+
+            #ifdef _WIN32
+            inline
+            MappedFile(std::wstring_view strvFilename) noexcept {
+                this->spnData   = impl::map_file(strvFilename);
+            }
+            #endif
 
             inline
             ~MappedFile() noexcept {
