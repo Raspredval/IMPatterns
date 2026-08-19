@@ -282,7 +282,7 @@ namespace imp {
     template<typename Fn>
     concept Handler =
         std::is_class_v<Fn> &&
-        std::same_as<std::invoke_result_t<Fn, MemStream&, const Match&, CapturesView, const std::any&>, Match>;
+        std::same_as<std::invoke_result_t<const Fn, MemStream&, const Match&, CapturesView, const std::any&>, Match>;
 
     inline Pattern auto
     operator/(const Pattern auto& fn, const Handler auto& handler) {
