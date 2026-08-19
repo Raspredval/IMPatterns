@@ -82,38 +82,44 @@ namespace imp {
         };
     }
 
-    namespace __impl {
-        template<FixedString strSet, bool bSet>
-        inline constexpr Pattern auto
-        SetOrNegSet() {
-            return []
-            (MemStream& stream, CapturesList&, const std::any&) -> Match {
-                intptr_t
-                    iBegin  = stream.GetPos();
-                auto optc   = stream.Read();
-                if (!optc)
-                    return Match(iBegin, 0uz, false);
-
-                Match
-                    mCur    = Match(iBegin, 1uz, bSet);
-                if (!strSet.contains(*optc))
-                    mCur.ToggleGood();
-
-                return mCur;
-            };
-        }
-    }
-
     template<FixedString strSet>
     inline constexpr Pattern auto
     Set() {
-        return __impl::SetOrNegSet<strSet, true>();
+        return []
+        (MemStream& stream, CapturesList&, const std::any&) -> Match {
+            intptr_t
+                iBegin  = stream.GetPos();
+            auto optc   = stream.Read();
+            if (!optc)
+                return Match(iBegin, 0uz, false);
+
+            Match
+                mCur    = Match(iBegin, 1uz, true);
+            if (!strSet.contains(*optc))
+                mCur.ToggleGood();
+
+            return mCur;
+        };
     }
 
     template<FixedString strSet>
     inline constexpr Pattern auto
     NegSet() {
-        return __impl::SetOrNegSet<strSet, false>();
+        return []
+        (MemStream& stream, CapturesList&, const std::any&) -> Match {
+            intptr_t
+                iBegin  = stream.GetPos();
+            auto optc   = stream.Read();
+            if (!optc)
+                return Match(iBegin, 0uz, false);
+
+            Match
+                mCur    = Match(iBegin, 1uz, false);
+            if (!strSet.contains(*optc))
+                mCur.ToggleGood();
+
+            return mCur;
+        };
     }
 
     namespace __impl {
