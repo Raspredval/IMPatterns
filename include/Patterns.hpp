@@ -333,7 +333,9 @@ namespace imp {
             Match
                 mCur    = fn(hFile, groups, usr_val);
             if (mCur) {
-                groups.at(groups.size() - 1)
+                if (groups.empty())
+                    groups.emplace_back();
+                groups[groups.size() - 1]
                     .push_back(mCur);
             }
 
