@@ -26,24 +26,13 @@ set(LIBRARY_HEADERS
     "${CMAKE_SOURCE_DIR}/include/Patterns.hpp"
     "${CMAKE_SOURCE_DIR}/include/Match.hpp")
 
-add_library(IMPatterns_Shared
-    SHARED  ${LIBRARY_SOURCES})
-target_compile_options(IMPatterns_Shared
-    PRIVATE ${CXX_WARNINGS})
-target_include_directories(IMPatterns_Shared
-    PRIVATE "include/")
-set_target_properties(IMPatterns_Shared
-    PROPERTIES
-        OUTPUT_NAME         "impatterns"
-        OUTPUT_NAME_DEBUG   "impatterns-debug")
-
-add_library(IMPatterns_Static
+add_library(IMPatterns
     STATIC  ${LIBRARY_SOURCES})
-target_compile_options(IMPatterns_Static
+target_compile_options(IMPatterns
     PRIVATE ${CXX_WARNINGS})
-target_include_directories(IMPatterns_Static
+target_include_directories(IMPatterns
     PRIVATE "include/")
-set_target_properties(IMPatterns_Static
+set_target_properties(IMPatterns
     PROPERTIES
         OUTPUT_NAME         "impatterns"
         OUTPUT_NAME_DEBUG   "impatterns-debug")
@@ -54,7 +43,7 @@ install(
     DESTINATION "include/IMPatterns"
     COMPONENT   imp-headers)
 install(
-    TARGETS     IMPatterns_Shared IMPatterns_Static
+    TARGETS     IMPatterns
     DESTINATION "lib/"
     COMPONENT   imp-binaries)
 
@@ -78,7 +67,7 @@ target_include_directories(tests
 target_compile_options(tests
     PRIVATE ${CXX_WARNINGS})
 target_link_libraries(tests
-    IMPatterns_Shared)
+    IMPatterns)
 
 add_executable(make_json
     "tests/MakeJSON.cpp")
