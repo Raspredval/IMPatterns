@@ -3,6 +3,7 @@
 /.vscode
 /.vscode/*
 /assets/*
+!/assets/.gitkeep
 /build
 /build/*
 /compile_commands.json
