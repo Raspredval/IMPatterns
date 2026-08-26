@@ -6,7 +6,7 @@ namespace imp::__impl {
     static std::span<const char>
     map_file_handle(HANDLE hFile) noexcept;
 
-    extern std::span<const char>
+    std::span<const char>
     mmap_windows::map_file(std::string_view strvFilename) noexcept {
         HANDLE
             hFile   = CreateFileA(
@@ -18,7 +18,7 @@ namespace imp::__impl {
         return map_file_handle(hFile);
     }
 
-    extern std::span<const char>
+    std::span<const char>
     mmap_windows::map_file(std::wstring_view strvFilename) noexcept {
         HANDLE
             hFile   = CreateFileW(
@@ -30,7 +30,7 @@ namespace imp::__impl {
         return map_file_handle(hFile);
     }
 
-    extern bool
+    bool
     mmap_windows::unmap_file(std::span<const char> spnFileView) noexcept {
         if (spnFileView.data())
             return UnmapViewOfFile((LPCVOID)spnFileView.data());
