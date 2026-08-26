@@ -11,9 +11,9 @@ set(ASSETS_LINK "${CMAKE_BINARY_DIR}/assets")
 file (CREATE_LINK ${ASSETS_DIR} ${ASSETS_LINK} SYMBOLIC)
 
 if (MSVC)
-    set(CXX_WARNINGS "/W4 /WX /WL")
+    set(CXX_EXTRA_FLAGS "/W4" "/WX" "/Zc:__cplusplus" "/wd4324")
 else()
-    set(CXX_WARNINGS "-Wall" "-Wextra" "-Wconversion" "-Werror")
+    set(CXX_EXTRA_FLAGS "-Wall" "-Wextra" "-Wconversion" "-Werror")
 endif()
 
 set(LIBRARY_SOURCES
@@ -29,7 +29,7 @@ set(LIBRARY_HEADERS
 add_library(IMPatterns
     STATIC  ${LIBRARY_SOURCES})
 target_compile_options(IMPatterns
-    PRIVATE ${CXX_WARNINGS})
+    PRIVATE ${CXX_EXTRA_FLAGS})
 target_include_directories(IMPatterns
     PRIVATE "include/")
 set_target_properties(IMPatterns
@@ -65,7 +65,7 @@ add_executable(tests
 target_include_directories(tests
     PRIVATE "include/")
 target_compile_options(tests
-    PRIVATE ${CXX_WARNINGS})
+    PRIVATE ${CXX_EXTRA_FLAGS})
 target_link_libraries(tests
     IMPatterns)
 
@@ -74,4 +74,4 @@ add_executable(make_json
 target_include_directories(tests
     PRIVATE "include/")
 target_compile_options(tests
-    PRIVATE ${CXX_WARNINGS})
+    PRIVATE ${CXX_EXTRA_FLAGS})
