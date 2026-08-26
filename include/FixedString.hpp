@@ -6,7 +6,7 @@ static_assert(__cplusplus >= 202207L, "requires C++23 minimum version");
 namespace imp {
     template<size_t n>
         requires (n != 0)
-    struct alignas(64) FixedString {
+    struct alignas(32) FixedString {
         constexpr FixedString(const char (&szData)[n]) {
             std::ranges::copy(szData, this->lpcData);
         }
