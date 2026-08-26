@@ -10,7 +10,7 @@ constexpr const char*
 
 int main() {
     CFile
-        uptrJSON    = CFile{fopen64("./assets/test.json", "w")};
+        uptrJSON    = CFile{fopen("./assets/test.json", "w")};
     if (!uptrJSON) {
         fprintf(stderr, "failed to open %s\n", szFilename);
         return EXIT_FAILURE;
