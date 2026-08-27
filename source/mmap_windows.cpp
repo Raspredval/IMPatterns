@@ -1,6 +1,9 @@
 #ifdef _WIN32
 #include "MappedFile.hpp"
+
 #include <windows.h>
+#include <memory>
+
 
 namespace imp::__impl {
     static std::span<const char>
