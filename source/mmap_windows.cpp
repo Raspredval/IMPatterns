@@ -77,7 +77,7 @@ namespace imp::__impl {
             goto finally;
 
         spnResult = {
-            (const char*)lpFileView,
+            std::start_lifetime_as<const char>(lpFileView),
             uFileSize
         };
 
