@@ -12,7 +12,7 @@ file (CREATE_LINK ${ASSETS_DIR} ${ASSETS_LINK} SYMBOLIC)
 
 if (MSVC)
     message(WARNING "MSVC produced executable is much slower than clangs for some reason, try fiddling with compiler flags")
-    set(CXX_EXTRA_FLAGS "/W4" "/WX" "/Zc:__cplusplus" "/wd4324")
+    set(CXX_EXTRA_FLAGS "/W4" "/WX" "/Zc:__cplusplus")
 else()
     set(CXX_EXTRA_FLAGS "-Wall" "-Wextra" "-Wconversion" "-Werror")
 endif()
