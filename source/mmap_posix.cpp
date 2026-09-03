@@ -5,7 +5,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-#include <memory>
 
 
 namespace imp::__impl {
@@ -36,8 +35,7 @@ namespace imp::__impl {
             goto finally;
 
         spnResult       = {
-            std::start_lifetime_as_array<char>(
-                lpFileView, uFileSize), uFileSize
+            static_cast<const char*>(lpFileView), uFileSize
         };
 
     finally:

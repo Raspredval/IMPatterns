@@ -1,9 +1,6 @@
 #ifdef _WIN32
 #include "MappedFile.hpp"
-
 #include <windows.h>
-#include <memory>
-
 
 namespace imp::__impl {
     static std::span<const char>
@@ -80,8 +77,7 @@ namespace imp::__impl {
             goto finally;
 
         spnResult = {
-            std::start_lifetime_as_array<char>(
-                lpFileView, uFileSize), uFileSize
+            static_cast<const char*>(lpFileView), uFileSize
         };
 
     finally:
