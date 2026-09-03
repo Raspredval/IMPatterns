@@ -1,5 +1,5 @@
 #pragma once
-static_assert(__cplusplus >= 202207L, "requires C++23 minimum version");
+static_assert(__cplusplus >= 202002L, "requires C++23 minimum version");
 
 #include <span>
 #include <string_view>
