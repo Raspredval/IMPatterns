@@ -4,6 +4,7 @@ static_assert(__cplusplus >= 202002L, "requires C++23 minimum version");
 #include <span>
 #include <cstdint>
 #include <optional>
+#include <algorithm>
 
 namespace imp {
     class MemStream {
@@ -34,9 +35,8 @@ namespace imp {
 
         inline void
         SetPos(intptr_t iNewPos) noexcept {
-            this->iPos  = std::max<intptr_t>(
-                            0, std::min<intptr_t>(
-                                (intptr_t)this->StreamData().size(), iNewPos));
+            this->iPos  = std::clamp<intptr_t>(iNewPos,
+                            0, (intptr_t)this->StreamData().size());
         }
 
         inline intptr_t
