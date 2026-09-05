@@ -8,6 +8,7 @@ static_assert(__cplusplus >= 202002L, "requires C++23 minimum version");
 #include <concepts>
 
 #include "Match.hpp"
+#include "CharSet.hpp"
 #include "MemStream.hpp"
 #include "FixedString.hpp"
 
@@ -82,7 +83,7 @@ namespace imp {
         };
     }
 
-    template<FixedString strSet>
+    template<CharSet chset>
     inline constexpr Pattern auto
     Set() {
         return []
@@ -95,14 +96,14 @@ namespace imp {
 
             Match
                 mCur    = Match(iBegin, 1uz, true);
-            if (!strSet.contains(*optc))
+            if (!chset.contains(*optc))
                 mCur.ToggleGood();
 
             return mCur;
         };
     }
 
-    template<FixedString strSet>
+    template<CharSet chset>
     inline constexpr Pattern auto
     NegSet() {
         return []
@@ -115,7 +116,7 @@ namespace imp {
 
             Match
                 mCur    = Match(iBegin, 1uz, false);
-            if (!strSet.contains(*optc))
+            if (!chset.contains(*optc))
                 mCur.ToggleGood();
 
             return mCur;
