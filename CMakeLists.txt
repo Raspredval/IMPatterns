@@ -10,8 +10,11 @@ set(ASSETS_DIR  "${CMAKE_SOURCE_DIR}/assets")
 set(ASSETS_LINK "${CMAKE_BINARY_DIR}/assets")
 file (CREATE_LINK ${ASSETS_DIR} ${ASSETS_LINK} SYMBOLIC)
 
-if (MSVC)
-    message(WARNING "MSVC produced executable is much slower than clangs for some reason, try fiddling with compiler flags")
+if (MSVC) # msvc or clang-cl
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        message(WARNING "MSVC produced executable is much slower than clangs for some reason, try fiddling with compiler flags")
+    endif()
+
     set(CXX_EXTRA_FLAGS "/W4" "/WX" "/Zc:__cplusplus")
 else()
     set(CXX_EXTRA_FLAGS "-Wall" "-Wextra" "-Wconversion" "-Werror")
