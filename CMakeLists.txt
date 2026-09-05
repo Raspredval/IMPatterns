@@ -11,7 +11,7 @@ set(ASSETS_LINK "${CMAKE_BINARY_DIR}/assets")
 file (CREATE_LINK ${ASSETS_DIR} ${ASSETS_LINK} SYMBOLIC)
 
 if (MSVC) # msvc or clang-cl
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    if (${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
         message(WARNING "MSVC produced executable is much slower than clangs for some reason, try fiddling with compiler flags")
     endif()
 
