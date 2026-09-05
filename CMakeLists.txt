@@ -25,6 +25,7 @@ set(LIBRARY_HEADERS
     "${CMAKE_SOURCE_DIR}/include/MappedFile.hpp"
     "${CMAKE_SOURCE_DIR}/include/MemStream.hpp"
     "${CMAKE_SOURCE_DIR}/include/Patterns.hpp"
+    "${CMAKE_SOURCE_DIR}/include/CharSet.hpp"
     "${CMAKE_SOURCE_DIR}/include/Match.hpp")
 
 add_library(IMPatterns
