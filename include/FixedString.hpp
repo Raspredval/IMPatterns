@@ -2,6 +2,7 @@
 static_assert(__cplusplus >= 202002L, "requires C++23 minimum version");
 
 #include <algorithm>
+#include <string_view>
 
 namespace imp {
     template<size_t n>
@@ -44,6 +45,11 @@ namespace imp {
             }
 
             return false;
+        }
+
+        explicit constexpr
+        operator std::string_view() const noexcept {
+            return { this->c_str(), this->size() };
         }
 
         constexpr char
