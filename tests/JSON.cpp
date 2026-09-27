@@ -57,9 +57,9 @@ namespace grammJSON {
         imp::Fn<boolean>() | imp::Fn<null>()
     )
 
-    IMP_MAKE_RULE(boolean,
-        imp::Str<"true">() | imp::Str<"false">()
-    )
+    IMP_MAKE_RULE(boolean, (
+        imp::Dict<"true", "false">()
+    ))
 
     IMP_MAKE_RULE(null,
         imp::Str<"null">()
