@@ -196,8 +196,8 @@ namespace imp {
                 strvPrefix  = strvNode.substr(0, uWhere),
                 strvPostfix = strvNode.substr(uWhere);
             return {
-                NodeData{ strvPrefix,   false       },
-                NodeData{ strvPostfix,  ndt.bIsEnd  }
+                NodeData{ strvPrefix,   false               },
+                NodeData{ strvPostfix,  (bool)ndt.bIsEnd    }
             };
         }
 
