@@ -21,7 +21,7 @@ namespace imp {
 
             NodeData(std::string_view strvData, bool bIsEnd = false) :
                 lpcWord(strvData.data()),
-                uLength(strvData.size()),
+                uLength((strvData.size() << 1) >> 1),
                 bIsEnd(bIsEnd) {}
 
             operator
