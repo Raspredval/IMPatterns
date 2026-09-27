@@ -1,4 +1,6 @@
 #pragma once
+static_assert(__cplusplus >= 202002L, "requires C++23 minimum version");
+
 #include "FixedString.hpp"
 #include <string_view>
 #include <vector>
