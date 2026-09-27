@@ -10,6 +10,7 @@ static_assert(__cplusplus >= 202002L, "requires C++23 minimum version");
 #include "Match.hpp"
 #include "CharSet.hpp"
 #include "MemStream.hpp"
+#include "Dictionary.hpp"
 #include "FixedString.hpp"
 
 #define IMP_DECL_RULE(name) imp::Match name (imp::MemStream& s, imp::CapturesList& g, const std::any& u)
@@ -120,6 +121,33 @@ namespace imp {
                 mCur.ToggleGood();
 
             return mCur;
+        };
+    }
+
+    template<FixedString... args>
+    inline constexpr Pattern auto
+    Dict() {
+        static const Dictionary
+            dict = { args... };
+        return []
+        (MemStream& stream, CapturesList&, const std::any&) -> Match {
+            intptr_t
+                iBegin  = stream.GetPos(),
+                iEnd    = iBegin;
+            Dictionary::DictMatch
+                dm      = dict.StartMatch();
+            std::optional<char>
+                optc    = {};
+            while ((bool)(optc = stream.Read())) {
+                dm      = dict.NextMatch(dm, *optc);
+                if (!dm)
+                    break;
+                if (dm.AtSegmentEnd() && dm.IsEndSegment())
+                    iEnd    = stream.GetPos();
+            }
+
+            stream.SetPos(iEnd);
+            return Match{ iBegin, iEnd, iBegin != iEnd };
         };
     }
 
