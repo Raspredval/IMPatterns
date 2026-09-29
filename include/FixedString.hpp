@@ -17,11 +17,6 @@ namespace imp {
             return n - 1;
         }
 
-        static constexpr bool
-        empty() noexcept {
-            return FixedString::size() == 0;
-        }
-
         constexpr const char*
         c_str() const noexcept {
             return this->lpcData;
