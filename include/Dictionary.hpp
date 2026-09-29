@@ -3,6 +3,7 @@ static_assert(__cplusplus >= 202002L, "requires C++23 minimum version");
 
 #include "FixedString.hpp"
 #include <string_view>
+#include <cassert>
 #include <vector>
 
 namespace imp {
@@ -22,7 +23,10 @@ namespace imp {
             NodeData(std::string_view strvData, bool bIsEnd = false) :
                 lpcSegment(strvData.data()),
                 uLength((strvData.size() << 1) >> 1),
-                bIsEnd(bIsEnd) {}
+                bIsEnd(bIsEnd)
+            {
+                assert(!strvData.empty() && strvData != nullptr);
+            }
 
             std::pair<NodeData, NodeData>
             split(size_t uWhere) const {
