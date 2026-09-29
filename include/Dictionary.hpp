@@ -24,6 +24,18 @@ namespace imp {
                 uLength((strvData.size() << 1) >> 1),
                 bIsEnd(bIsEnd) {}
 
+            std::pair<NodeData, NodeData>
+            split(size_t uWhere) const {
+                std::string_view
+                    strvNode    = (std::string_view)*this,
+                    strvPrefix  = strvNode.substr(0, uWhere),
+                    strvPostfix = strvNode.substr(uWhere);
+                return {
+                    NodeData{ strvPrefix,   false               },
+                    NodeData{ strvPostfix,  (bool)this->bIsEnd  }
+                };
+            }
+
             operator
             std::string_view() const noexcept {
                 return { this->lpcSegment, this->uLength };
@@ -169,7 +181,7 @@ namespace imp {
                     std::vector<Node>
                         vecCurChlidren  = std::move(refNode.vecChildren);
                     auto [ ndtPrefix, ndtPostfix] =
-                        splitNodeData(refNode.ndtData, uPrefLen);
+                        refNode.ndtData.split(uPrefLen);
                     NodeData
                         ndtInsert       = { strvInsert.substr(uPrefLen), true };
 
@@ -187,18 +199,6 @@ namespace imp {
                 ndtInsert   = { strvInsert, true };
             vecNodes.emplace_back(
                 ndtInsert, std::vector<Node>{});
-        }
-
-        static std::pair<NodeData, NodeData>
-        splitNodeData(const NodeData& ndt, size_t uWhere) {
-            std::string_view
-                strvNode    = (std::string_view)ndt,
-                strvPrefix  = strvNode.substr(0, uWhere),
-                strvPostfix = strvNode.substr(uWhere);
-            return {
-                NodeData{ strvPrefix,   false               },
-                NodeData{ strvPostfix,  (bool)ndt.bIsEnd    }
-            };
         }
 
         std::vector<Node>
