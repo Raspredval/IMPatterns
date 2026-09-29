@@ -12,7 +12,7 @@ namespace imp {
                 N   = sizeof(size_t) * 8 - 1;
 
             const char*
-                lpcWord     = nullptr;
+                lpcSegment  = nullptr;
             size_t
                 uLength : N = 0,
                 bIsEnd  : 1 = false;
@@ -20,13 +20,13 @@ namespace imp {
             NodeData() = default;
 
             NodeData(std::string_view strvData, bool bIsEnd = false) :
-                lpcWord(strvData.data()),
+                lpcSegment(strvData.data()),
                 uLength((strvData.size() << 1) >> 1),
                 bIsEnd(bIsEnd) {}
 
             operator
             std::string_view() const noexcept {
-                return { this->lpcWord, this->uLength };
+                return { this->lpcSegment, this->uLength };
             }
         };
 
@@ -57,7 +57,7 @@ namespace imp {
             }
 
             bool
-            IsEndSegment() const noexcept {
+            IsLeafSegment() const noexcept {
                 if (!this->lpNode)
                     return false;
                 const NodeData&
@@ -107,7 +107,7 @@ namespace imp {
             const NodeData&
                 ndt = m.lpNode->ndtData;
             if (m.uMatchLen < ndt.uLength) {
-                if (ndt.lpcWord[m.uMatchLen] == c) {
+                if (ndt.lpcSegment[m.uMatchLen] == c) {
                     m.uMatchLen++;
                     return m;
                 }
@@ -142,7 +142,7 @@ namespace imp {
             for (const Node& refNode : vecNodes) {
                 const NodeData&
                     ndt = refNode.ndtData;
-                if (ndt.lpcWord[0] == c)
+                if (ndt.lpcSegment[0] == c)
                     return DictMatch(refNode);
             }
 

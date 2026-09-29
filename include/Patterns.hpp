@@ -142,7 +142,7 @@ namespace imp {
                 dm      = dict.NextMatch(dm, *optc);
                 if (!dm)
                     break;
-                if (dm.AtSegmentEnd() && dm.IsEndSegment())
+                if (dm.AtSegmentEnd() && dm.IsLeafSegment())
                     iEnd    = stream.GetPos();
             }
 
