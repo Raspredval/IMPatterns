@@ -233,6 +233,16 @@ namespace imp {
         return __impl::CType<isspace>();
     }
 
+    inline constexpr Pattern auto
+    Uppercase() {
+        return __impl::CType<isupper>();
+    }
+
+    inline constexpr Pattern auto
+    Lowercase() {
+        return __impl::CType<islower>();
+    }
+
     namespace __impl {
         template<bool bAny>
         inline constexpr Pattern auto
