@@ -25,7 +25,7 @@ namespace imp {
                 uLength((strvData.size() << 1) >> 1),
                 bIsEnd(bIsEnd)
             {
-                assert(!strvData.empty() && strvData != nullptr);
+                assert(!strvData.empty() && strvData.data() != nullptr);
             }
 
             std::pair<NodeData, NodeData>
