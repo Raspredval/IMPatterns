@@ -98,7 +98,7 @@ namespace imp {
             Match
                 mCur    = Match(iBegin, 1uz, true);
             if (!chset.contains(*optc))
-                mCur.ToggleGood();
+                mCur.Toggle();
 
             return mCur;
         };
@@ -118,7 +118,7 @@ namespace imp {
             Match
                 mCur    = Match(iBegin, 1uz, false);
             if (!chset.contains(*optc))
-                mCur.ToggleGood();
+                mCur.Toggle();
 
             return mCur;
         };
@@ -175,7 +175,7 @@ namespace imp {
                 Match
                     mCur    = Match(iBegin, 1uz);
                 if (!fnCheck(*optc))
-                    mCur.ToggleGood();
+                    mCur.Toggle();
 
                 return mCur;
             };
@@ -425,7 +425,7 @@ namespace imp {
         (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
                 mCur    = fn(stream, groups, usr_val);
-            mCur.ToggleGood();
+            mCur.Toggle();
             return mCur;
         };
     }

@@ -45,8 +45,15 @@ namespace imp {
         }
 
         void
-        ToggleGood() noexcept {
+        Toggle() noexcept {
             this->bGood = !this->bGood;
+        }
+
+        Match
+        Inverse() const noexcept {
+            Match m = *this;
+            m.Toggle();
+            return m;
         }
 
         friend Match
