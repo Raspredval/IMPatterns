@@ -238,12 +238,12 @@ namespace imp {
     }
 
     inline constexpr Pattern auto
-    Any() {
+    Anything() {
         return __impl::AnyOrNone<true>();
     }
 
     inline constexpr Pattern auto
-    None() {
+    Nothing() {
         return __impl::AnyOrNone<false>();
     }
 
@@ -324,13 +324,28 @@ namespace imp {
         };
     }
 
+    inline Pattern auto
+    Opt(const Pattern auto& fn) {
+        return UpTo<1>(fn);
+    }
+
+    inline Pattern auto
+    Any(const Pattern auto& fn) {
+        return AtLeast<0>(fn);
+    }
+
+    inline Pattern auto
+    Some(const Pattern auto& fn) {
+        return AtLeast<1>(fn);
+    }
+
     template<typename Fn>
     concept Handler =
         std::is_class_v<Fn> &&
         std::same_as<std::invoke_result_t<const Fn, MemStream&, const Match&, CapturesView, const std::any&>, Match>;
 
     inline Pattern auto
-    operator/(const Pattern auto& fn, const Handler auto& handler) {
+    operator/=(const Pattern auto& fn, const Handler auto& handler) {
         return [tpl = std::make_tuple(fn, handler)]
         (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
