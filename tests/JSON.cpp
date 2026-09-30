@@ -72,7 +72,8 @@ namespace grammJSON {
     IMP_MAKE_RULE(escseq,
         imp::Str<"\\">() >> (
             imp::Set<"/\"\\bfnrt">() |
-            imp::Set<"uU">() >> imp::Exactly<4>(imp::HexDigit())
+            imp::Str<"u">() >> imp::Exactly<4>(imp::HexDigit()) |
+            imp::Str<"U">() >> imp::Exactly<8>(imp::HexDigit())
         )
     )
 
