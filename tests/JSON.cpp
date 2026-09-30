@@ -13,21 +13,18 @@ namespace grammJSON {
     IMP_DECL_RULE(static boolean);
     IMP_DECL_RULE(static null);
     IMP_DECL_RULE(static string);
-    IMP_DECL_RULE(static strfill);
     IMP_DECL_RULE(static escseq);
     IMP_DECL_RULE(static number);
-    IMP_DECL_RULE(static numint);
-    IMP_DECL_RULE(static numfract);
 
     IMP_MAKE_RULE(spacing,
-        imp::AtLeast<0>(imp::SpaceOrNewLine())
+        imp::Any(imp::SpaceOrNewLine())
     )
 
     IMP_MAKE_RULE(object,
         imp::Str<"{">() >> imp::Fn<spacing>() >>
-        imp::UpTo<1>(
+        imp::Opt(
             imp::Fn<field>() >> imp::Fn<spacing>() >>
-            imp::AtLeast<0>(
+            imp::Any(
                 imp::Str<",">() >> imp::Fn<spacing>() >>
                 imp::Fn<field>() >> imp::Fn<spacing>()
             )
@@ -36,9 +33,9 @@ namespace grammJSON {
 
     IMP_MAKE_RULE(array,
         imp::Str<"[">() >> imp::Fn<spacing>() >>
-        imp::UpTo<1>(
+        imp::Opt(
             imp::Fn<value>() >> imp::Fn<spacing>() >>
-            imp::AtLeast<0>(
+            imp::Any(
                 imp::Str<",">() >> imp::Fn<spacing>() >>
                 imp::Fn<value>() >> imp::Fn<spacing>()
             )
@@ -66,14 +63,10 @@ namespace grammJSON {
     )
 
     IMP_MAKE_RULE(string,
-        imp::Str<"\"">() >> imp::Fn<strfill>() >>
-        imp::AtLeast<0>(
-            imp::Fn<escseq>() >> imp::Fn<strfill>()
+        imp::Str<"\"">() >>
+        imp::Any(imp::NegSet<"\"\\">()) >> imp::Any(
+            imp::Fn<escseq>() >> imp::Any(imp::NegSet<"\"\\">())
         ) >> imp::Str<"\"">()
-    )
-
-    IMP_MAKE_RULE(strfill,
-        imp::AtLeast<0>(imp::NegSet<"\"\\">())
     )
 
     IMP_MAKE_RULE(escseq,
@@ -84,24 +77,20 @@ namespace grammJSON {
     )
 
     IMP_MAKE_RULE(number,
-        imp::Fn<numint>() >> imp::UpTo<1>(imp::Fn<numfract>())
-    )
-
-    IMP_MAKE_RULE(numint,
-        imp::UpTo<1>(imp::Set<"+-">()) >> imp::AtLeast<1>(imp::Digit())
-    )
-
-    IMP_MAKE_RULE(numfract,
-        imp::Str<".">() >> imp::AtLeast<1>(imp::Digit()) >>
-        imp::UpTo<1>(
-            imp::Set<"eE">() >> imp::Fn<numint>()
+        imp::Opt(imp::Set<"+-">()) >> imp::Some(imp::Digit()) >>
+        imp::Opt(
+            imp::Str<".">() >> imp::Some(imp::Digit()) >>
+            imp::Opt(
+                imp::Set<"eE">() >>
+                imp::Opt(imp::Set<"+-">()) >> imp::Some(imp::Digit())
+            )
         )
     )
 
     IMP_MAKE_RULE(eval,
-        (imp::Fn<spacing>() >> imp::UpTo<1>(
+        imp::Fn<spacing>() >> imp::Opt(
             imp::Fn<value>() >> imp::Fn<spacing>()
-        ) >> imp::None()) /
+        ) >> imp::Nothing() /=
         [] (imp::MemStream& stream, const imp::Match& m, imp::CapturesView, const std::any&) -> imp::Match {
             if (!m)
                 fprintf(stderr, "failed to parse JSON at %zi\n", stream.GetPos());
