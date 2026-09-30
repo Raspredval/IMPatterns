@@ -140,41 +140,20 @@ namespace imp {
                 optc    = {};
             while ((bool)(optc = stream.Read())) {
                 dm      = dict.NextMatch(dm, *optc);
-                if (!dm)
-                    break;
+                if (!dm) {
+                    if (iBegin == iEnd) {
+                        iEnd = stream.GetPos();
+                        return Match{ iBegin, iEnd, false };
+                    }
+                    else
+                        break;
+                }
                 if (dm.AtSegmentEnd() && dm.IsLeafSegment())
-                    iEnd    = stream.GetPos();
+                    iEnd = stream.GetPos();
             }
 
             stream.SetPos(iEnd);
             return Match{ iBegin, iEnd, iBegin != iEnd };
-        };
-    }
-
-    template<FixedString... args>
-    inline constexpr Pattern auto
-    NegDict() {
-        static const Dictionary
-            dict = { args... };
-        return []
-        (MemStream& stream, CapturesList&, const std::any&) -> Match {
-            intptr_t
-                iBegin  = stream.GetPos(),
-                iEnd    = iBegin;
-            Dictionary::DictMatch
-                dm      = dict.StartMatch();
-            std::optional<char>
-                optc    = {};
-            while ((bool)(optc = stream.Read())) {
-                dm      = dict.NextMatch(dm, *optc);
-                if (!dm)
-                    break;
-                if (dm.AtSegmentEnd() && dm.IsLeafSegment())
-                    iEnd    = stream.GetPos();
-            }
-
-            stream.SetPos(iEnd);
-            return Match{ iBegin, iEnd, iBegin == iEnd };
         };
     }
 
