@@ -65,8 +65,7 @@ namespace imp {
 
             bool
             AtSegmentEnd() const noexcept {
-                if (!this->lpNode)
-                    return false;
+                assert(this->lpNode);
                 const NodeData&
                     ndt = this->lpNode->ndtData;
                 return ndt.uLength == this->uMatchLen;
@@ -74,11 +73,18 @@ namespace imp {
 
             bool
             IsLeafSegment() const noexcept {
-                if (!this->lpNode)
-                    return false;
+                assert(this->lpNode);
                 const NodeData&
                     ndt = this->lpNode->ndtData;
                 return (bool)ndt.bIsEnd;
+            }
+
+            bool
+            AtLeafSegmentEnd() const noexcept {
+                assert(this->lpNode);
+                const NodeData&
+                    ndt = this->lpNode->ndtData;
+                return (bool)ndt.bIsEnd && (ndt.uLength == this->uMatchLen);
             }
 
             size_t

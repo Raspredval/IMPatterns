@@ -148,7 +148,7 @@ namespace imp {
                     else
                         break;
                 }
-                if (dm.AtSegmentEnd() && dm.IsLeafSegment())
+                if (dm.AtLeafSegmentEnd())
                     iEnd = stream.GetPos();
             }
 
