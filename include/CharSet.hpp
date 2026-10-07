@@ -7,9 +7,9 @@ namespace imp {
         template<size_t n>
             requires (n > 1)
         constexpr CharSet(const char (&lpcSet)[n]) noexcept {
-            for (char c : lpcSet)
-                this->insert(c);
-            this->remove('\0');
+            for (size_t i = 0; i != (n - 1); ++i) {
+                this->insert(lpcSet[i]);
+            }
         }
 
         constexpr void
