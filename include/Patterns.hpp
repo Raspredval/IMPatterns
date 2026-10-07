@@ -125,6 +125,7 @@ namespace imp {
     }
 
     template<FixedString... args>
+        requires (sizeof...(args) != 0)
     inline constexpr Pattern auto
     Dict() {
         static const Dictionary
