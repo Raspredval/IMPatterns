@@ -5,9 +5,11 @@
 namespace imp {
     struct CharSet {
         template<size_t n>
+            requires (n > 1)
         constexpr CharSet(const char (&lpcSet)[n]) noexcept {
             for (char c : lpcSet)
                 this->insert(c);
+            this->remove('\0');
         }
 
         constexpr void
