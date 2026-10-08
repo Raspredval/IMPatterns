@@ -374,14 +374,14 @@ namespace imp {
     inline Pattern auto
     CaptGr(const Pattern auto& fn, const Handler auto& handler) {
         return [tpl = std::make_tuple(fn, handler)]
-        (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+        (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
             groups.emplace_back();
             Match
-                mCur    = std::get<0>(tpl)(hFile, groups, usr_val);
+                mCur    = std::get<0>(tpl)(stream, groups, usr_val);
             CapturesView
                 spnCapt = (groups.empty())
                     ? CapturesView{} : CapturesView{groups.back()};
-            mCur        = std::get<1>(tpl)(hFile, mCur, spnCapt, usr_val);
+            mCur        = std::get<1>(tpl)(stream, mCur, spnCapt, usr_val);
             groups.pop_back();
             return mCur;
         };
@@ -390,9 +390,9 @@ namespace imp {
     inline Pattern auto
     Capt(const Pattern auto& fn) {
         return [fn]
-        (FILE* hFile, CapturesList& groups, const std::any& usr_val) -> Match {
+        (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
             Match
-                mCur    = fn(hFile, groups, usr_val);
+                mCur    = fn(stream, groups, usr_val);
             if (mCur) {
                 if (groups.empty())
                     groups.emplace_back();
