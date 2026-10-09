@@ -2,13 +2,12 @@
 static_assert(__cplusplus >= 202002L, "requires C++23 minimum version");
 
 #include <any>
-#include <span>
-#include <vector>
 #include <cctype>
 #include <concepts>
 
 #include "Match.hpp"
 #include "CharSet.hpp"
+#include "Capture.hpp"
 #include "MemStream.hpp"
 #include "Dictionary.hpp"
 #include "FixedString.hpp"
@@ -17,13 +16,6 @@ static_assert(__cplusplus >= 202002L, "requires C++23 minimum version");
 #define IMP_MAKE_RULE(name, fn) IMP_DECL_RULE(name) { return (fn)(s, g, u); }
 
 namespace imp {
-    using Captures =
-        std::vector<Match>;
-    using CapturesList =
-        std::vector<Captures>;
-    using CapturesView =
-        std::span<const Match>;
-
     template<typename Fn>
     concept Pattern =
         std::is_class_v<Fn> &&
@@ -387,6 +379,7 @@ namespace imp {
         };
     }
 
+    template<intptr_t iUserValue = 0>
     inline Pattern auto
     Capt(const Pattern auto& fn) {
         return [fn]
@@ -397,7 +390,7 @@ namespace imp {
                 if (groups.empty())
                     groups.emplace_back();
                 groups[groups.size() - 1]
-                    .push_back(mCur);
+                    .push_back({ mCur, iUserValue });
             }
 
             return mCur;
