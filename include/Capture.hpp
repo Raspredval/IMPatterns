@@ -17,30 +17,17 @@ namespace imp {
         imp::Match  m;
         uintptr_t   u;
 
-        inline void
-        setL(uhalfptr_t uLow) noexcept {
-            uintptr_t
-                uVal    = uLow,
-                uMask   = (1UL << uhalfptr_off) - 1;
-            this->u     = (this->u & uMask) | uVal;
+        inline constexpr friend std::pair<uhalfptr_t, uhalfptr_t>
+        to_halfptr(uintptr_t u) noexcept {
+            return {
+                (uhalfptr_t)(u),
+                (uhalfptr_t)(u >> uhalfptr_off)
+            };
         }
 
-        inline void
-        setH(uhalfptr_t uHigh) noexcept {
-            uintptr_t
-                uVal    = uHigh,
-                uMask   = ((1UL << uhalfptr_off) - 1) << uhalfptr_off;
-            this->u     = (this->u & uMask) | (uVal << uhalfptr_off);
-        }
-
-        inline uhalfptr_t
-        getL() const noexcept {
-            return (uhalfptr_t)(this->u);
-        }
-
-        inline uhalfptr_t
-        getH() const noexcept {
-            return (uhalfptr_t)(this->u >> uhalfptr_off);
+        inline constexpr friend uintptr_t
+        from_halfptr(uhalfptr_t h, uhalfptr_t l) noexcept {
+            return ((uintptr_t)l) | ((uintptr_t)h << uhalfptr_off);
         }
     };
 
