@@ -355,7 +355,7 @@ namespace imp {
             if (mCur) {
                 if (groups.empty())
                     groups.emplace_back();
-                groups[groups.size() - 1]
+                groups.back()
                     .push_back({ mCur, uUserValue });
             }
 
@@ -471,7 +471,7 @@ namespace imp {
                     groups.emplace_back();
 
                 assert(uWordID > 0 && uWordID <= sizeof...(args));
-                groups[groups.size() - 1]
+                groups.back()
                     .push_back({ mCur, lpUserData[uWordID - 1] });
 
                 return mCur;
