@@ -2,9 +2,12 @@
 static_assert(__cplusplus >= 202002L, "requires C++23 minimum version");
 
 #include "FixedString.hpp"
+#include "Capture.hpp"
+
 #include <string_view>
 #include <cassert>
 #include <vector>
+
 
 namespace imp {
     class Dictionary {
@@ -14,18 +17,19 @@ namespace imp {
 
             const char*
                 lpcSegment  = nullptr;
-            size_t
-                uLength : N = 0,
-                bIsEnd  : 1 = false;
+            uhalfptr_t
+                uLength     = 0,
+                uWordID     = 0;
 
             NodeData() = default;
 
-            NodeData(std::string_view strvData, bool bIsEnd = false) :
+            NodeData(std::string_view strvData, uhalfptr_t uWordID = 0) :
                 lpcSegment(strvData.data()),
-                uLength((strvData.size() << 1) >> 1),
-                bIsEnd(bIsEnd)
+                uLength((uhalfptr_t)strvData.size()),
+                uWordID(uWordID)
             {
                 assert(!strvData.empty() && strvData.data() != nullptr);
+                assert(!(strvData.size() > uhalfptr_max));
             }
 
             std::pair<NodeData, NodeData>
@@ -35,8 +39,8 @@ namespace imp {
                     strvPrefix  = strvNode.substr(0, uWhere),
                     strvPostfix = strvNode.substr(uWhere);
                 return {
-                    NodeData{ strvPrefix,   false               },
-                    NodeData{ strvPostfix,  (bool)this->bIsEnd  }
+                    NodeData{ strvPrefix,   0               },
+                    NodeData{ strvPostfix,  this->uWordID   }
                 };
             }
 
@@ -76,7 +80,7 @@ namespace imp {
                 assert(this->lpNode);
                 const NodeData&
                     ndt = this->lpNode->ndtData;
-                return (bool)ndt.bIsEnd;
+                return (ndt.uWordID != 0);
             }
 
             bool
@@ -84,7 +88,15 @@ namespace imp {
                 assert(this->lpNode);
                 const NodeData&
                     ndt = this->lpNode->ndtData;
-                return (bool)ndt.bIsEnd && (ndt.uLength == this->uMatchLen);
+                return (ndt.uWordID != 0) && (ndt.uLength == this->uMatchLen);
+            }
+
+            uhalfptr_t
+            WordID() const noexcept {
+                assert(this->lpNode);
+                const NodeData&
+                    ndt = this->lpNode->ndtData;
+                return ndt.uWordID;
             }
 
             size_t
@@ -111,9 +123,11 @@ namespace imp {
 
         template<size_t... n>
         Dictionary(const imp::FixedString<n>&... args) {
-            ([this] (std::string_view strv) {
-                this->Insert(strv);
-            } ((std::string_view)args), ...);
+            uhalfptr_t
+                uWordID = 1;
+            ([this] (std::string_view strvInsert, uhalfptr_t uWordID) {
+                this->insertImpl(this->vecRoot, strvInsert, uWordID);
+            } ((std::string_view)args, uWordID++), ...);
         }
 
         DictMatch
@@ -139,11 +153,6 @@ namespace imp {
             else {
                 return matchChar(m.lpNode->vecChildren, c);
             }
-        }
-
-        void
-        Insert(std::string_view strvInsert) {
-            return insertImpl(this->vecRoot, strvInsert);
         }
 
     private:
@@ -172,7 +181,9 @@ namespace imp {
         }
 
         static void
-        insertImpl(std::vector<Node>& vecNodes, std::string_view strvInsert) {
+        insertImpl(std::vector<Node>& vecNodes, std::string_view strvInsert, uhalfptr_t uWordID) {
+            assert(uWordID != 0);
+
             for (Node& refNode : vecNodes) {
                 std::string_view
                     strvNode    = refNode.ndtData;
@@ -181,9 +192,9 @@ namespace imp {
 
                 if (uPrefLen == strvNode.size()) {
                     if (strvInsert.size() == strvNode.size())
-                        refNode.ndtData.bIsEnd = true;
+                        refNode.ndtData.uWordID = uWordID;
                     else
-                        insertImpl(refNode.vecChildren, strvInsert.substr(uPrefLen));
+                        insertImpl(refNode.vecChildren, strvInsert.substr(uPrefLen), uWordID);
 
                     return;
                 }
@@ -193,7 +204,7 @@ namespace imp {
                     auto [ ndtPrefix, ndtPostfix] =
                         refNode.ndtData.split(uPrefLen);
                     NodeData
-                        ndtInsert       = { strvInsert.substr(uPrefLen), true };
+                        ndtInsert       = { strvInsert.substr(uPrefLen), 0 };
 
                     refNode.ndtData     = ndtPrefix;
                     refNode.vecChildren = std::vector<Node> {
@@ -206,7 +217,7 @@ namespace imp {
             }
 
             NodeData
-                ndtInsert   = { strvInsert, true };
+                ndtInsert   = { strvInsert, uWordID };
             vecNodes.emplace_back(
                 ndtInsert, std::vector<Node>{});
         }
