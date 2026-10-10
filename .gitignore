@@ -4,6 +4,7 @@
 /.vscode/*
 /examples/*/assets/*
 !/examples/*/assets/.gitkeep
+!/examples/expression_parser/assets/test.txt
 /build
 /build/*
 /compile_commands.json
