@@ -1,4 +1,4 @@
-#include <print>
+#include <cstdio>
 #include <memory>
 #include <chrono>
 #include <Patterns.hpp>
@@ -133,7 +133,7 @@ int main() {
     auto
         tmEnd       = std::chrono::high_resolution_clock::now();
 
-    std::print("parsing time: {:.3f}s\n",
+    printf("parsing time: %.3fs\n",
         std::chrono::duration_cast<std::chrono::duration<double>>(
             tmEnd - tmStart
         ).count());

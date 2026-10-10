@@ -6,7 +6,7 @@
 #include <string_view>
 #include <stdexcept>
 #include <format>
-#include <print>
+#include <cstdio>
 
 namespace grammar {
     namespace handler {
@@ -14,46 +14,48 @@ namespace grammar {
         full_expr(imp::MemStream& stream, const imp::Match& m, imp::CapturesView captures, const std::any&){
             if (m) {
                 for (const auto& c : captures) {
-                    auto [uLow, uHigh] = imp::to_halfptr(c.u);
+                    std::string_view
+                        strvCapture     = c.m.GetStringView(stream);
+                    auto [uLow, uHigh]  = imp::to_halfptr(c.u);
 
                     switch ((TokenType)uLow) {
                     break; case TYPE_VALUE: {
                         switch ((ValType)uHigh) {
                         break; case VALTYPE_NUMBER:
-                            std::print("number: ");
+                            printf("number: ");
 
                         break; case VALTYPE_VARIABLE:
-                            std::print("variable: ");
+                            printf("variable: ");
                         }
                     }
 
                     break; case TYPE_BINOP: {
                         OpType
                             uOpID   = (OpType)uHigh;
-                        std::print("opID: 0x{:x}; precedence: {}; left associative: {}\n",
+                        printf("opID: 0x%x; precedence: %u; left associative: %s\n",
                             (unsigned)uOpID,
                             Token::getPrecedence(uOpID),
-                            Token::isLeftAssociable(uOpID));
-                        std::print(" binary operator: ");
+                            Token::isLeftAssociable(uOpID) ? "true" : "false");
+                        printf(" binary operator: ");
                     }
 
                     break; case TYPE_UNOP: {
                         OpType
                             uOpID   = (OpType)uHigh;
-                        std::print("opID: 0x{:x}; precedence: {}; left associative: {}\n",
+                        printf("opID: 0x%x; precedence: %u; left associative: %s\n",
                             (unsigned)uOpID,
                             Token::getPrecedence((OpType)uHigh),
-                            Token::isLeftAssociable((OpType)uHigh));
-                        std::print(" unary operator: ");
+                            Token::isLeftAssociable((OpType)uHigh) ? "true" : "false");
+                        printf(" unary operator: ");
                     }
 
                     break; case TYPE_OPENBRK:
-                        std::print("open bracket: ");
+                        printf("open bracket: ");
 
                     break; case TYPE_CLOSEBRK:
-                        std::print("close bracket: ");
-                    } std::print("'{}'\n", c.m.GetStringView(stream));
-                } std::print("### END OF EXPRESSION ###\n\n");
+                        printf("close bracket: ");
+                    } printf("'%.*s'\n", (int)strvCapture.size(), strvCapture.data());
+                } printf("### END OF EXPRESSION ###\n\n");
             }
 
             return m;
@@ -189,10 +191,10 @@ int main() {
 
         PrecompileFile(strvFilename);
 
-        std::print("success\n");
+        printf("success\n");
     }
     catch (const std::exception& err) {
-        std::print(stderr, "error: {}\n", err.what());
+        fprintf(stderr, "error: %s\n", err.what());
         return -1;
     }
 
