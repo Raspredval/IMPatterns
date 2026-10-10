@@ -27,3 +27,8 @@ target_include_directories(make_json
         "${CMAKE_SOURCE_DIR}/include")
 target_compile_options(make_json
     PRIVATE ${CXX_EXTRA_FLAGS})
+
+if (MSVC) # using 'unsafe' fopen instead of un-portable fopen_s
+    target_compile_definitions(make_json
+        PRIVATE _CRT_SECURE_NO_WARNINGS)
+endif()
