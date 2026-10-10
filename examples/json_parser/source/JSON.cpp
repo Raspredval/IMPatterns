@@ -1,9 +1,10 @@
 #include <cstdio>
 #include <memory>
 #include <chrono>
-#include <Patterns.hpp>
 
-#include "MappedFile.hpp"
+#include <Patterns.hpp>
+#include <MappedFile.hpp>
+
 
 namespace grammJSON {
     IMP_DECL_RULE(static spacing);
