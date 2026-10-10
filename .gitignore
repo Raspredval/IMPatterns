@@ -2,8 +2,8 @@
 /.cache/*
 /.vscode
 /.vscode/*
-/assets/*
-!/assets/.gitkeep
+/examples/*/assets/*
+!/examples/*/assets/.gitkeep
 /build
 /build/*
 /compile_commands.json

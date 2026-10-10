@@ -6,10 +6,6 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(ASSETS_DIR  "${CMAKE_SOURCE_DIR}/assets")
-set(ASSETS_LINK "${CMAKE_BINARY_DIR}/assets")
-file (CREATE_LINK ${ASSETS_DIR} ${ASSETS_LINK} SYMBOLIC)
-
 if (MSVC) # msvc or clang-cl
     if (${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
         message(WARNING "MSVC produced executable is much slower than clangs for some reason, try fiddling with compiler flags")
@@ -67,18 +63,5 @@ cpack_add_component(imp-binaries
     DISPLAY "Binary files")
 endif()
 
-add_executable(tests
-    "tests/JSON.cpp")
-target_include_directories(tests
-    PRIVATE "include/")
-target_compile_options(tests
-    PRIVATE ${CXX_EXTRA_FLAGS})
-target_link_libraries(tests
-    IMPatterns)
-
-add_executable(make_json
-    "tests/MakeJSON.cpp")
-target_include_directories(tests
-    PRIVATE "include/")
-target_compile_options(tests
-    PRIVATE ${CXX_EXTRA_FLAGS})
+add_subdirectory("examples/json_parser/")
+add_subdirectory("examples/expression_parser")

@@ -41,7 +41,7 @@ int main() {
             "vim enjoyer"
         };
 
-    srand(time(nullptr));
+    srand((unsigned)time(nullptr));
     fprintf(uptrJSON.get(), "{\n\t\"scores\": [\n");
     for (size_t i = 0; i != 100'000'000; ++i) {
         fprintf(uptrJSON.get(), "\t\t{ \"%s %s\": %d },\n",

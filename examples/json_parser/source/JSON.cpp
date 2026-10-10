@@ -1,5 +1,6 @@
-#include <cstdio>
+#include <print>
 #include <memory>
+#include <chrono>
 #include <Patterns.hpp>
 
 #include "MappedFile.hpp"
@@ -119,8 +120,24 @@ int main() {
         return EXIT_FAILURE;
     }
 
+    std::atomic_signal_fence(std::memory_order_seq_cst);
+    auto
+        tmStart     = std::chrono::high_resolution_clock::now();
+
     imp::MemStream
         stream      = mmfileJSON.GetView();
-    return (bool)imp::Eval(imp::Fn<grammJSON::eval>(), stream)
+    imp::Match
+        mResult     = imp::Eval(imp::Fn<grammJSON::eval>(), stream);
+
+    std::atomic_signal_fence(std::memory_order_seq_cst);
+    auto
+        tmEnd       = std::chrono::high_resolution_clock::now();
+
+    std::print("parsing time: {:.3f}s\n",
+        std::chrono::duration_cast<std::chrono::duration<double>>(
+            tmEnd - tmStart
+        ).count());
+
+    return (bool)mResult
         ? EXIT_SUCCESS : EXIT_FAILURE;
 }
