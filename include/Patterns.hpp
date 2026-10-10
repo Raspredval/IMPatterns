@@ -379,7 +379,7 @@ namespace imp {
         };
     }
 
-    template<intptr_t iUserValue = 0>
+    template<uintptr_t uUserValue = 0>
     inline Pattern auto
     Capt(const Pattern auto& fn) {
         return [fn]
@@ -390,11 +390,17 @@ namespace imp {
                 if (groups.empty())
                     groups.emplace_back();
                 groups[groups.size() - 1]
-                    .push_back({ mCur, iUserValue });
+                    .push_back({ mCur, uUserValue });
             }
 
             return mCur;
         };
+    }
+
+    template<uhalfptr_t uLow, uhalfptr_t uHigh>
+    inline Pattern auto
+    Capt(const Pattern auto& fn) {
+        return Capt<from_halfptr(uLow, uHigh)>(fn);
     }
 
     inline Pattern auto

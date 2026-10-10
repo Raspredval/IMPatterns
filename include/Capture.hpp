@@ -27,7 +27,7 @@ namespace imp {
     }
 
     inline constexpr uintptr_t
-    from_halfptr(uhalfptr_t h, uhalfptr_t l) noexcept {
+    from_halfptr(uhalfptr_t l, uhalfptr_t h) noexcept {
         return ((uintptr_t)l) | ((uintptr_t)h << uhalfptr_off);
     }
 
