@@ -98,14 +98,8 @@ namespace grammar {
 
     IMP_MAKE_RULE(number, (
         imp::Capt<TYPE_VALUE, VALTYPE_NUMBER>(
-            imp::Opt(imp::Set<"+-">()) >>
             imp::Some(imp::Digit()) >> imp::Opt(
-                imp::Str<".">() >>
-                imp::Some(imp::Digit()) >> imp::Opt(
-                    imp::Set<"eE">() >>
-                    imp::Opt(imp::Set<"+-">()) >>
-                    imp::Some(imp::Digit())
-                )
+                imp::Str<".">() >> imp::Some(imp::Digit())
             )
         )
     ))
