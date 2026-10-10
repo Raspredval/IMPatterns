@@ -91,7 +91,7 @@ namespace grammJSON {
     IMP_MAKE_RULE(eval,
         imp::Fn<spacing>() >> imp::Opt(
             imp::Fn<value>() >> imp::Fn<spacing>()
-        ) >> imp::Nothing() /=
+        ) >> imp::NoChars() /=
         [] (imp::MemStream& stream, const imp::Match& m, imp::CapturesView, const std::any&) -> imp::Match {
             if (!m)
                 fprintf(stderr, "failed to parse JSON at %zi\n", stream.GetPos());

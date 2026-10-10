@@ -197,12 +197,12 @@ namespace imp {
     }
 
     inline constexpr Pattern auto
-    Anything() {
+    AnyChar() {
         return __impl::AnyOrNone<true>();
     }
 
     inline constexpr Pattern auto
-    Nothing() {
+    NoChars() {
         return __impl::AnyOrNone<false>();
     }
 
