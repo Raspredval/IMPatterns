@@ -47,7 +47,6 @@ struct Token {
     static bool
     isLeftAssociable(OpType uType) {
         switch (uType) {
-        case OPTYPE_POW:
         case OPTYPE_MUL:
         case OPTYPE_DIV:
         case OPTYPE_IDIV:
