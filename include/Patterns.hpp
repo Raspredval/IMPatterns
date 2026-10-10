@@ -470,9 +470,9 @@ namespace imp {
                 if (groups.empty())
                     groups.emplace_back();
 
-                assert(uWordID != 0 && uWordID <= sizeof...(args));
+                assert(uWordID > 0 && uWordID <= sizeof...(args));
                 groups[groups.size() - 1]
-                    .push_back({ mCur, lpUserData[uWordID] });
+                    .push_back({ mCur, lpUserData[uWordID - 1] });
 
                 return mCur;
             }
