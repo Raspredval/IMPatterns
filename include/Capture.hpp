@@ -18,6 +18,9 @@ namespace imp {
     static constexpr size_t
         uhalfptr_off = sizeof(void*) * 4UL;
 
+    static constexpr size_t
+        uhalfptr_max = (1uz << uhalfptr_off) - 1uz;
+
     inline constexpr std::pair<uhalfptr_t, uhalfptr_t>
     to_halfptr(uintptr_t u) noexcept {
         return {
