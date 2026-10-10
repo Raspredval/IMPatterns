@@ -116,40 +116,6 @@ namespace imp {
         };
     }
 
-    template<FixedString... args>
-        requires (sizeof...(args) != 0)
-    inline constexpr Pattern auto
-    Dict() {
-        static const Dictionary
-            dict = { args... };
-        return []
-        (MemStream& stream, CapturesList&, const std::any&) -> Match {
-            intptr_t
-                iBegin  = stream.GetPos(),
-                iEnd    = iBegin;
-            Dictionary::DictMatch
-                dm      = dict.StartMatch();
-            std::optional<char>
-                optc    = {};
-            while ((bool)(optc = stream.Read())) {
-                dm      = dict.NextMatch(dm, *optc);
-                if (!dm) {
-                    if (iBegin == iEnd) {
-                        iEnd = stream.GetPos();
-                        return Match{ iBegin, iEnd, false };
-                    }
-                    else
-                        break;
-                }
-                if (dm.AtLeafSegmentEnd())
-                    iEnd = stream.GetPos();
-            }
-
-            stream.SetPos(iEnd);
-            return Match{ iBegin, iEnd, iBegin != iEnd };
-        };
-    }
-
     namespace __impl {
         using CTypeProc =
             int(*)(int);
@@ -402,6 +368,118 @@ namespace imp {
     Capt(const Pattern auto& fn) {
         return Capt<from_halfptr(uLow, uHigh)>(fn);
     }
+
+    template<FixedString... args>
+        requires (sizeof...(args) != 0)
+    inline constexpr Pattern auto
+    Dict() {
+        static const Dictionary
+            dict = { args... };
+        return []
+        (MemStream& stream, CapturesList&, const std::any&) -> Match {
+            intptr_t
+                iBegin  = stream.GetPos(),
+                iEnd    = iBegin;
+            Dictionary::DictMatch
+                dm      = dict.StartMatch();
+            std::optional<char>
+                optc    = {};
+            while ((bool)(optc = stream.Read())) {
+                dm      = dict.NextMatch(dm, *optc);
+                if (!dm) {
+                    if (iBegin == iEnd) {
+                        iEnd = stream.GetPos();
+                        return Match{ iBegin, iEnd, false };
+                    }
+                    else
+                        break;
+                }
+                if (dm.AtLeafSegmentEnd())
+                    iEnd = stream.GetPos();
+            }
+
+            stream.SetPos(iEnd);
+            return Match{ iBegin, iEnd, iBegin != iEnd };
+        };
+    }
+
+    namespace __impl {
+        template<size_t n>
+        struct TaggedFixedString :
+            public FixedString<n>
+        {
+            constexpr TaggedFixedString(const char (&szData)[n], uintptr_t uTag = 0) :
+                FixedString<n>(szData),
+                uTag(uTag) {}
+
+            constexpr TaggedFixedString(const char (&szData)[n], uhalfptr_t uLow, uhalfptr_t uHigh) :
+                FixedString<n>(szData),
+                uTag(from_halfptr(uLow, uHigh)) {}
+
+            constexpr uintptr_t
+            tag() const noexcept {
+                return this->uTag;
+            }
+
+            uintptr_t
+                uTag;
+        };
+    }
+
+    template<__impl::TaggedFixedString... args>
+        requires (sizeof...(args) != 0)
+    inline constexpr Pattern auto
+    CaptDict() {
+        static constexpr uintptr_t
+            lpUserData[]    = { args.tag()... };
+        static const Dictionary
+            dict            = { args... };
+
+        return []
+        (MemStream& stream, CapturesList& groups, const std::any&) -> Match {
+            intptr_t
+                iBegin  = stream.GetPos(),
+                iEnd    = iBegin;
+
+            Dictionary::DictMatch
+                dm      = dict.StartMatch();
+            std::optional<char>
+                optc    = {};
+            uhalfptr_t
+                uWordID = 0;
+            while ((bool)(optc = stream.Read())) {
+                dm      = dict.NextMatch(dm, *optc);
+                if (!dm) {
+                    if (iBegin == iEnd) {
+                        iEnd = stream.GetPos();
+                        return Match{ iBegin, iEnd, false };
+                    }
+                    else
+                        break;
+                }
+                if (dm.AtLeafSegmentEnd()) {
+                    iEnd    = stream.GetPos();
+                    uWordID = dm.WordID();
+                }
+            }
+
+            stream.SetPos(iEnd);
+            if (iBegin != iEnd) {
+                Match
+                    mCur    = { iBegin, iEnd, true };
+                if (groups.empty())
+                    groups.emplace_back();
+
+                assert(uWordID != 0 && uWordID <= sizeof...(args));
+                groups[groups.size() - 1]
+                    .push_back({ mCur, lpUserData[uWordID] });
+
+                return mCur;
+            }
+            else
+                return Match{ iBegin, iEnd, false };
+        };
+    };
 
     inline Pattern auto
     LookAhead(const Pattern auto& fn) {
