@@ -121,7 +121,8 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    std::atomic_signal_fence(std::memory_order_seq_cst);
+    std::atomic_signal_fence(
+        std::memory_order_seq_cst);
     auto
         tmStart     = std::chrono::high_resolution_clock::now();
 
@@ -130,14 +131,21 @@ int main() {
     imp::Match
         mResult     = imp::Eval(imp::Fn<grammJSON::eval>(), stream);
 
-    std::atomic_signal_fence(std::memory_order_seq_cst);
+    std::atomic_signal_fence(
+        std::memory_order_seq_cst);
     auto
         tmEnd       = std::chrono::high_resolution_clock::now();
 
-    printf("parsing time: %.3fs\n",
-        std::chrono::duration_cast<std::chrono::duration<double>>(
-            tmEnd - tmStart
-        ).count());
+    size_t
+        uFileSize   = mmfileJSON.GetView().size_bytes();
+    double
+        secParseTm  = std::chrono::duration_cast<
+                        std::chrono::duration<double>>(
+                            tmEnd - tmStart
+                        ).count(),
+        fParseSpeed = (double)uFileSize / (1024 * 1024) / secParseTm;
+    printf("parse time: %.3f sec (%.2f MB/s)\n",
+        secParseTm, fParseSpeed);
 
     return (bool)mResult
         ? EXIT_SUCCESS : EXIT_FAILURE;
