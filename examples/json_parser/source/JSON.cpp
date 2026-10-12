@@ -1,6 +1,6 @@
 #include <cstdio>
-#include <memory>
 #include <chrono>
+#include <atomic>
 
 #include <Patterns.hpp>
 #include <MappedFile.hpp>
@@ -104,9 +104,6 @@ namespace grammJSON {
     )
 }
 
-using CFile = std::unique_ptr<FILE,
-    decltype([] (FILE* hFile) { if (hFile) fclose(hFile); })>;
-
 int main() {
     static constexpr std::string_view
         strvFile    = "./assets/test.json";
@@ -139,10 +136,7 @@ int main() {
     size_t
         uFileSize   = mmfileJSON.GetView().size_bytes();
     double
-        secParseTm  = std::chrono::duration_cast<
-                        std::chrono::duration<double>>(
-                            tmEnd - tmStart
-                        ).count(),
+        secParseTm  = std::chrono::duration<double>{tmEnd - tmStart}.count(),
         fParseSpeed = (double)uFileSize / (1024 * 1024) / secParseTm;
     printf("parse time: %.3f sec (%.2f MB/s)\n",
         secParseTm, fParseSpeed);
