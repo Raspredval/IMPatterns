@@ -1,7 +1,7 @@
 #pragma once
 #include <string_view>
 
-enum TokenType : unsigned {
+enum TokenType {
     TYPE_VALUE,
     TYPE_BINOP,
     TYPE_UNOP,
@@ -9,12 +9,12 @@ enum TokenType : unsigned {
     TYPE_CLOSEBRK,
 };
 
-enum ValType : unsigned {
+enum ValType {
     VALTYPE_NUMBER,
     VALTYPE_VARIABLE
 };
 
-enum OpType : unsigned {
+enum OpType {
     OPTYPE_PLUS     = 0x10,
     OPTYPE_MINUS    = 0x11,
     OPTYPE_POW      = 0x20,
@@ -34,19 +34,19 @@ enum OpType : unsigned {
     OPTYPE_POWASS   = 0x57
 };
 
-enum BrktType : unsigned {
+enum BrktType {
     BRKTYPE_ROUND
 };
 
 struct Token {
-    static unsigned
-    getPrecedence(OpType uType) {
-        return uType >> 4;
+    static int
+    getPrecedence(OpType iType) {
+        return iType >> 4;
     }
 
     static bool
-    isLeftAssociable(OpType uType) {
-        switch (uType) {
+    isLeftAssociable(OpType iType) {
+        switch (iType) {
         case OPTYPE_MUL:
         case OPTYPE_DIV:
         case OPTYPE_IDIV:
@@ -61,8 +61,8 @@ struct Token {
     }
 
     static bool
-    isRightAssociable(OpType uType) {
-        return !isLeftAssociable(uType);
+    isRightAssociable(OpType iType) {
+        return !isLeftAssociable(iType);
     }
 
     std::string_view

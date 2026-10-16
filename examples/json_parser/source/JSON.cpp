@@ -94,7 +94,7 @@ namespace grammJSON {
         imp::Fn<spacing>() >> imp::Opt(
             imp::Fn<value>() >> imp::Fn<spacing>()
         ) >> imp::NoChars() /=
-        [] (imp::MemStream& stream, const imp::Match& m, imp::CapturesView, const std::any&) -> imp::Match {
+        [] (imp::MemStream& stream, const imp::Match& m, imp::CapturesView, imp::UserData) -> imp::Match {
             if (!m)
                 fprintf(stderr, "failed to parse JSON at %zi\n", stream.GetPos());
             else

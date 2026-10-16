@@ -11,16 +11,22 @@
 namespace grammar {
     namespace handler {
         static imp::Match
-        full_expr(imp::MemStream& stream, const imp::Match& m, imp::CapturesView captures, const std::any&){
+        full_expr(imp::MemStream& stream, const imp::Match& m, imp::CapturesView captures, imp::UserData){
             if (m) {
+                std::string_view
+                    strvExpression  = m.GetStringView(stream);
+                if (strvExpression.ends_with('\n'))
+                    strvExpression.remove_suffix(1);
+                printf("### %.*s ###\n",
+                    (int)strvExpression.size(), strvExpression.data());
+
                 for (const auto& c : captures) {
                     std::string_view
                         strvCapture     = c.m.GetStringView(stream);
-                    auto [uLow, uHigh]  = imp::to_halfptr(c.u);
 
-                    switch ((TokenType)uLow) {
+                    switch ((TokenType)c.d.ul) {
                     break; case TYPE_VALUE: {
-                        switch ((ValType)uHigh) {
+                        switch ((ValType)c.d.uh) {
                         break; case VALTYPE_NUMBER:
                             printf("number: ");
 
@@ -31,21 +37,21 @@ namespace grammar {
 
                     break; case TYPE_BINOP: {
                         OpType
-                            uOpID   = (OpType)uHigh;
-                        printf("opID: 0x%x; precedence: %u; left associative: %s\n",
-                            (unsigned)uOpID,
-                            Token::getPrecedence(uOpID),
-                            Token::isLeftAssociable(uOpID) ? "true" : "false");
+                            iOpID   = (OpType)c.d.uh;
+                        printf("opID: 0x%x; precedence: %d; left associative: %s\n",
+                            (int)iOpID,
+                            Token::getPrecedence(iOpID),
+                            Token::isLeftAssociable(iOpID) ? "true" : "false");
                         printf(" binary operator: ");
                     }
 
                     break; case TYPE_UNOP: {
                         OpType
-                            uOpID   = (OpType)uHigh;
-                        printf("opID: 0x%x; precedence: %u; left associative: %s\n",
-                            (unsigned)uOpID,
-                            Token::getPrecedence((OpType)uHigh),
-                            Token::isLeftAssociable((OpType)uHigh) ? "true" : "false");
+                            iOpID   = (OpType)c.d.uh;
+                        printf("opID: 0x%x; precedence: %i; left associative: %s\n",
+                            (int)iOpID,
+                            Token::getPrecedence(iOpID),
+                            Token::isLeftAssociable(iOpID) ? "true" : "false");
                         printf(" unary operator: ");
                     }
 
@@ -97,7 +103,7 @@ namespace grammar {
     )
 
     IMP_MAKE_RULE(number, (
-        imp::Capt<TYPE_VALUE, VALTYPE_NUMBER>(
+        imp::Capt<{TYPE_VALUE, VALTYPE_NUMBER}>(
             imp::Some(imp::Digit()) >> imp::Opt(
                 imp::Str<".">() >> imp::Some(imp::Digit())
             )
@@ -105,44 +111,44 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(variable, (
-        imp::Capt<TYPE_VALUE, VALTYPE_VARIABLE>(
+        imp::Capt<{TYPE_VALUE, VALTYPE_VARIABLE}>(
             imp::Alpha() >> imp::Any(imp::Alnum())
         )
     ))
 
     IMP_MAKE_RULE(brkt_expr, (
-        imp::Capt<TYPE_OPENBRK, BRKTYPE_ROUND>(
+        imp::Capt<{TYPE_OPENBRK, BRKTYPE_ROUND}>(
             imp::Str<"(">()
         ) >> imp::Fn<sub_expr>() >>
-        imp::Capt<TYPE_CLOSEBRK, BRKTYPE_ROUND>(
+        imp::Capt<{TYPE_CLOSEBRK, BRKTYPE_ROUND}>(
             imp::Str<")">()
         )
     ))
 
     IMP_MAKE_RULE(bin_op, (
         imp::CaptDict<
-            {"+",   TYPE_BINOP, OPTYPE_ADD      },
-            {"-",   TYPE_BINOP, OPTYPE_SUB      },
-            {"*",   TYPE_BINOP, OPTYPE_MUL      },
-            {"/",   TYPE_BINOP, OPTYPE_DIV      },
-            {"%",   TYPE_BINOP, OPTYPE_MOD      },
-            {"//",  TYPE_BINOP, OPTYPE_IDIV     },
-            {"^^",  TYPE_BINOP, OPTYPE_POW      },
-            {"=",   TYPE_BINOP, OPTYPE_ASSIGN   },
-            {"+=",  TYPE_BINOP, OPTYPE_ADDASS   },
-            {"-=",  TYPE_BINOP, OPTYPE_SUBASS   },
-            {"*=",  TYPE_BINOP, OPTYPE_MULASS   },
-            {"/=",  TYPE_BINOP, OPTYPE_DIVASS   },
-            {"%=",  TYPE_BINOP, OPTYPE_MODADD   },
-            {"//=", TYPE_BINOP, OPTYPE_IDIVASS  },
-            {"^^=", TYPE_BINOP, OPTYPE_POWASS   }
+            {"+",   { TYPE_BINOP, OPTYPE_ADD     }},
+            {"-",   { TYPE_BINOP, OPTYPE_SUB     }},
+            {"*",   { TYPE_BINOP, OPTYPE_MUL     }},
+            {"/",   { TYPE_BINOP, OPTYPE_DIV     }},
+            {"%",   { TYPE_BINOP, OPTYPE_MOD     }},
+            {"//",  { TYPE_BINOP, OPTYPE_IDIV    }},
+            {"^^",  { TYPE_BINOP, OPTYPE_POW     }},
+            {"=",   { TYPE_BINOP, OPTYPE_ASSIGN  }},
+            {"+=",  { TYPE_BINOP, OPTYPE_ADDASS  }},
+            {"-=",  { TYPE_BINOP, OPTYPE_SUBASS  }},
+            {"*=",  { TYPE_BINOP, OPTYPE_MULASS  }},
+            {"/=",  { TYPE_BINOP, OPTYPE_DIVASS  }},
+            {"%=",  { TYPE_BINOP, OPTYPE_MODADD  }},
+            {"//=", { TYPE_BINOP, OPTYPE_IDIVASS }},
+            {"^^=", { TYPE_BINOP, OPTYPE_POWASS  }}
         >()
     ))
 
     IMP_MAKE_RULE(un_op, (
         imp::CaptDict<
-            { "+", TYPE_UNOP, OPTYPE_PLUS   },
-            { "-", TYPE_UNOP, OPTYPE_MINUS  }
+            { "+", { TYPE_UNOP, OPTYPE_PLUS  }},
+            { "-", { TYPE_UNOP, OPTYPE_MINUS }}
         >()
     ))
 
