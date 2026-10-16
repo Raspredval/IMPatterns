@@ -24,9 +24,9 @@ namespace grammar {
                     std::string_view
                         strvCapture     = c.m.GetStringView(stream);
 
-                    switch ((TokenType)c.d.ul) {
+                    switch ((TokenType)c.d.ipr.l) {
                     break; case TYPE_VALUE: {
-                        switch ((ValType)c.d.uh) {
+                        switch ((ValType)c.d.ipr.h) {
                         break; case VALTYPE_NUMBER:
                             printf("number: ");
 
@@ -37,7 +37,7 @@ namespace grammar {
 
                     break; case TYPE_BINOP: {
                         OpType
-                            iOpID   = (OpType)c.d.uh;
+                            iOpID   = (OpType)c.d.ipr.h;
                         printf("opID: 0x%x; precedence: %d; left associative: %s\n",
                             (int)iOpID,
                             Token::getPrecedence(iOpID),
@@ -47,7 +47,7 @@ namespace grammar {
 
                     break; case TYPE_UNOP: {
                         OpType
-                            iOpID   = (OpType)c.d.uh;
+                            iOpID   = (OpType)c.d.ipr.h;
                         printf("opID: 0x%x; precedence: %i; left associative: %s\n",
                             (int)iOpID,
                             Token::getPrecedence(iOpID),
