@@ -16,13 +16,13 @@ namespace imp {
     union UserData {
         uintptr_t   u;
         intptr_t    i;
-        void*       p;
-        struct {
-            uhalfptr_t ul, uh;
-        };
-        struct {
-            ihalfptr_t il, ih;
-        };
+        void*       ptr;
+        struct upair {
+            uhalfptr_t l, h;
+        } upr;
+        struct ipair {
+            ihalfptr_t l, h;
+        } ipr;
 
         constexpr UserData() = default;
 
@@ -33,12 +33,12 @@ namespace imp {
             i{i} {}
 
         constexpr UserData(void* p) :
-            p{p} {}
+            ptr{p} {}
 
-        constexpr UserData(uhalfptr_t ul, uhalfptr_t uh) :
-            ul{ul}, uh{uh} {}
+        constexpr UserData(uhalfptr_t l, uhalfptr_t h) :
+            upr{l, h} {}
 
-        constexpr UserData(ihalfptr_t il, ihalfptr_t ih) :
-            il{il}, ih{ih} {}
+        constexpr UserData(ihalfptr_t l, ihalfptr_t h) :
+            ipr{l, h} {}
     };
 }
