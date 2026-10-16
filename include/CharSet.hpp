@@ -1,4 +1,6 @@
 #pragma once
+static_assert(__cplusplus >= 202302L, "requires C++23 minimum version");
+
 #include <cstddef>
 #include <cstdint>
 
