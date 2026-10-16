@@ -4,35 +4,13 @@ static_assert(__cplusplus >= 202002L, "requires C++23 minimum version");
 #include <span>
 #include <vector>
 #include "Match.hpp"
+#include "UserData.hpp"
 
 namespace imp {
     struct Capture {
-        imp::Match  m;
-        uintptr_t   u;
+        imp::Match      m;
+        imp::UserData   d;
     };
-
-    using uhalfptr_t =
-        std::conditional_t<sizeof(void*) == 8,
-            uint32_t, uint16_t>;
-
-    static constexpr size_t
-        uhalfptr_off = sizeof(void*) * 4UL;
-
-    static constexpr size_t
-        uhalfptr_max = (1uz << uhalfptr_off) - 1uz;
-
-    inline constexpr std::pair<uhalfptr_t, uhalfptr_t>
-    to_halfptr(uintptr_t u) noexcept {
-        return {
-            (uhalfptr_t)(u),
-            (uhalfptr_t)(u >> uhalfptr_off)
-        };
-    }
-
-    inline constexpr uintptr_t
-    from_halfptr(uhalfptr_t l, uhalfptr_t h) noexcept {
-        return ((uintptr_t)l) | ((uintptr_t)h << uhalfptr_off);
-    }
 
     using Captures =
         std::vector<Capture>;

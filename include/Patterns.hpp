@@ -1,25 +1,25 @@
 #pragma once
 static_assert(__cplusplus >= 202002L, "requires C++23 minimum version");
 
-#include <any>
 #include <cctype>
 #include <concepts>
 
 #include "Match.hpp"
 #include "CharSet.hpp"
 #include "Capture.hpp"
+#include "UserData.hpp"
 #include "MemStream.hpp"
 #include "Dictionary.hpp"
 #include "FixedString.hpp"
 
-#define IMP_DECL_RULE(name) imp::Match name (imp::MemStream& s, imp::CapturesList& g, const std::any& u)
-#define IMP_MAKE_RULE(name, fn) IMP_DECL_RULE(name) { return (fn)(s, g, u); }
+#define IMP_DECL_RULE(name) imp::Match name (imp::MemStream& s, imp::CapturesList& g, imp::UserData d)
+#define IMP_MAKE_RULE(name, fn) IMP_DECL_RULE(name) { return (fn)(s, g, d); }
 
 namespace imp {
     template<typename Fn>
     concept Pattern =
         std::is_class_v<Fn> &&
-        std::same_as<std::invoke_result_t<const Fn, MemStream&, CapturesList&, const std::any&>, Match>;
+        std::same_as<std::invoke_result_t<const Fn, MemStream&, CapturesList&, UserData>, Match>;
 
     namespace __impl {
         inline void
@@ -33,7 +33,7 @@ namespace imp {
     inline constexpr Pattern auto
     operator>>(const Pattern auto& lhs, const Pattern auto& rhs) {
         return [tpl = std::make_tuple(lhs, rhs)]
-        (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
+        (MemStream& stream, CapturesList& groups, UserData usr_val) -> Match {
             Match
                 mLhs    = std::get<0>(tpl)(stream, groups, usr_val);
             if (!mLhs)
@@ -45,7 +45,7 @@ namespace imp {
     inline constexpr Pattern auto
     operator|(const Pattern auto& lhs, const Pattern auto& rhs) {
         return [tpl = std::make_tuple(lhs, rhs)]
-        (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
+        (MemStream& stream, CapturesList& groups, UserData usr_val) -> Match {
             intptr_t
                 iBegin  = stream.GetPos();
             size_t
@@ -63,7 +63,7 @@ namespace imp {
     inline constexpr Pattern auto
     Str() {
         return []
-        (MemStream& stream, CapturesList&, const std::any&) -> Match {
+        (MemStream& stream, CapturesList&, UserData) -> Match {
             intptr_t
                 iBegin  = stream.GetPos();
             for (size_t i = 0; i != strMatch.size(); ++i) {
@@ -80,7 +80,7 @@ namespace imp {
     inline constexpr Pattern auto
     Set() {
         return []
-        (MemStream& stream, CapturesList&, const std::any&) -> Match {
+        (MemStream& stream, CapturesList&, UserData) -> Match {
             intptr_t
                 iBegin  = stream.GetPos();
             auto optc   = stream.Read();
@@ -100,7 +100,7 @@ namespace imp {
     inline constexpr Pattern auto
     NegSet() {
         return []
-        (MemStream& stream, CapturesList&, const std::any&) -> Match {
+        (MemStream& stream, CapturesList&, UserData) -> Match {
             intptr_t
                 iBegin  = stream.GetPos();
             auto optc   = stream.Read();
@@ -124,7 +124,7 @@ namespace imp {
         inline constexpr Pattern auto
         CType() {
             return []
-            (MemStream& stream, CapturesList&, const std::any&) -> Match {
+            (MemStream& stream, CapturesList&, UserData) -> Match {
                 intptr_t
                     iBegin  = stream.GetPos();
                 auto optc   = stream.Read();
@@ -186,7 +186,7 @@ namespace imp {
         inline constexpr Pattern auto
         AnyOrNone() {
             return []
-            (MemStream& stream, CapturesList&, const std::any&) -> Match {
+            (MemStream& stream, CapturesList&, UserData) -> Match {
                 intptr_t
                     iBegin  = stream.GetPos();
                 return ((bool)stream.Read())
@@ -210,7 +210,7 @@ namespace imp {
     inline constexpr Pattern auto
     UpTo(const Pattern auto& fn) {
         return [fn]
-        (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
+        (MemStream& stream, CapturesList& groups, UserData usr_val) -> Match {
             intptr_t
                 iBegin  = stream.GetPos();
             Match
@@ -236,7 +236,7 @@ namespace imp {
     inline Pattern auto
     AtLeast(const Pattern auto& fn) {
         return [fn]
-        (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
+        (MemStream& stream, CapturesList& groups, UserData usr_val) -> Match {
             intptr_t
                 iBegin  = stream.GetPos();
             Match
@@ -268,7 +268,7 @@ namespace imp {
     inline Pattern auto
     Exactly(const Pattern auto& fn) {
         return [fn]
-        (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
+        (MemStream& stream, CapturesList& groups, UserData usr_val) -> Match {
             intptr_t
                 iBegin  = stream.GetPos();
             Match
@@ -301,12 +301,12 @@ namespace imp {
     template<typename Fn>
     concept Handler =
         std::is_class_v<Fn> &&
-        std::same_as<std::invoke_result_t<const Fn, MemStream&, const Match&, CapturesView, const std::any&>, Match>;
+        std::same_as<std::invoke_result_t<const Fn, MemStream&, const Match&, CapturesView, UserData>, Match>;
 
     inline Pattern auto
     operator/=(const Pattern auto& fn, const Handler auto& handler) {
         return [tpl = std::make_tuple(fn, handler)]
-        (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
+        (MemStream& stream, CapturesList& groups, UserData usr_val) -> Match {
             Match
                 mCur    = std::get<0>(tpl)(stream, groups, usr_val);
             CapturesView
@@ -320,7 +320,7 @@ namespace imp {
     inline Pattern auto
     CaptGr(const Pattern auto& fn) {
         return [fn]
-        (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
+        (MemStream& stream, CapturesList& groups, UserData usr_val) -> Match {
             groups.emplace_back();
             Match
                 mCur    = fn(stream, groups, usr_val);
@@ -332,7 +332,7 @@ namespace imp {
     inline Pattern auto
     CaptGr(const Pattern auto& fn, const Handler auto& handler) {
         return [tpl = std::make_tuple(fn, handler)]
-        (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
+        (MemStream& stream, CapturesList& groups, UserData usr_val) -> Match {
             groups.emplace_back();
             Match
                 mCur    = std::get<0>(tpl)(stream, groups, usr_val);
@@ -345,28 +345,22 @@ namespace imp {
         };
     }
 
-    template<uintptr_t uUserValue = 0>
+    template<UserData capt_tag>
     inline Pattern auto
     Capt(const Pattern auto& fn) {
         return [fn]
-        (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
+        (MemStream& stream, CapturesList& groups, UserData usr_val) -> Match {
             Match
                 mCur    = fn(stream, groups, usr_val);
             if (mCur) {
                 if (groups.empty())
                     groups.emplace_back();
                 groups.back()
-                    .push_back({ mCur, uUserValue });
+                    .push_back({ mCur, capt_tag });
             }
 
             return mCur;
         };
-    }
-
-    template<uhalfptr_t uLow, uhalfptr_t uHigh>
-    inline Pattern auto
-    Capt(const Pattern auto& fn) {
-        return Capt<from_halfptr(uLow, uHigh)>(fn);
     }
 
     template<FixedString... args>
@@ -376,7 +370,7 @@ namespace imp {
         static const Dictionary
             dict = { args... };
         return []
-        (MemStream& stream, CapturesList&, const std::any&) -> Match {
+        (MemStream& stream, CapturesList&, UserData) -> Match {
             intptr_t
                 iBegin  = stream.GetPos(),
                 iEnd    = iBegin;
@@ -408,21 +402,17 @@ namespace imp {
         struct TaggedFixedString :
             public FixedString<n>
         {
-            constexpr TaggedFixedString(const char (&szData)[n], uintptr_t uTag = 0) :
+            constexpr TaggedFixedString(const char (&szData)[n], UserData capt_tag) :
                 FixedString<n>(szData),
-                uTag(uTag) {}
+                capt_tag(capt_tag) {}
 
-            constexpr TaggedFixedString(const char (&szData)[n], uhalfptr_t uLow, uhalfptr_t uHigh) :
-                FixedString<n>(szData),
-                uTag(from_halfptr(uLow, uHigh)) {}
-
-            constexpr uintptr_t
+            constexpr UserData
             tag() const noexcept {
-                return this->uTag;
+                return this->capt_tag;
             }
 
-            uintptr_t
-                uTag;
+            UserData
+                capt_tag;
         };
     }
 
@@ -430,13 +420,13 @@ namespace imp {
         requires (sizeof...(args) != 0)
     inline constexpr Pattern auto
     CaptDict() {
-        static constexpr uintptr_t
-            lpUserData[]    = { args.tag()... };
+        static constexpr UserData
+            lpCaptTags[]    = { args.tag()... };
         static const Dictionary
             dict            = { args... };
 
         return []
-        (MemStream& stream, CapturesList& groups, const std::any&) -> Match {
+        (MemStream& stream, CapturesList& groups, UserData) -> Match {
             intptr_t
                 iBegin  = stream.GetPos(),
                 iEnd    = iBegin;
@@ -472,7 +462,7 @@ namespace imp {
 
                 assert(uWordID > 0 && uWordID <= sizeof...(args));
                 groups.back()
-                    .push_back({ mCur, lpUserData[uWordID - 1] });
+                    .push_back({ mCur, lpCaptTags[uWordID - 1] });
 
                 return mCur;
             }
@@ -484,7 +474,7 @@ namespace imp {
     inline Pattern auto
     LookAhead(const Pattern auto& fn) {
         return [fn]
-        (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
+        (MemStream& stream, CapturesList& groups, UserData usr_val) -> Match {
             intptr_t
                 iBegin  = stream.GetPos();
             size_t
@@ -500,7 +490,7 @@ namespace imp {
     inline Pattern auto
     Not(const Pattern auto& fn) {
         return [fn]
-        (MemStream& stream, CapturesList& groups, const std::any& usr_val) -> Match {
+        (MemStream& stream, CapturesList& groups, UserData usr_val) -> Match {
             Match
                 mCur    = fn(stream, groups, usr_val);
             mCur.Toggle();
@@ -509,16 +499,16 @@ namespace imp {
     }
 
     using CRule =
-        Match(*)(MemStream&, CapturesList&, const std::any&);
+        Match(*)(MemStream&, CapturesList&, UserData);
 
     using CHandler =
-        Match(*)(MemStream&, const Match&, CapturesView, const std::any&);
+        Match(*)(MemStream&, const Match&, CapturesView, UserData);
 
     template<CRule fn>
     inline Pattern auto
     Fn() {
         return []
-        (MemStream& s, CapturesList& g, const std::any& u) -> Match {
+        (MemStream& s, CapturesList& g, UserData u) -> Match {
             return fn(s, g, u);
         };
     }
@@ -527,18 +517,18 @@ namespace imp {
     inline Handler auto
     Fn() {
         return []
-        (MemStream& s, const Match& m, CapturesView c, const std::any& u) -> Match {
+        (MemStream& s, const Match& m, CapturesView c, UserData u) -> Match {
             return fn(s, m, c, u);
         };
     }
 
     inline Match
-    Eval(const Pattern auto& fn, MemStream& stream, CapturesList& groups, const std::any& usr_val = {}) {
+    Eval(const Pattern auto& fn, MemStream& stream, CapturesList& groups, UserData usr_val = {}) {
         return fn(stream, groups, usr_val);
     }
 
     inline Match
-    Eval(const Pattern auto& fn, MemStream& stream, const std::any& usr_val = {}) {
+    Eval(const Pattern auto& fn, MemStream& stream, UserData usr_val = {}) {
         CapturesList
             groups;
         return Eval(fn, stream, groups, usr_val);
