@@ -25,7 +25,6 @@ set(LIBRARY_HEADERS
     "${CMAKE_SOURCE_DIR}/include/MemStream.hpp"
     "${CMAKE_SOURCE_DIR}/include/Patterns.hpp"
     "${CMAKE_SOURCE_DIR}/include/UserData.hpp"
-    "${CMAKE_SOURCE_DIR}/include/Capture.hpp"
     "${CMAKE_SOURCE_DIR}/include/CharSet.hpp"
     "${CMAKE_SOURCE_DIR}/include/Match.hpp")
 
