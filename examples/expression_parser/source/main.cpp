@@ -163,7 +163,7 @@ namespace grammar {
             {"-=",  { TYPE_BINOP, OPTYPE_SUBASS  }},
             {"*=",  { TYPE_BINOP, OPTYPE_MULASS  }},
             {"/=",  { TYPE_BINOP, OPTYPE_DIVASS  }},
-            {"%=",  { TYPE_BINOP, OPTYPE_MODADD  }},
+            {"%=",  { TYPE_BINOP, OPTYPE_MODASS  }},
             {"//=", { TYPE_BINOP, OPTYPE_IDIVASS }},
             {"^^=", { TYPE_BINOP, OPTYPE_POWASS  }}
         >()

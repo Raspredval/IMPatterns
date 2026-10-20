@@ -36,7 +36,7 @@ enum OpType {
     OPTYPE_MULASS   = 0x53,
     OPTYPE_DIVASS   = 0x54,
     OPTYPE_IDIVASS  = 0x55,
-    OPTYPE_MODADD   = 0x56,
+    OPTYPE_MODASS   = 0x56,
     OPTYPE_POWASS   = 0x57
 };
 
