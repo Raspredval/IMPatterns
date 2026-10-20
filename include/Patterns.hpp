@@ -17,7 +17,7 @@ static_assert(__cplusplus >= 202302L, "requires C++23 minimum version");
 namespace imp {
     struct Capture {
         imp::Match      m;
-        imp::UserData   d;
+        imp::UserData   dt;
     };
 
     using Captures =
