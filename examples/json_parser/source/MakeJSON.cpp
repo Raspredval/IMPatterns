@@ -1,6 +1,6 @@
-#include <cstdlib>
-#include <cstdio>
+#include <print>
 #include <memory>
+#include <cstdlib>
 
 using CFile = std::unique_ptr<FILE,
     decltype([] (FILE* hFile) { if (hFile) fclose(hFile); })>;
@@ -12,7 +12,7 @@ int main() {
     CFile
         uptrJSON    = CFile{fopen("./assets/test.json", "w")};
     if (!uptrJSON) {
-        fprintf(stderr, "failed to open %s\n", szFilename);
+        std::print(stderr, "failed to open {}\n", szFilename);
         return EXIT_FAILURE;
     }
 
@@ -42,12 +42,12 @@ int main() {
         };
 
     srand((unsigned)time(nullptr));
-    fprintf(uptrJSON.get(), "{\n\t\"scores\": [\n");
+    std::print(uptrJSON.get(), "{{\n\t\"scores\": [\n");
     for (size_t i = 0; i != 100'000'000; ++i) {
-        fprintf(uptrJSON.get(), "\t\t{ \"%s %s\": %d },\n",
+        std::print(uptrJSON.get(), "\t\t{{ \"{} {}\": {} }},\n",
             lpPrefixes[rand() % 8], lpPostfixes[rand() % 8], rand() % 100 + 1);
     }
-    fprintf(uptrJSON.get(), "\t\t{ \"%s %s\": %d }\n\t]\n}",
+    std::print(uptrJSON.get(), "\t\t{{ \"{} {}\": {} }}\n\t]\n}}",
         lpPrefixes[rand() % 8], lpPostfixes[rand() % 8], rand() % 100 + 1);
 
     return EXIT_SUCCESS;

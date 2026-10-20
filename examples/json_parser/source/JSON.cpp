@@ -1,4 +1,4 @@
-#include <cstdio>
+#include <print>
 #include <chrono>
 #include <atomic>
 
@@ -96,9 +96,9 @@ namespace grammJSON {
         ) >> imp::NoChars() /=
         [] (imp::MemStream& stream, const imp::Match& m, imp::CapturesView, imp::UserData) -> imp::Match {
             if (!m)
-                fprintf(stderr, "failed to parse JSON at %zi\n", stream.GetPos());
+                std::print(stderr, "failed to parse JSON at {}\n", stream.GetPos());
             else
-                printf("success\n");
+                std::print("success\n");
             return m;
         }
     )
@@ -112,8 +112,8 @@ int main() {
         mmfileJSON  = {strvFile};
 
     if (!mmfileJSON) {
-        fprintf(stderr, "failed to open file: %s\n",
-            strvFile.data());
+        std::print(stderr, "failed to open file: {}\n",
+            strvFile);
 
         return EXIT_FAILURE;
     }
@@ -138,7 +138,7 @@ int main() {
     double
         secParseTm  = std::chrono::duration<double>{tmEnd - tmStart}.count(),
         fParseSpeed = (double)uFileSize / (1024 * 1024) / secParseTm;
-    printf("parse time: %.3f sec (%.2f MB/s)\n",
+    std::print("parse time: {:.3f} sec ({:.2f} MB/s)\n",
         secParseTm, fParseSpeed);
 
     return (bool)mResult

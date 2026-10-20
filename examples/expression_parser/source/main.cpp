@@ -6,7 +6,7 @@
 #include <string_view>
 #include <stdexcept>
 #include <format>
-#include <cstdio>
+#include <print>
 
 namespace grammar {
     namespace handler {
@@ -17,8 +17,8 @@ namespace grammar {
                     strvExpression  = m.GetStringView(stream);
                 if (strvExpression.ends_with('\n'))
                     strvExpression.remove_suffix(1);
-                printf("### %.*s ###\n",
-                    (int)strvExpression.size(), strvExpression.data());
+                std::print("### {} ###\n",
+                    strvExpression);
 
                 for (const auto& c : captures) {
                     std::string_view
@@ -28,40 +28,40 @@ namespace grammar {
                     break; case TYPE_VALUE: {
                         switch ((ValType)c.d.ipr.h) {
                         break; case VALTYPE_NUMBER:
-                            printf("number: ");
+                            std::print("number: ");
 
                         break; case VALTYPE_VARIABLE:
-                            printf("variable: ");
+                            std::print("variable: ");
                         }
                     }
 
                     break; case TYPE_BINOP: {
                         OpType
                             iOpID   = (OpType)c.d.ipr.h;
-                        printf("opID: 0x%x; precedence: %d; left associative: %s\n",
+                        std::print("opID: 0x{:x}; precedence: {}; left associative: {}\n",
                             (int)iOpID,
                             Token::getPrecedence(iOpID),
-                            Token::isLeftAssociable(iOpID) ? "true" : "false");
-                        printf(" binary operator: ");
+                            Token::isLeftAssociable(iOpID));
+                        std::print(" binary operator: ");
                     }
 
                     break; case TYPE_UNOP: {
                         OpType
                             iOpID   = (OpType)c.d.ipr.h;
-                        printf("opID: 0x%x; precedence: %i; left associative: %s\n",
+                        std::print("opID: 0x{:x}; precedence: {}; left associative: {}\n",
                             (int)iOpID,
                             Token::getPrecedence(iOpID),
-                            Token::isLeftAssociable(iOpID) ? "true" : "false");
-                        printf(" unary operator: ");
+                            Token::isLeftAssociable(iOpID));
+                        std::print(" unary operator: ");
                     }
 
                     break; case TYPE_OPENBRK:
-                        printf("open bracket: ");
+                        std::print("open bracket: ");
 
                     break; case TYPE_CLOSEBRK:
-                        printf("close bracket: ");
-                    } printf("'%.*s'\n", (int)strvCapture.size(), strvCapture.data());
-                } printf("### END OF EXPRESSION ###\n\n");
+                        std::print("close bracket: ");
+                    } std::print("'{}'\n", strvCapture);
+                } std::print("### END OF EXPRESSION ###\n\n");
             }
 
             return m;
@@ -191,10 +191,10 @@ int main() {
 
         PrecompileFile(strvFilename);
 
-        printf("success\n");
+        std::print("success\n");
     }
     catch (const std::exception& err) {
-        fprintf(stderr, "error: %s\n", err.what());
+        std::print(stderr, "error: {}\n", err.what());
         return -1;
     }
 
