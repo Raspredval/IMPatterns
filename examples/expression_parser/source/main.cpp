@@ -33,6 +33,10 @@ namespace grammar {
                     TokenType
                         iTknID  = (TokenType)iLow;
                     switch (iTknID) {
+                    break; case TYPE_COMMENT: {
+                        std::print("comment: ");
+                    }
+
                     break; case TYPE_VALUE: {
                         ValType
                             iValID  = (ValType)iHigh;
@@ -79,6 +83,7 @@ namespace grammar {
     }
 
     IMP_DECL_RULE(static eval);
+    IMP_DECL_RULE(static comment);
     IMP_DECL_RULE(static bin_op);
     IMP_DECL_RULE(static un_op);
     IMP_DECL_RULE(static operand);
@@ -88,9 +93,18 @@ namespace grammar {
     IMP_DECL_RULE(static full_expr);
     IMP_DECL_RULE(static brkt_expr);
 
+    IMP_MAKE_RULE(comment, (
+        imp::Capt<{TYPE_COMMENT, COMMTYPE_ENDLINE}>(
+            imp::Str<"#">() >> imp::Any(imp::NegSet<"\n">())
+        )
+    ))
+
     IMP_MAKE_RULE(full_expr,
         imp::CaptGr(
-            imp::Fn<sub_expr>() >> (imp::Set<";\n">() | imp::NoChars()),
+            imp::Fn<sub_expr>() >>
+            imp::Opt(imp::Fn<comment>()) >>
+            (imp::Set<";\n">() | imp::NoChars()),
+
             imp::Fn<handler::full_expr>()
         )
     )

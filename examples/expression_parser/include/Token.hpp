@@ -7,6 +7,12 @@ enum TokenType {
     TYPE_UNOP,
     TYPE_OPENBRK,
     TYPE_CLOSEBRK,
+    TYPE_COMMENT
+};
+
+enum CommType {
+    COMMTYPE_ENDLINE,
+    COMMTYPE_INLINE
 };
 
 enum ValType {
@@ -76,5 +82,7 @@ struct Token {
             op_type;
         BrktType
             brkt_type;
+        CommType
+            comm_type;
     };
 };
