@@ -321,7 +321,7 @@ namespace imp {
     template<typename Fn>
     concept Handler =
         std::is_class_v<Fn> &&
-        std::same_as<std::invoke_result_t<const Fn, MemStream&, const Match&, CaptureView, UserData>, Match>;
+        std::same_as<std::invoke_result_t<const Fn, MemStream&, Match, CaptureView, UserData>, Match>;
 
     inline Pattern auto
     operator/=(const Pattern auto& fn, const Handler auto& handler) {
@@ -382,6 +382,51 @@ namespace imp {
             }
 
             return mCur;
+        };
+    }
+
+    template<UserData capt_tag>
+    inline Pattern auto
+    CaptReplace(const Pattern auto& fn) {
+        return [fn]
+        (MemStream& stream, CaptureGroups& groups, UserData usr_val) -> Match {
+            Match
+                mCur    = fn(stream, groups, usr_val);
+            if (mCur) {
+                if (!groups.empty()) {
+                    Captures&
+                        captures    = groups.back();
+                    if (!captures.empty()) {
+                        captures.pop_back();
+                        captures.push_back({mCur, capt_tag});
+                    }
+                }
+            }
+
+            return mCur;
+        };
+    }
+
+    template<UserData capt_tag>
+    inline Pattern auto
+    CaptConcat(const Pattern auto& fn) {
+        return [fn]
+        (MemStream& stream, CaptureGroups& groups, UserData usr_val) -> Match {
+            Match
+                mCur    = fn(stream, groups, usr_val);
+            if (mCur) {
+                if (!groups.empty()) {
+                    Captures&
+                        captures    = groups.back();
+                    if (!captures.empty()) {
+                        Match
+                            mLast   = captures.back().m;
+                        mCur        = mLast + mCur;
+                        captures.pop_back();
+                        captures.push_back({mCur, capt_tag});
+                    }
+                }
+            }
         };
     }
 
@@ -524,7 +569,7 @@ namespace imp {
         Match(*)(MemStream&, CaptureGroups&, UserData);
 
     using CHandler =
-        Match(*)(MemStream&, const Match&, CaptureView, UserData);
+        Match(*)(MemStream&, Match, CaptureView, UserData);
 
     template<CRule fn>
     inline Pattern auto
@@ -539,7 +584,7 @@ namespace imp {
     inline Handler auto
     Fn() {
         return []
-        (MemStream& s, const Match& m, CaptureView c, UserData u) -> Match {
+        (MemStream& s, Match m, CaptureView c, UserData u) -> Match {
             return fn(s, m, c, u);
         };
     }
