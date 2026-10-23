@@ -32,10 +32,16 @@ namespace imp {
 
     namespace __impl {
         inline void
-        RestoreState(intptr_t iOldPos, size_t uOldCptCnt, MemStream& stream, CaptureGroups& groups) noexcept {
+        RestoreState(intptr_t iOldPos, size_t uGrpCnt, size_t uCptCnt, MemStream& stream, CaptureGroups& groups) noexcept {
             stream.SetPos(iOldPos);
-            while (groups.size() > uOldCptCnt)
+            while (groups.size() > uGrpCnt)
                 groups.pop_back();
+            if (!groups.empty()) {
+                Captures&
+                    captures = groups.back();
+                while (captures.size() > uCptCnt)
+                    captures.pop_back();
+            }
         }
     }
 
@@ -58,12 +64,13 @@ namespace imp {
             intptr_t
                 iBegin  = stream.GetPos();
             size_t
-                uCptCnt = groups.size();
+                uGrpCnt = groups.size(),
+                uCptCnt = groups.empty() ? 0 : groups.back().size();
             Match
                 mLhs    = std::get<0>(tpl)(stream, groups, usr_val);
             if (mLhs)
                 return mLhs;
-            __impl::RestoreState(iBegin, uCptCnt, stream, groups);
+            __impl::RestoreState(iBegin, uGrpCnt, uCptCnt, stream, groups);
             return std::get<1>(tpl)(stream, groups, usr_val);
         };
     }
@@ -226,11 +233,12 @@ namespace imp {
                 mAcc    = Match(iBegin, 0uz);
             for (size_t i = 0; i != n; ++i) {
                 size_t
-                    uCptCnt = groups.size();
+                    uGrpCnt = groups.size(),
+                    uCptCnt = groups.empty() ? 0 : groups.back().size();
                 Match
                     mCur    = fn(stream, groups, usr_val);
                 if (!mCur) {
-                    __impl::RestoreState(mAcc.End(), uCptCnt, stream, groups);
+                    __impl::RestoreState(mAcc.End(), uGrpCnt, uCptCnt, stream, groups);
                     break;
                 }
 
@@ -258,11 +266,12 @@ namespace imp {
 
             while (true) {
                 size_t
-                    uCptCnt = groups.size();
+                    uGrpCnt = groups.size(),
+                    uCptCnt = groups.empty() ? 0 : groups.back().size();
                 Match
                     mCur    = fn(stream, groups, usr_val);
                 if (!mCur) {
-                    __impl::RestoreState(mAcc.End(), uCptCnt, stream, groups);
+                    __impl::RestoreState(mAcc.End(), uGrpCnt, uCptCnt, stream, groups);
                     break;
                 }
 
@@ -481,11 +490,11 @@ namespace imp {
             intptr_t
                 iBegin  = stream.GetPos();
             size_t
-                uCptCnt = (!groups.empty())
-                            ? groups.back().size() : 0;
+                uGrpCnt = groups.size(),
+                uCptCnt = groups.empty() ? 0 : groups.back().size();
             Match
                 mCur    = fn(stream, groups, usr_val);
-            __impl::RestoreState(iBegin, uCptCnt, stream, groups);
+            __impl::RestoreState(iBegin, uGrpCnt, uCptCnt, stream, groups);
             return Match(iBegin, 0uz, mCur.Good());
         };
     }
