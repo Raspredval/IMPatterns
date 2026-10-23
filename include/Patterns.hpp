@@ -427,6 +427,8 @@ namespace imp {
                     }
                 }
             }
+
+            return mCur;
         };
     }
 
