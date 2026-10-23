@@ -1,6 +1,7 @@
 #pragma once
 static_assert(__cplusplus >= 202302L, "requires C++23 minimum version");
 
+#include <limits>
 #include <cstdint>
 #include <type_traits>
 
@@ -9,9 +10,17 @@ namespace imp {
         std::conditional_t<sizeof(void*) == 8,
             uint32_t, uint16_t>;
 
+    static constexpr auto
+        uhalfptr_min = std::numeric_limits<uhalfptr_t>::min(),
+        uhalfptr_max = std::numeric_limits<uhalfptr_t>::max();
+
     using ihalfptr_t =
         std::conditional_t<sizeof(void*) == 8,
             int32_t, int16_t>;
+
+    static constexpr auto
+        ihalfptr_min = std::numeric_limits<ihalfptr_t>::min(),
+        ihalfptr_max = std::numeric_limits<ihalfptr_t>::max();
 
     union UserData {
         uintptr_t   u;
