@@ -392,14 +392,12 @@ namespace imp {
         (MemStream& stream, CaptureGroups& groups, UserData usr_val) -> Match {
             Match
                 mCur    = fn(stream, groups, usr_val);
-            if (mCur) {
-                if (!groups.empty()) {
-                    Captures&
-                        captures    = groups.back();
-                    if (!captures.empty()) {
-                        captures.pop_back();
-                        captures.push_back({mCur, capt_tag});
-                    }
+            if (mCur && !groups.empty()) {
+                Captures&
+                    captures    = groups.back();
+                if (!captures.empty()) {
+                    captures.pop_back();
+                    captures.push_back({mCur, capt_tag});
                 }
             }
 
@@ -414,17 +412,15 @@ namespace imp {
         (MemStream& stream, CaptureGroups& groups, UserData usr_val) -> Match {
             Match
                 mCur    = fn(stream, groups, usr_val);
-            if (mCur) {
-                if (!groups.empty()) {
-                    Captures&
-                        captures    = groups.back();
-                    if (!captures.empty()) {
-                        Match
-                            mLast   = captures.back().m;
-                        mCur        = mLast + mCur;
-                        captures.pop_back();
-                        captures.push_back({mCur, capt_tag});
-                    }
+            if (mCur && !groups.empty()) {
+                Captures&
+                    captures    = groups.back();
+                if (!captures.empty()) {
+                    Match
+                        mLast   = captures.back().m;
+                    mCur        = mLast + mCur;
+                    captures.pop_back();
+                    captures.push_back({mCur, capt_tag});
                 }
             }
 
