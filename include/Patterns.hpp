@@ -407,7 +407,7 @@ namespace imp {
 
     template<UserData capt_tag>
     inline Pattern auto
-    CaptConcat(const Pattern auto& fn) {
+    CaptMerge(const Pattern auto& fn) {
         return [fn]
         (MemStream& stream, CaptureGroups& groups, UserData usr_val) -> Match {
             Match
