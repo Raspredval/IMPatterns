@@ -190,29 +190,30 @@ namespace imp {
                 size_t
                     uPrefLen    = commonPrefix(strvNode, strvInsert);
 
-                if (uPrefLen == strvNode.size()) {
-                    if (strvInsert.size() == strvNode.size())
+                if (uPrefLen != 0) {
+                    if (uPrefLen != strvNode.size()) {
+                        auto[ndtPrefix, ndtSuffix] =
+                            refNode.ndtData.split(uPrefLen);
+
+                        refNode = Node {
+                            ndtPrefix,
+                            std::vector<Node> {
+                                Node {
+                                    ndtSuffix,
+                                    std::move(refNode.vecChildren)
+                                }
+                            }
+                        };
+                    }
+
+                    if (strvInsert.size() == uPrefLen) {
                         refNode.ndtData.uWordID = uWordID;
-                    else
-                        insertImpl(refNode.vecChildren, strvInsert.substr(uPrefLen), uWordID);
-
-                    return;
-                }
-                else if (uPrefLen != 0) {
-                    std::vector<Node>
-                        vecCurChlidren  = std::move(refNode.vecChildren);
-                    auto [ ndtPrefix, ndtPostfix] =
-                        refNode.ndtData.split(uPrefLen);
-                    NodeData
-                        ndtInsert       = { strvInsert.substr(uPrefLen), 0 };
-
-                    refNode.ndtData     = ndtPrefix;
-                    refNode.vecChildren = std::vector<Node> {
-                        Node{ ndtPostfix,   std::move(vecCurChlidren)   },
-                        Node{ ndtInsert,    std::vector<Node>{}         }
-                    };
-
-                    return;
+                        return;
+                    }
+                    else {
+                        strvInsert.remove_prefix(uPrefLen);
+                        return insertImpl(refNode.vecChildren, strvInsert, uWordID);
+                    }
                 }
             }
 
