@@ -12,9 +12,6 @@ static_assert(__cplusplus >= 202302L, "requires C++23 minimum version");
 namespace imp {
     class Dictionary {
         struct NodeData {
-            static constexpr size_t
-                N   = sizeof(size_t) * 8 - 1;
-
             const char*
                 lpcSegment  = nullptr;
             uhalfptr_t
@@ -217,10 +214,10 @@ namespace imp {
                 }
             }
 
-            NodeData
-                ndtInsert   = { strvInsert, uWordID };
             vecNodes.emplace_back(
-                ndtInsert, std::vector<Node>{});
+                NodeData{ strvInsert, uWordID },
+                std::vector<Node>{}
+            );
         }
 
         std::vector<Node>
