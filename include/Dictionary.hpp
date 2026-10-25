@@ -49,7 +49,7 @@ namespace imp {
 
         struct Node {
             NodeData
-                ndtData;
+                ndt;
             std::vector<Node>
                 vecChildren;
         };
@@ -68,7 +68,7 @@ namespace imp {
             AtSegmentEnd() const noexcept {
                 assert(this->lpNode);
                 const NodeData&
-                    ndt = this->lpNode->ndtData;
+                    ndt = this->lpNode->ndt;
                 return ndt.uLength == this->uMatchLen;
             }
 
@@ -76,7 +76,7 @@ namespace imp {
             IsLeafSegment() const noexcept {
                 assert(this->lpNode);
                 const NodeData&
-                    ndt = this->lpNode->ndtData;
+                    ndt = this->lpNode->ndt;
                 return (ndt.uWordID != 0);
             }
 
@@ -84,7 +84,7 @@ namespace imp {
             AtLeafSegmentEnd() const noexcept {
                 assert(this->lpNode);
                 const NodeData&
-                    ndt = this->lpNode->ndtData;
+                    ndt = this->lpNode->ndt;
                 return (ndt.uWordID != 0) && (ndt.uLength == this->uMatchLen);
             }
 
@@ -92,7 +92,7 @@ namespace imp {
             WordID() const noexcept {
                 assert(this->lpNode);
                 const NodeData&
-                    ndt = this->lpNode->ndtData;
+                    ndt = this->lpNode->ndt;
                 return ndt.uWordID;
             }
 
@@ -138,7 +138,7 @@ namespace imp {
                 return matchChar(this->vecRoot, c);
 
             const NodeData&
-                ndt = m.lpNode->ndtData;
+                ndt = m.lpNode->ndt;
             if (m.uMatchLen < ndt.uLength) {
                 if (ndt.lpcSegment[m.uMatchLen] == c) {
                     m.uMatchLen++;
@@ -169,7 +169,7 @@ namespace imp {
         matchChar(const std::vector<Node>& vecNodes, char c) {
             for (const Node& refNode : vecNodes) {
                 const NodeData&
-                    ndt = refNode.ndtData;
+                    ndt = refNode.ndt;
                 if (ndt.lpcSegment[0] == c)
                     return DictMatch(refNode);
             }
@@ -183,14 +183,14 @@ namespace imp {
 
             for (Node& refNode : vecNodes) {
                 std::string_view
-                    strvNode    = refNode.ndtData;
+                    strvNode    = refNode.ndt;
                 size_t
                     uPrefLen    = commonPrefix(strvNode, strvInsert);
 
                 if (uPrefLen != 0) {
                     if (uPrefLen != strvNode.size()) {
                         auto[ndtPrefix, ndtSuffix] =
-                            refNode.ndtData.split(uPrefLen);
+                            refNode.ndt.split(uPrefLen);
 
                         refNode = Node {
                             ndtPrefix,
@@ -204,7 +204,7 @@ namespace imp {
                     }
 
                     if (strvInsert.size() == uPrefLen) {
-                        refNode.ndtData.uWordID = uWordID;
+                        refNode.ndt.uWordID = uWordID;
                         return;
                     }
                     else {
