@@ -387,21 +387,21 @@ namespace imp {
 
     template<UserData capt_tag>
     inline Pattern auto
-    CaptReplace(const Pattern auto& fn) {
-        return [fn]
-        (MemStream& stream, CaptureGroups& groups, UserData usr_val) -> Match {
+    ReplaceCaptTag() {
+        return []
+        (MemStream& stream, CaptureGroups& groups, UserData) -> Match {
             Match
-                mCur    = fn(stream, groups, usr_val);
-            if (mCur && !groups.empty()) {
+                mDummy  = { stream.GetPos(), 0uz, false };
+            if (!groups.empty()) {
                 Captures&
                     captures    = groups.back();
                 if (!captures.empty()) {
-                    captures.pop_back();
-                    captures.push_back({mCur, capt_tag});
+                    captures.back().dt = capt_tag;
+                    mDummy.Toggle();
                 }
             }
 
-            return mCur;
+            return mDummy;
         };
     }
 
