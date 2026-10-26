@@ -11,7 +11,7 @@
 namespace grammar {
     namespace handler {
         static imp::Match
-        full_expr(imp::MemStream& stream, imp::Match m, imp::CaptureView captures, imp::UserData){
+        full_expr(imp::MemStream& stream, imp::Match m, imp::Captures&& captures, imp::UserData){
             if (m) {
                 std::string_view
                     strvExpression  = m.GetStringView(stream);
