@@ -319,12 +319,12 @@ namespace imp {
     }
 
     template<typename Fn>
-    concept Handler =
+    concept PatternHandler =
         std::is_class_v<Fn> &&
         std::same_as<std::invoke_result_t<const Fn, MemStream&, Match, CaptureView, UserData>, Match>;
 
     inline Pattern auto
-    operator/=(const Pattern auto& fn, const Handler auto& handler) {
+    operator/=(const Pattern auto& fn, const PatternHandler auto& handler) {
         return [tpl = std::make_tuple(fn, handler)]
         (MemStream& stream, CaptureGroups& groups, UserData usr_val) -> Match {
             Match
@@ -350,18 +350,20 @@ namespace imp {
         };
     }
 
+    template<typename Fn>
+    concept GroupHandler =
+        std::is_class_v<Fn> &&
+        std::same_as<std::invoke_result_t<const Fn, MemStream&, Match, Captures&&, UserData>, Match>;
+
     inline Pattern auto
-    CaptGr(const Pattern auto& fn, const Handler auto& handler) {
+    CaptGr(const Pattern auto& fn, const GroupHandler auto& handler) {
         return [tpl = std::make_tuple(fn, handler)]
         (MemStream& stream, CaptureGroups& groups, UserData usr_val) -> Match {
-            groups.emplace_back();
+            Captures&
+                refCapt = groups.emplace_back();
             Match
                 mCur    = std::get<0>(tpl)(stream, groups, usr_val);
-            CaptureView
-                captv   = groups.empty()
-                            ? CaptureView{}
-                            : CaptureView{groups.back()};
-            mCur        = std::get<1>(tpl)(stream, mCur, captv, usr_val);
+            mCur        = std::get<1>(tpl)(stream, mCur, std::move(refCapt), usr_val);
             groups.pop_back();
             return mCur;
         };
@@ -567,8 +569,11 @@ namespace imp {
     using CRule =
         Match(*)(MemStream&, CaptureGroups&, UserData);
 
-    using CHandler =
+    using CPatternHandler =
         Match(*)(MemStream&, Match, CaptureView, UserData);
+
+    using CGroupHandler =
+        Match(*)(MemStream&, Match, Captures&&, UserData);
 
     template<CRule fn>
     inline Pattern auto
@@ -579,12 +584,21 @@ namespace imp {
         };
     }
 
-    template<CHandler fn>
-    inline Handler auto
+    template<CPatternHandler fn>
+    inline PatternHandler auto
     Fn() {
         return []
         (MemStream& s, Match m, CaptureView c, UserData u) -> Match {
             return fn(s, m, c, u);
+        };
+    }
+
+    template<CGroupHandler fn>
+    inline GroupHandler auto
+    Fn() {
+        return []
+        (MemStream& s, Match m, Captures&& g, UserData u) -> Match {
+            return fn(s, m, std::move(g), u);
         };
     }
 
