@@ -17,24 +17,21 @@ namespace imp {
             const value_type*;
 
     private:
-        struct Header {
+        struct alignas(std::max(alignof(value_type), alignof(size_t)))
+        Header {
             const size_t
                 uCapacity;
             size_t
                 uSize;
 
-            struct alignas(alignof(value_type)) Storage {
-                std::byte bytes[sizeof(value_type)];
-            } lpStorage[];
-
             const value_type*
             data() const noexcept {
-                return (const value_type*)this->lpStorage;
+                return (const value_type*)(this + 1);
             }
 
             value_type*
             data() noexcept {
-                return (value_type*)this->lpStorage;
+                return (value_type*)(this + 1);
             }
         };
 
@@ -52,9 +49,10 @@ namespace imp {
                 lpStorage   = new
                     (std::align_val_t{alignof(Header)})
                     std::byte[sizeof(Header) + sizeof(value_type) * uCapacity];
-            return new
-                ((void*)lpStorage)
-                Header{uCapacity, uInitSize, {}};
+            return std::construct_at(
+                (Header*)lpStorage,
+                uCapacity, uInitSize
+            );
         }
 
         static Header*
