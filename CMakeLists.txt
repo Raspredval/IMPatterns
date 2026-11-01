@@ -10,7 +10,7 @@ if (MSVC) # msvc or clang-cl
         message(WARNING "MSVC produced executable is much slower than clangs for some reason, try fiddling with compiler flags")
     endif()
 
-    set(CXX_EXTRA_FLAGS "/W4" "/WX" "/Zc:__cplusplus")
+    set(CXX_EXTRA_FLAGS "/W4" "/WX" "/Zc:__cplusplus" "/wd4200")
 else()
     set(CXX_EXTRA_FLAGS "-Wall" "-Wextra" "-Wconversion" "-Werror")
 endif()
