@@ -3,6 +3,7 @@ static_assert(__cplusplus >= 202302L, "requires C++23 minimum version");
 
 #include <memory>
 #include <cassert>
+#include <initializer_list>
 
 namespace imp {
     template<typename T>
@@ -21,8 +22,20 @@ namespace imp {
                 uCapacity;
             size_t
                 uSize;
-            value_type
-                lpData[];
+
+            struct alignas(alignof(value_type)) {
+                std::byte bytes[sizeof(value_type)];
+            } lpStorage[];
+
+            const value_type*
+            data() const noexcept {
+                return (const value_type*)this->lpStorage;
+            }
+
+            value_type*
+            data() noexcept {
+                return (value_type*)this->lpStorage;
+            }
         };
 
         static Header*
@@ -37,7 +50,7 @@ namespace imp {
 
             std::byte*
                 lpStorage   = new
-                    (std::align_val_t{alignof(value_type)})
+                    (std::align_val_t{alignof(Header)})
                     std::byte[sizeof(Header) + sizeof(value_type) * uCapacity];
             return std::construct_at(
                 (Header*)lpStorage,
@@ -54,12 +67,12 @@ namespace imp {
                     lpResult    = allocHeader(uAtLeast, lpCur->uSize);
                 for (size_t i = 0; i != lpCur->uSize; ++i) {
                     std::construct_at(
-                        &lpResult->lpData[i],
-                        std::move(lpCur->lpData[i])
+                        &lpResult->data()[i],
+                        std::move(lpCur->data()[i])
                     );
 
                     std::destroy_at(
-                        &lpCur->lpData[i]
+                        &lpCur->data()[i]
                     );
                 }
 
@@ -86,8 +99,8 @@ namespace imp {
                                     obj.lpHeader->uSize);
                 for (size_t i = 0; i != this->lpHeader->uSize; ++i) {
                     std::construct_at(
-                        &this->lpHeader->lpData[i],
-                        obj.lpHeader->lpData[i]
+                        &this->lpHeader->data()[i],
+                        obj.lpHeader->data()[i]
                     );
                 }
             }
@@ -96,7 +109,7 @@ namespace imp {
         ~Vector() {
             if (this->lpHeader) {
                 for (size_t i = 0; i != this->lpHeader->uSize; ++i) {
-                    std::destroy_at(&this->lpHeader->lpData[i]);
+                    std::destroy_at(&this->lpHeader->data()[i]);
                 }
 
                 std::destroy_at(this->lpHeader);
@@ -128,6 +141,11 @@ namespace imp {
             return *this;
         }
 
+        Vector(const std::initializer_list<value_type>& list) {
+            for (auto& obj : list)
+                this->push_back(std::move(obj));
+        }
+
         size_t
         size() const noexcept {
             return (this->lpHeader)
@@ -149,13 +167,13 @@ namespace imp {
         const value_type*
         data() const noexcept {
             return (this->lpHeader)
-                ? this->lpHeader->lpData : nullptr;
+                ? this->lpHeader->data() : nullptr;
         }
 
         value_type*
         data() noexcept {
             return (this->lpHeader)
-                ? this->lpHeader->lpData : nullptr;
+                ? this->lpHeader->data() : nullptr;
         }
 
         const value_type&
@@ -171,13 +189,13 @@ namespace imp {
         const_iterator
         begin() const noexcept {
             return (this->lpHeader)
-                ? this->lpHeader->lpData : nullptr;
+                ? this->lpHeader->data() : nullptr;
         }
 
         const_iterator
         end() const noexcept {
             return (this->lpHeader)
-                ? this->lpHeader->lpData +
+                ? this->lpHeader->data() +
                     this->lpHeader->uSize
                 : nullptr;
         }
@@ -185,13 +203,13 @@ namespace imp {
         iterator
         begin() noexcept {
             return (this->lpHeader)
-                ? this->lpHeader->lpData : nullptr;
+                ? this->lpHeader->data() : nullptr;
         }
 
         iterator
         end() noexcept {
             return (this->lpHeader)
-                ? this->lpHeader->lpData +
+                ? this->lpHeader->data() +
                     this->lpHeader->uSize
                 : nullptr;
         }
@@ -199,13 +217,13 @@ namespace imp {
         const_iterator
         cbegin() const noexcept {
             return (this->lpHeader)
-                ? this->lpHeader->lpData : nullptr;
+                ? this->lpHeader->data() : nullptr;
         }
 
         const_iterator
         cend() const noexcept {
             return (this->lpHeader)
-                ? this->lpHeader->lpData +
+                ? this->lpHeader->data() +
                     this->lpHeader->uSize
                 : nullptr;
         }
@@ -221,7 +239,7 @@ namespace imp {
                                     this->lpHeader,
                                     this->lpHeader->uSize + 1);
             return *std::construct_at(
-                &this->lpHeader->lpData[
+                &this->lpHeader->data()[
                     this->lpHeader->uSize++],
                 std::forward<Args>(args)...
             );
@@ -242,7 +260,7 @@ namespace imp {
             assert(!this->empty());
 
             std::destroy_at(
-                &this->lpHeader->lpData[
+                &this->lpHeader->data()[
                     this->lpHeader->uSize -= 1]
             );
         }
@@ -251,28 +269,28 @@ namespace imp {
         back() const noexcept {
             assert(!this->empty());
 
-            return this->lpHeader->lpData[this->lpHeader->uSize - 1];
+            return this->lpHeader->data()[this->lpHeader->uSize - 1];
         }
 
         const value_type&
         front() const noexcept {
             assert(!this->empty());
 
-            return this->lpHeader->lpData[0];
+            return this->lpHeader->data()[0];
         }
 
         value_type&
         back() noexcept {
             assert(!this->empty());
 
-            return this->lpHeader->lpData[this->lpHeader->uSize - 1];
+            return this->lpHeader->data()[this->lpHeader->uSize - 1];
         }
 
         value_type&
         front() noexcept {
             assert(!this->empty());
 
-            return this->lpHeader->lpData[0];
+            return this->lpHeader->data()[0];
         }
 
     private:
