@@ -52,10 +52,9 @@ namespace imp {
                 lpStorage   = new
                     (std::align_val_t{alignof(Header)})
                     std::byte[sizeof(Header) + sizeof(value_type) * uCapacity];
-            return std::construct_at(
-                (Header*)lpStorage,
-                uCapacity, uInitSize
-            );
+            return new
+                ((void*)lpStorage)
+                Header{uCapacity, uInitSize, {}};
         }
 
         static Header*
