@@ -23,7 +23,7 @@ namespace imp {
             size_t
                 uSize;
 
-            struct alignas(alignof(value_type)) {
+            struct alignas(alignof(value_type)) Storage {
                 std::byte bytes[sizeof(value_type)];
             } lpStorage[];
 
