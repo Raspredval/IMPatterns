@@ -45,10 +45,10 @@ namespace imp {
             while (uCapacity < uAtLeast)
                 uCapacity *= 2;
 
-            std::byte*
-                lpStorage   = new
-                    (std::align_val_t{alignof(Header)})
-                    std::byte[sizeof(Header) + sizeof(value_type) * uCapacity];
+            void*
+                lpStorage   = ::operator new(
+                    sizeof(Header) + sizeof(value_type) * uCapacity,
+                    std::align_val_t{alignof(Header)});
             return std::construct_at(
                 (Header*)lpStorage,
                 uCapacity, uInitSize
@@ -110,7 +110,10 @@ namespace imp {
                 }
 
                 std::destroy_at(this->lpHeader);
-                delete[] (std::byte*)this->lpHeader;
+                ::operator delete[](
+                    (void*)this->lpHeader,
+                    std::align_val_t{alignof(Header)}
+                );
             }
         }
 
