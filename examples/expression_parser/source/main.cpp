@@ -11,7 +11,7 @@
 namespace grammar {
     namespace handler {
         static imp::Match
-        full_expr(imp::MemStream& stream, imp::Match m, imp::Captures&& captures, imp::UserData){
+        full_expr(imp::MemStream& stream, imp::Match m, imp::CaptureView captures, imp::UserData){
             if (m) {
                 std::string_view
                     strvExpression  = m.GetStringView(stream);
@@ -22,10 +22,10 @@ namespace grammar {
 
                 for (const auto& c : captures) {
                     std::string_view
-                        strvCapture     = c.m.GetStringView(stream);
+                        strvCapture     = c.match.GetStringView(stream);
 
                     imp::UserData
-                        usr_val = c.dt;
+                        usr_val = c.tag;
                     auto
                         iLow    = usr_val.ipr.l,
                         iHigh   = usr_val.ipr.h;
