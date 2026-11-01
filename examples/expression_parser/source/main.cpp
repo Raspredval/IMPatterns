@@ -9,78 +9,7 @@
 #include <print>
 
 namespace grammar {
-    namespace handler {
-        static imp::Match
-        full_expr(imp::MemStream& stream, imp::Match m, imp::CaptureView captures, imp::UserData){
-            if (m) {
-                std::string_view
-                    strvExpression  = m.GetStringView(stream);
-                if (strvExpression.ends_with('\n'))
-                    strvExpression.remove_suffix(1);
-                std::print("### {} ###\n",
-                    strvExpression);
-
-                for (const auto& c : captures) {
-                    std::string_view
-                        strvCapture     = c.match.GetStringView(stream);
-
-                    imp::UserData
-                        usr_val = c.tag;
-                    auto
-                        iLow    = usr_val.ipr.l,
-                        iHigh   = usr_val.ipr.h;
-
-                    TokenType
-                        iTknID  = (TokenType)iLow;
-                    switch (iTknID) {
-                    break; case TYPE_COMMENT: {
-                        std::print("comment: ");
-                    }
-
-                    break; case TYPE_VALUE: {
-                        ValType
-                            iValID  = (ValType)iHigh;
-                        switch (iValID) {
-                        break; case VALTYPE_NUMBER:
-                            std::print("number: ");
-
-                        break; case VALTYPE_VARIABLE:
-                            std::print("variable: ");
-                        }
-                    }
-
-                    break; case TYPE_BINOP: {
-                        OpType
-                            iOpID   = (OpType)iHigh;
-                        std::print("opID: 0x{:x}; precedence: {}; left associative: {}\n",
-                            (int)iOpID,
-                            Token::getPrecedence(iOpID),
-                            Token::isLeftAssociable(iOpID));
-                        std::print(" binary operator: ");
-                    }
-
-                    break; case TYPE_UNOP: {
-                        OpType
-                            iOpID   = (OpType)iHigh;
-                        std::print("opID: 0x{:x}; precedence: {}; left associative: {}\n",
-                            (int)iOpID,
-                            Token::getPrecedence(iOpID),
-                            Token::isLeftAssociable(iOpID));
-                        std::print(" unary operator: ");
-                    }
-
-                    break; case TYPE_OPENBRK:
-                        std::print("open bracket: ");
-
-                    break; case TYPE_CLOSEBRK:
-                        std::print("close bracket: ");
-                    } std::print("'{}'\n", strvCapture);
-                } std::print("### END OF EXPRESSION ###\n\n");
-            }
-
-            return m;
-        }
-    }
+    using namespace imp;
 
     IMP_DECL_RULE(static eval);
     IMP_DECL_RULE(static comment);
@@ -88,111 +17,262 @@ namespace grammar {
     IMP_DECL_RULE(static un_op);
     IMP_DECL_RULE(static operand);
     IMP_DECL_RULE(static number);
+    IMP_DECL_RULE(static boolean);
+    IMP_DECL_RULE(static string);
     IMP_DECL_RULE(static variable);
     IMP_DECL_RULE(static sub_expr);
     IMP_DECL_RULE(static full_expr);
+    IMP_DECL_RULE(static arg_expr);
     IMP_DECL_RULE(static brkt_expr);
 
     IMP_MAKE_RULE(comment, (
-        imp::Capt<{TYPE_COMMENT, COMMTYPE_ENDLINE}>(
-            imp::Str<"#">() >> imp::Any(imp::NegSet<"\n">())
+        Capt<{TYPE_COMMENT, COMMTYPE_ENDLINE}>(
+            Str<"#">() >> Any(NegSet<"\n">())
         )
     ))
 
-    IMP_MAKE_RULE(full_expr,
-        imp::CaptGr(
-            imp::Fn<sub_expr>() >>
-            imp::Opt(imp::Fn<comment>()) >>
-            (imp::Set<";\n">() | imp::NoChars()),
-
-            imp::Fn<handler::full_expr>()
+    IMP_MAKE_RULE(full_expr, (
+        CaptGr<{TYPE_EXPR, EXPRTYPE_FULL}>(
+            Fn<sub_expr>() >>
+            Opt(Fn<comment>()) >>
+            (Set<";\n">() | NoChars())
         )
-    )
+    ))
 
     IMP_MAKE_RULE(sub_expr,
-        imp::Any(imp::Space()) >> imp::Opt(
-            imp::Fn<operand>() >> imp::Any(
-                imp::Any(imp::Space()) >> imp::Fn<bin_op>() >>
-                imp::Any(imp::Space()) >> imp::Fn<operand>()
-            ) >> imp::Any(imp::Space())
+        Any(Space()) >> Opt(
+            Fn<operand>() >> Any(
+                Any(Space()) >> Fn<bin_op>() >>
+                Any(Space()) >> Fn<operand>()
+            ) >> Any(Space())
         )
     )
 
     IMP_MAKE_RULE(operand,
-        imp::Any(imp::Fn<un_op>()) >> (
-            imp::Fn<number>() |
-            imp::Fn<variable>() |
-            imp::Fn<brkt_expr>()
+        Any(Fn<un_op>()) >> (
+            Fn<number>()   |
+            Fn<boolean>()  |
+            Fn<string>()   |
+            Fn<variable>() |
+            Fn<brkt_expr>()
         )
     )
 
     IMP_MAKE_RULE(number, (
-        imp::Capt<{TYPE_VALUE, VALTYPE_NUMBER}>(
-            imp::Some(imp::Digit()) >> imp::Opt(
-                imp::Str<".">() >> imp::Some(imp::Digit())
+        Capt<{TYPE_VALUE, VALTYPE_INT}>(
+            Some(Digit())
+        ) >> Opt(
+            CaptMerge<{TYPE_VALUE, VALTYPE_FLOAT}>(
+                Str<".">() >> Some(Digit())
             )
         )
     ))
 
+    IMP_MAKE_RULE(boolean, (
+        Capt<{TYPE_VALUE, VALTYPE_BOOL}>(
+            Dict<"true", "false">()
+        )
+    ))
+
     IMP_MAKE_RULE(variable, (
-        imp::Capt<{TYPE_VALUE, VALTYPE_VARIABLE}>(
-            imp::Alpha() >> imp::Any(imp::Alnum())
+        Capt<{TYPE_VALUE, VALTYPE_VAR}>(
+            Alpha() >> Any(imp::Alnum())
+        ) >> Opt(
+            Str<"(">() >> ReplaceCaptTag<{TYPE_VALUE, VALTYPE_FUNC}>() >>
+            Opt(
+                Fn<arg_expr>() >> Any(
+                    Str<",">() >> Fn<arg_expr>()
+                )
+            ) >> Str<")">()
+        )
+    ))
+
+    IMP_MAKE_RULE(arg_expr, (
+        CaptGr<{TYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>(),
+        [] (MemStream&, Match m, CaptureView captures, UserData) -> Match {
+            if (m) {
+                if (captures.empty())
+                    m.Toggle();
+            }
+
+            return m;
+        })
+    ))
+
+    IMP_MAKE_RULE(string, (
+        Capt<{TYPE_VALUE, VALTYPE_STR}>(
+            Str<"\"">() >>
+            Any(NegSet<"\"\n">()) >>
+            Str<"\"">()
         )
     ))
 
     IMP_MAKE_RULE(brkt_expr, (
-        imp::Capt<{TYPE_OPENBRK, BRKTYPE_ROUND}>(
-            imp::Str<"(">()
-        ) >> imp::Fn<sub_expr>() >>
-        imp::Capt<{TYPE_CLOSEBRK, BRKTYPE_ROUND}>(
-            imp::Str<")">()
+        Capt<{TYPE_OPENBRK, BRKTYPE_ROUND}>(
+            Str<"(">()
+        ) >> Fn<sub_expr>() >>
+        Capt<{TYPE_CLOSEBRK, BRKTYPE_ROUND}>(
+            Str<")">()
         )
     ))
 
     IMP_MAKE_RULE(bin_op, (
-        imp::CaptDict<
-            {"+",   { TYPE_BINOP, OPTYPE_ADD     }},
-            {"-",   { TYPE_BINOP, OPTYPE_SUB     }},
-            {"*",   { TYPE_BINOP, OPTYPE_MUL     }},
-            {"/",   { TYPE_BINOP, OPTYPE_DIV     }},
-            {"%",   { TYPE_BINOP, OPTYPE_MOD     }},
-            {"//",  { TYPE_BINOP, OPTYPE_IDIV    }},
-            {"^^",  { TYPE_BINOP, OPTYPE_POW     }},
-            {"=",   { TYPE_BINOP, OPTYPE_ASSIGN  }},
-            {"+=",  { TYPE_BINOP, OPTYPE_ADDASS  }},
-            {"-=",  { TYPE_BINOP, OPTYPE_SUBASS  }},
-            {"*=",  { TYPE_BINOP, OPTYPE_MULASS  }},
-            {"/=",  { TYPE_BINOP, OPTYPE_DIVASS  }},
-            {"%=",  { TYPE_BINOP, OPTYPE_MODASS  }},
-            {"//=", { TYPE_BINOP, OPTYPE_IDIVASS }},
-            {"^^=", { TYPE_BINOP, OPTYPE_POWASS  }}
+        CaptDict<
+            {"^^",  { TYPE_BINOP, OPTYPE_POW        }},
+            {"*",   { TYPE_BINOP, OPTYPE_MUL        }},
+            {"/",   { TYPE_BINOP, OPTYPE_DIV        }},
+            {"%",   { TYPE_BINOP, OPTYPE_MOD        }},
+            {"//",  { TYPE_BINOP, OPTYPE_IDIV       }},
+            {"+",   { TYPE_BINOP, OPTYPE_ADD        }},
+            {"-",   { TYPE_BINOP, OPTYPE_SUB        }},
+            {"<",   { TYPE_BINOP, OPTYPE_LESS       }},
+            {"<=",  { TYPE_BINOP, OPTYPE_LESSEQ     }},
+            {">",   { TYPE_BINOP, OPTYPE_GREAT      }},
+            {">=",  { TYPE_BINOP, OPTYPE_GREATEQ    }},
+            {"==",  { TYPE_BINOP, OPTYPE_EQUAL      }},
+            {"!=",  { TYPE_BINOP, OPTYPE_NOTEQUAL   }},
+            {"&&",  { TYPE_BINOP, OPTYPE_BOOLAND    }},
+            {"||",  { TYPE_BINOP, OPTYPE_BOOLOR     }},
+            {"=",   { TYPE_BINOP, OPTYPE_ASSIGN     }},
+            {"+=",  { TYPE_BINOP, OPTYPE_ADDASS     }},
+            {"-=",  { TYPE_BINOP, OPTYPE_SUBASS     }},
+            {"*=",  { TYPE_BINOP, OPTYPE_MULASS     }},
+            {"/=",  { TYPE_BINOP, OPTYPE_DIVASS     }},
+            {"%=",  { TYPE_BINOP, OPTYPE_MODASS     }},
+            {"//=", { TYPE_BINOP, OPTYPE_IDIVASS    }},
+            {"^^=", { TYPE_BINOP, OPTYPE_POWASS     }}
         >()
     ))
 
     IMP_MAKE_RULE(un_op, (
-        imp::CaptDict<
-            { "+", { TYPE_UNOP, OPTYPE_PLUS  }},
-            { "-", { TYPE_UNOP, OPTYPE_MINUS }}
+        CaptDict<
+            { "+", { TYPE_UNOP, OPTYPE_PLUS     }},
+            { "-", { TYPE_UNOP, OPTYPE_MINUS    }},
+            { "!", { TYPE_UNOP, OPTYPE_NOT      }}
         >()
     ))
 
     IMP_MAKE_RULE(eval,
-        imp::Any(
-            imp::LookAhead(imp::AnyChar()) >>
-            imp::Fn<full_expr>()
-        ) >> imp::NoChars()
+        Any(
+            LookAhead(AnyChar()) >>
+            Fn<full_expr>()
+        ) >> NoChars()
     )
+}
+
+template<typename... Args>
+static void
+Print(int iLevel, const std::format_string<const Args&...>& strfmt, const Args&... args) {
+    for (int i = 0; i < iLevel; ++i)
+        putchar(' ');
+    std::print(strfmt, args...);
+}
+
+static void
+PrintTokens(imp::MemStream& stream, imp::CaptureView captures, int iLevel) {
+    for (const auto& c : captures) {
+        std::string_view
+            strvCapture     = c.match.GetStringView(stream);
+        if (strvCapture.ends_with('\n'))
+            strvCapture.remove_suffix(1);
+
+        imp::UserData
+            usr_val = c.tag;
+        auto
+            iLow    = usr_val.ipr.l,
+            iHigh   = usr_val.ipr.h;
+
+        TokenType
+            iTknID  = (TokenType)iLow;
+        switch (iTknID) {
+        break; case TYPE_EXPR: {
+            ExprType
+                iExprID = (ExprType)iHigh;
+            switch (iExprID) {
+            break; case EXPRTYPE_FULL:
+                Print(iLevel, "#expr: [ {} ] {{\n", strvCapture);
+                PrintTokens(stream, c.children, iLevel + 1);
+                Print(iLevel, "}}\n\n");
+
+            break; case EXPRTYPE_ARG:
+                Print(iLevel, "#arg expr: [ {} ] {{\n", strvCapture);
+                PrintTokens(stream, c.children, iLevel + 1);
+                Print(iLevel, "}}\n");
+            }
+        }
+
+        break; case TYPE_COMMENT: {
+            Print(iLevel, "comment: [ {} ]\n", strvCapture);
+        }
+
+        break; case TYPE_VALUE: {
+            ValType
+                iValID  = (ValType)iHigh;
+            switch (iValID) {
+            break; case VALTYPE_INT:
+                Print(iLevel, "integer: [ {} ]\n", strvCapture);
+
+            break; case VALTYPE_FLOAT:
+                Print(iLevel, "float: [ {} ]\n", strvCapture);
+
+            break; case VALTYPE_BOOL:
+                Print(iLevel, "boolean: [ {} ]\n", strvCapture);
+
+            break; case VALTYPE_STR:
+                Print(iLevel, "string: [ {} ]\n", strvCapture);
+
+            break; case VALTYPE_VAR:
+                Print(iLevel, "variable: [ {} ]\n", strvCapture);
+
+            break; case VALTYPE_FUNC:
+                Print(iLevel, "function: [ {} ]\n", strvCapture);
+            }
+        }
+
+        break; case TYPE_BINOP: {
+            OpType
+                iOpID   = (OpType)iHigh;
+            Print(iLevel, "binary op: (0x{:x} {}) [ {} ]\n",
+                (int)iOpID,
+                Token::isLeftAssociable(iOpID)
+                    ? "left ass." : "right ass.",
+                strvCapture
+            );
+        }
+
+        break; case TYPE_UNOP: {
+            OpType
+                iOpID   = (OpType)iHigh;
+            Print(iLevel, "unary op: (0x{:x} {}) [ {} ]\n",
+                (int)iOpID,
+                Token::isLeftAssociable(iOpID)
+                    ? "left ass." : "right ass.",
+                strvCapture
+            );
+        }
+
+        break; case TYPE_OPENBRK:
+            Print(iLevel, "open bracket: [ {} ]\n", strvCapture);
+
+        break; case TYPE_CLOSEBRK:
+            Print(iLevel, "close bracket: [ {} ]\n", strvCapture);
+        }
+    }
 }
 
 static void
 PrecompileChunk(std::span<const char> spnSource) {
     imp::MemStream
-        stream  = {spnSource};
-    if (!imp::Eval(imp::Fn<grammar::eval>(), stream)) {
+        stream      = {spnSource};
+    imp::Captures
+        captures    = {};
+    if (!imp::Eval(imp::Fn<grammar::eval>(), stream, captures)) {
         throw std::runtime_error(std::format(
             "parser failed at: {}", stream.GetPos()
         ));
     }
+
+    PrintTokens(stream, captures, 0);
 }
 
 static void

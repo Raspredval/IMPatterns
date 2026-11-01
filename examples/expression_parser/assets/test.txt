@@ -1,3 +1,5 @@
 Pi = 22 / 7; Radius = -(6.9 - (6 + 7))  # setting constants
 CircleArea  = Pi * Radius ^^ 2          # calculating circle area
 CirclePerim = 2 * Pi * Radius           # calculating circle perimeter
+
+print("Hello", "World!")
