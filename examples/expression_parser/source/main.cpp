@@ -172,20 +172,17 @@ Print(int iLevel, const std::format_string<const Args&...>& strfmt, const Args&.
 }
 
 static void
-PrintTokens(imp::MemStream& stream, imp::CaptureView captures, int iLevel = 0) {
-    for (const auto& c : captures) {
+PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
+    for (const auto& tkn : tokens) {
         std::string_view
-            strvCapture     = c.match.GetStringView(stream);
-        while (!strvCapture.empty() && isblank(strvCapture.front()))
-            strvCapture.remove_prefix(1);
-        while (!strvCapture.empty() && strvCapture.back() == '\n')
-            strvCapture.remove_suffix(1);
+            strvToken   = tkn.match.GetStringView(stream);
+        while (!strvToken.empty() && isblank(strvToken.front()))
+            strvToken.remove_prefix(1);
+        while (!strvToken.empty() && strvToken.back() == '\n')
+            strvToken.remove_suffix(1);
 
-        imp::UserData
-            usr_val = c.tag;
-        auto
-            iLow    = usr_val.ipr.l,
-            iHigh   = usr_val.ipr.h;
+        auto [ iLow, iHigh] =
+            tkn.tag.ipr;
 
         TokenType
             iTknID  = (TokenType)iLow;
@@ -195,24 +192,24 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView captures, int iLevel = 0) {
                 iExprID = (ExprType)iHigh;
             switch (iExprID) {
             break; case EXPRTYPE_FULL:
-                Print(iLevel, "#expression: [ {} ] {{\n", strvCapture);
-                PrintTokens(stream, c.children, iLevel + 1);
+                Print(iLevel, "#expression: [ {} ] {{\n", strvToken);
+                PrintTokens(stream, tkn.children, iLevel + 1);
                 Print(iLevel, "}}\n\n");
 
             break; case EXPRTYPE_SUB:
-                Print(iLevel, "#sub expression: [ {} ] {{\n", strvCapture);
-                PrintTokens(stream, c.children, iLevel + 1);
+                Print(iLevel, "#sub expression: [ {} ] {{\n", strvToken);
+                PrintTokens(stream, tkn.children, iLevel + 1);
                 Print(iLevel, "}}\n");
 
             break; case EXPRTYPE_ARG:
-                Print(iLevel, "#argument: [ {} ] {{\n", strvCapture);
-                PrintTokens(stream, c.children, iLevel + 1);
+                Print(iLevel, "#argument: [ {} ] {{\n", strvToken);
+                PrintTokens(stream, tkn.children, iLevel + 1);
                 Print(iLevel, "}}\n");
             }
         }
 
         break; case TOKTYPE_COMMENT: {
-            Print(iLevel, "comment:\t[ {} ]\n", strvCapture);
+            Print(iLevel, "comment:\t[ {} ]\n", strvToken);
         }
 
         break; case TOKTYPE_VALUE: {
@@ -220,22 +217,22 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView captures, int iLevel = 0) {
                 iValID  = (ValType)iHigh;
             switch (iValID) {
             break; case VALTYPE_INT:
-                Print(iLevel, "integer:\t[ {} ]\n", strvCapture);
+                Print(iLevel, "integer:\t[ {} ]\n", strvToken);
 
             break; case VALTYPE_FLOAT:
-                Print(iLevel, "fractional:\t[ {} ]\n", strvCapture);
+                Print(iLevel, "fractional:\t[ {} ]\n", strvToken);
 
             break; case VALTYPE_BOOL:
-                Print(iLevel, "boolean:\t[ {} ]\n", strvCapture);
+                Print(iLevel, "boolean:\t[ {} ]\n", strvToken);
 
             break; case VALTYPE_STR:
-                Print(iLevel, "string:\t[ {} ]\n", strvCapture);
+                Print(iLevel, "string:\t[ {} ]\n", strvToken);
 
             break; case VALTYPE_VAR:
-                Print(iLevel, "variable:\t[ {} ]\n", strvCapture);
+                Print(iLevel, "variable:\t[ {} ]\n", strvToken);
 
             break; case VALTYPE_FUNC:
-                Print(iLevel, "function:\t[ {} ]\n", strvCapture);
+                Print(iLevel, "function:\t[ {} ]\n", strvToken);
             }
         }
 
@@ -243,7 +240,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView captures, int iLevel = 0) {
             OpType
                 iOpID   = (OpType)iHigh;
             Print(iLevel, "binary op:\t[ {} ] (opID: 0x{:x}, {})\n",
-                strvCapture,
+                strvToken,
                 (int)iOpID,
                 isLeftAssociable(iOpID)
                     ? "left associable"
@@ -255,7 +252,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView captures, int iLevel = 0) {
             OpType
                 iOpID   = (OpType)iHigh;
             Print(iLevel, "unary op:\t[ {} ] (opID: 0x{:x}, {})\n",
-                strvCapture,
+                strvToken,
                 (int)iOpID,
                 isLeftAssociable(iOpID)
                     ? "left associable"
