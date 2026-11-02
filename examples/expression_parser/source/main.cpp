@@ -176,7 +176,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView captures, int iLevel = 0) {
     for (const auto& c : captures) {
         std::string_view
             strvCapture     = c.match.GetStringView(stream);
-        while (!strvCapture.empty() && isblank(strvCapture.back()))
+        while (!strvCapture.empty() && isblank(strvCapture.front()))
             strvCapture.remove_prefix(1);
         while (!strvCapture.empty() && strvCapture.back() == '\n')
             strvCapture.remove_suffix(1);
