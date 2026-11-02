@@ -4,7 +4,6 @@
 #include "Token.hpp"
 
 #include <string_view>
-#include <stdexcept>
 #include <format>
 #include <print>
 
@@ -117,8 +116,7 @@ namespace grammar {
             }
 
             return m;
-        }) >>
-        Str<")">()
+        }) >> Str<")">()
     ))
 
     IMP_MAKE_RULE(bin_op, (
@@ -174,7 +172,7 @@ Print(int iLevel, const std::format_string<const Args&...>& strfmt, const Args&.
 }
 
 static void
-PrintTokens(imp::MemStream& stream, imp::CaptureView captures, int iLevel) {
+PrintTokens(imp::MemStream& stream, imp::CaptureView captures, int iLevel = 0) {
     for (const auto& c : captures) {
         std::string_view
             strvCapture     = c.match.GetStringView(stream);
@@ -269,47 +267,28 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView captures, int iLevel) {
     }
 }
 
-static void
-PrecompileChunk(std::span<const char> spnSource) {
-    imp::MemStream
-        stream      = {spnSource};
-    imp::Captures
-        captures    = {};
-    if (!imp::Eval(imp::Fn<grammar::eval>(), stream, captures)) {
-        throw std::runtime_error(std::format(
-            "parser failed at: {}", stream.GetPos()
-        ));
-    }
+int main() {
+    std::string_view
+        strvFilename    = "./assets/test.txt";
 
-    PrintTokens(stream, captures, 0);
-}
-
-static void
-PrecompileFile(std::string_view strvFilename) {
     imp::MappedFile
         mapped_file = {strvFilename};
     if (!mapped_file) {
-        throw std::runtime_error(std::format(
-            "failed to open file: {}", strvFilename
-        ));
-    }
-
-    return PrecompileChunk(mapped_file.GetView());
-}
-
-int main() {
-    try {
-        std::string_view
-            strvFilename    = "./assets/test.txt";
-
-        PrecompileFile(strvFilename);
-
-        std::print("success\n");
-    }
-    catch (const std::exception& err) {
-        std::print(stderr, "error: {}\n", err.what());
+        std::print(stderr,
+            "failed to open file: {}", strvFilename);
         return -1;
     }
 
+    imp::Captures
+        tokens;
+    imp::MemStream
+        stream      = {mapped_file.GetView()};
+    if (!imp::Eval(imp::Fn<grammar::eval>(), stream, tokens)) {
+        std::print(stderr,
+            "parser failed at: {}", stream.GetPos());
+        return -1;
+    }
+
+    PrintTokens(stream, tokens);
     return 0;
 }
