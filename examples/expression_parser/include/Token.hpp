@@ -1,19 +1,17 @@
 #pragma once
-#include <string_view>
 
 enum TokenType {
-    TYPE_VALUE,
-    TYPE_EXPR,
-    TYPE_BINOP,
-    TYPE_UNOP,
-    TYPE_OPENBRK,
-    TYPE_CLOSEBRK,
-    TYPE_COMMENT
+    TOKTYPE_VALUE,
+    TOKTYPE_EXPR,
+    TOKTYPE_BINOP,
+    TOKTYPE_UNOP,
+    TOKTYPE_COMMENT
 };
 
 enum ExprType {
     EXPRTYPE_FULL,
-    EXPRTYPE_ARG
+    EXPRTYPE_SUB,
+    EXPRTYPE_ARG,
 };
 
 enum CommType {
@@ -66,59 +64,36 @@ enum OpType {
     OPTYPE_POWASS   = 0x97
 };
 
-enum BrktType {
-    BRKTYPE_ROUND
-};
+inline int
+getOpPrecedence(OpType iType) {
+    return iType >> 4;
+}
 
-struct Token {
-    static int
-    getPrecedence(OpType iType) {
-        return iType >> 4;
+inline bool
+isLeftAssociable(OpType iType) {
+    switch (iType) {
+    case OPTYPE_MUL:
+    case OPTYPE_DIV:
+    case OPTYPE_IDIV:
+    case OPTYPE_MOD:
+    case OPTYPE_ADD:
+    case OPTYPE_SUB:
+    case OPTYPE_LESS:
+    case OPTYPE_LESSEQ:
+    case OPTYPE_GREAT:
+    case OPTYPE_GREATEQ:
+    case OPTYPE_EQUAL:
+    case OPTYPE_NOTEQUAL:
+    case OPTYPE_BOOLAND:
+    case OPTYPE_BOOLOR:
+        return true;
+
+    default:
+        return false;
     }
+}
 
-    static bool
-    isLeftAssociable(OpType iType) {
-        switch (iType) {
-        case OPTYPE_MUL:
-        case OPTYPE_DIV:
-        case OPTYPE_IDIV:
-        case OPTYPE_MOD:
-        case OPTYPE_ADD:
-        case OPTYPE_SUB:
-        case OPTYPE_LESS:
-        case OPTYPE_LESSEQ:
-        case OPTYPE_GREAT:
-        case OPTYPE_GREATEQ:
-        case OPTYPE_EQUAL:
-        case OPTYPE_NOTEQUAL:
-        case OPTYPE_BOOLAND:
-        case OPTYPE_BOOLOR:
-            return true;
-
-        default:
-            return false;
-        }
-    }
-
-    static bool
-    isRightAssociable(OpType iType) {
-        return !isLeftAssociable(iType);
-    }
-
-    std::string_view
-        strvValue;
-    TokenType
-        type;
-    union {
-        ExprType
-            expr_type;
-        ValType
-            val_type;
-        OpType
-            op_type;
-        BrktType
-            brkt_type;
-        CommType
-            comm_type;
-    };
-};
+inline bool
+isRightAssociable(OpType iType) {
+    return !isLeftAssociable(iType);
+}
