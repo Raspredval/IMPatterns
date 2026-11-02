@@ -3,10 +3,10 @@ static_assert(__cplusplus >= 202302L, "requires C++23 minimum version");
 
 #include "FixedString.hpp"
 #include "UserData.hpp"
+#include "Vector.hpp"
 
 #include <string_view>
 #include <cassert>
-#include <vector>
 
 
 namespace imp {
@@ -50,7 +50,7 @@ namespace imp {
         struct Node {
             NodeData
                 ndt;
-            std::vector<Node>
+            Vector<Node>
                 vecChildren;
         };
 
@@ -166,7 +166,7 @@ namespace imp {
         }
 
         static DictMatch
-        matchChar(const std::vector<Node>& vecNodes, char c) {
+        matchChar(const Vector<Node>& vecNodes, char c) {
             for (const Node& refNode : vecNodes) {
                 const NodeData&
                     ndt = refNode.ndt;
@@ -178,7 +178,7 @@ namespace imp {
         }
 
         static void
-        insertImpl(std::vector<Node>& vecNodes, std::string_view strvInsert, uhalfptr_t uWordID) {
+        insertImpl(Vector<Node>& vecNodes, std::string_view strvInsert, uhalfptr_t uWordID) {
             assert(uWordID != 0);
 
             for (Node& refNode : vecNodes) {
@@ -194,7 +194,7 @@ namespace imp {
 
                         refNode = Node {
                             ndtPrefix,
-                            std::vector<Node> {
+                            Vector<Node> {
                                 Node {
                                     ndtSuffix,
                                     std::move(refNode.vecChildren)
@@ -216,11 +216,11 @@ namespace imp {
 
             vecNodes.emplace_back(
                 NodeData{ strvInsert, uWordID },
-                std::vector<Node>{}
+                Vector<Node>{}
             );
         }
 
-        std::vector<Node>
+        Vector<Node>
             vecRoot;
     };
 }
