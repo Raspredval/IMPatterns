@@ -192,9 +192,14 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
                 iExprID = (ExprType)iHigh;
             switch (iExprID) {
             break; case EXPRTYPE_FULL:
-                Print(iLevel, "#expression: [ {} ] {{\n", strvToken);
-                PrintTokens(stream, tkn.children, iLevel + 1);
-                Print(iLevel, "}}\n\n");
+                Print(iLevel, "#expression: [ {} ]", strvToken);
+                if (!tkn.children.empty()) {
+                    std::print(" {{\n");
+                    PrintTokens(stream, tkn.children, iLevel + 1);
+                    Print(iLevel, "}}\n\n");
+                }
+                else
+                    std::print(";\n\n");
 
             break; case EXPRTYPE_SUB:
                 Print(iLevel, "#sub expression: [ {} ] {{\n", strvToken);
