@@ -6,6 +6,25 @@ static_assert(__cplusplus >= 202302L, "requires C++23 minimum version");
 
 namespace imp {
     namespace __impl {
+        template<typename Fn>
+            requires std::same_as<std::invoke_result_t<Fn>, void>
+        class [[maybe_unused]] defer {
+        public:
+            defer(const Fn& fn) :
+                fn(fn) {}
+
+            defer(Fn&& fn) :
+                fn(std::move(fn)) {}
+
+            ~defer() {
+                fn();
+            }
+
+        private:
+            std::remove_reference_t<Fn>
+                fn;
+        };
+
         #ifdef _WIN32
         struct mmap_windows {
             static std::span<const char>

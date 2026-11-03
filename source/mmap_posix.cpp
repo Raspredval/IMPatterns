@@ -10,39 +10,28 @@
 namespace imp::__impl {
     extern std::span<const char>
     mmap_posix::map_file(std::string_view strvFilename) noexcept {
-        void*
-            lpFileView  = nullptr;
-        size_t
-            uFileSize   = 0;
         struct stat
             file_info   = {};
-        std::span<const char>
-            spnResult   = {};
         int
             hFile       = open(strvFilename.data(), O_RDONLY);
-        if (hFile < 0)
-            goto finally;
+        auto
+            defer_file  = defer{[hFile] { if (hFile > 0) close(hFile); }};
+        if (hFile < 0 || fstat(hFile, &file_info) < 0)
+            return {};
 
-        if (fstat(hFile, &file_info) < 0)
-            goto finally;
-        uFileSize       = (size_t)file_info.st_size;
-
-        lpFileView      = mmap(
+        size_t
+            uFileSize   = (size_t)file_info.st_size;
+        void*
+            lpFileView  = mmap(
                             NULL, uFileSize,
                             PROT_READ, MAP_PRIVATE,
                             hFile, 0);
         if (lpFileView == MAP_FAILED)
-            goto finally;
+            return {};
 
-        spnResult       = {
-            static_cast<const char*>(lpFileView), uFileSize
+        return {
+            (const char*)lpFileView, uFileSize
         };
-
-    finally:
-        if (hFile > 0)
-            close(hFile);
-
-        return spnResult;
     }
 
     extern bool

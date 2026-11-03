@@ -40,53 +40,40 @@ namespace imp::__impl {
 
     static std::span<const char>
     map_file_handle(HANDLE hFile) noexcept {
-        HANDLE
-            hFileMap    = nullptr;
-        void*
-            lpFileView  = nullptr;
-        UINT64
-            uFileSize   = 0;
         BY_HANDLE_FILE_INFORMATION
             file_info   = {};
-        std::span<const char>
-            spnResult   = {};
+        auto
+            defer_file  = defer{[hFile] { if (hFile != INVALID_HANDLE_VALUE) CloseHandle(hFile); }};
+        if (hFile == INVALID_HANDLE_VALUE || !GetFileInformationByHandle(hFile, &file_info))
+            return {};
 
-        if (hFile == INVALID_HANDLE_VALUE)
-            goto finally;
+        UINT64
+            uFileSize   = (UINT64)file_info.nFileSizeLow |
+                            (UINT64)file_info.nFileSizeHigh << 32;
+        HANDLE
+            hFileMap    = CreateFileMappingA(
+                            hFile, nullptr,
+                            PAGE_READONLY,
+                            (DWORD)(uFileSize >> 32),
+                            (DWORD)(uFileSize),
+                            nullptr);
+        auto
+            defer_fmap  = defer{[hFileMap] { if (hFileMap != nullptr) CloseHandle(hFileMap); }};
+        if (hFileMap == nullptr)
+            return {};
 
-        if (!GetFileInformationByHandle(hFile, &file_info))
-            goto finally;
-        uFileSize   = (UINT64)file_info.nFileSizeLow |
-                        (UINT64)file_info.nFileSizeHigh << 32;
+        void*
+            lpFileView  = MapViewOfFile(
+                            hFileMap,
+                            FILE_MAP_READ,
+                            0, 0,
+                            (SIZE_T)uFileSize);
+        if (lpFileView == nullptr)
+            return {};
 
-        hFileMap    = CreateFileMappingA(
-                        hFile, nullptr,
-                        PAGE_READONLY,
-                        (DWORD)(uFileSize >> 32),
-                        (DWORD)(uFileSize),
-                        nullptr);
-        if (hFileMap == NULL)
-            goto finally;
-
-        lpFileView  = MapViewOfFile(
-                        hFileMap,
-                        FILE_MAP_READ,
-                        0, 0,
-                        (SIZE_T)uFileSize);
-        if (lpFileView == NULL)
-            goto finally;
-
-        spnResult = {
-            static_cast<const char*>(lpFileView), uFileSize
+        return {
+            (const char*)lpFileView, uFileSize
         };
-
-    finally:
-        if (hFileMap != NULL)
-            CloseHandle(hFileMap);
-        if (hFile != INVALID_HANDLE_VALUE)
-            CloseHandle(hFile);
-
-        return spnResult;
     }
 }
 
