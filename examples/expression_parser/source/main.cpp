@@ -32,18 +32,16 @@ namespace grammar {
 
     IMP_MAKE_RULE(full_expr, (
         CaptGr<{TOKTYPE_EXPR, EXPRTYPE_FULL}>(
-            Fn<sub_expr>() >>
-            Opt(Fn<comment>()) >>
-            (Set<";\n">() | NoChars())
+            Any(Space()) >> Opt (
+                Fn<sub_expr>() >> Any(Space())
+            ) >> Opt(Fn<comment>()) >> (Set<";\n">() | NoChars())
         )
     ))
 
     IMP_MAKE_RULE(sub_expr,
-        Any(Space()) >> Opt(
-            Fn<operand>() >> Any(
-                Any(Space()) >> Fn<bin_op>() >>
-                Any(Space()) >> Fn<operand>()
-            ) >> Any(Space())
+        Fn<operand>() >> Any(
+            Any(Space()) >> Fn<bin_op>() >>
+            Any(Space()) >> Fn<operand>()
         )
     )
 
@@ -87,15 +85,9 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(arg_expr, (
-        CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>(),
-        [] (MemStream&, Match m, CaptureView captures, UserData) -> Match {
-            if (m) {
-                if (captures.empty())
-                    m.Toggle();
-            }
-
-            return m;
-        })
+        Any(Space()) >>
+        CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
+        Any(Space())
     ))
 
     IMP_MAKE_RULE(string, (
@@ -107,16 +99,9 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(brkt_expr, (
-        Str<"(">() >>
-        CaptGr<{TOKTYPE_EXPR, EXPRTYPE_SUB}>(Fn<sub_expr>(),
-        [] (MemStream&, Match m, CaptureView captures, UserData) -> Match {
-            if (m) {
-                if (captures.empty())
-                    m.Toggle();
-            }
-
-            return m;
-        }) >> Str<")">()
+        Str<"(">() >> Any(Space()) >>
+        CaptGr<{TOKTYPE_EXPR, EXPRTYPE_SUB}>(Fn<sub_expr>()) >>
+        Any(Space()) >> Str<")">()
     ))
 
     IMP_MAKE_RULE(bin_op, (
@@ -176,9 +161,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
     for (const auto& tkn : tokens) {
         std::string_view
             strvToken   = tkn.match.GetStringView(stream);
-        while (!strvToken.empty() && isblank(strvToken.front()))
-            strvToken.remove_prefix(1);
-        while (!strvToken.empty() && strvToken.back() == '\n')
+        if (strvToken.ends_with('\n'))
             strvToken.remove_suffix(1);
 
         auto [ iLow, iHigh] =
@@ -287,7 +270,7 @@ int main() {
         stream      = {mapped_file.GetView()};
     if (!imp::Eval(imp::Fn<grammar::eval>(), stream, tokens)) {
         std::print(stderr,
-            "parser failed at: {}", stream.GetPos());
+            "parser failed at: {}\n", stream.GetPos());
         return -1;
     }
 
