@@ -257,7 +257,7 @@ int main() {
         strvFilename    = "./assets/test.txt";
 
     imp::MappedFile
-        mapped_file = {strvFilename};
+        mapped_file     = {strvFilename};
     if (!mapped_file) {
         std::print(stderr,
             "failed to open file: {}", strvFilename);
@@ -265,9 +265,9 @@ int main() {
     }
 
     imp::Captures
-        tokens;
+        tokens  = {};
     imp::MemStream
-        stream      = {mapped_file.GetView()};
+        stream  = {mapped_file.GetView()};
     if (!imp::Eval(imp::Fn<grammar::eval>(), stream, tokens)) {
         std::print(stderr,
             "parser failed at: {}\n", stream.GetPos());
