@@ -72,8 +72,10 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(variable, (
-        Capt<{TOKTYPE_VALUE, VALTYPE_VAR}>(
-            Alpha() >> Any(imp::Alnum())
+        NegDict<"if", "else">(
+            Capt<{TOKTYPE_VALUE, VALTYPE_VAR}>(
+                Alpha() >> Any(imp::Alnum())
+            )
         ) >> Opt(
             Str<"(">() >> ReplaceCaptTag<{TOKTYPE_VALUE, VALTYPE_FUNC}>() >>
             Opt(
