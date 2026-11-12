@@ -10,6 +10,31 @@
 namespace grammar {
     using namespace imp;
 
+    struct SrcPos {
+        intptr_t
+            iLine, iColumn;
+    };
+
+    struct State {
+        intptr_t
+            iLastLnBrk,
+            iLineCount;
+
+        SrcPos
+        GetPos(intptr_t iCurPos) const noexcept {
+            return {
+                .iLine      = this->iLineCount + 1,
+                .iColumn    = (iCurPos - this->iLastLnBrk) + 1
+            };
+        }
+
+        void
+        PushLnBrk(intptr_t iCurPos) {
+            this->iLineCount    += 1;
+            this->iLastLnBrk    = iCurPos + 1;
+        }
+    };
+
     IMP_DECL_RULE(static eval);
     IMP_DECL_RULE(static comment);
     IMP_DECL_RULE(static bin_op);
@@ -23,6 +48,7 @@ namespace grammar {
     IMP_DECL_RULE(static full_expr);
     IMP_DECL_RULE(static arg_expr);
     IMP_DECL_RULE(static brkt_expr);
+    IMP_DECL_RULE(static line_break);
 
     IMP_MAKE_RULE(comment, (
         Capt<{TOKTYPE_COMMENT, COMMTYPE_ENDLINE}>(
@@ -34,8 +60,23 @@ namespace grammar {
         CaptGr<{TOKTYPE_EXPR, EXPRTYPE_FULL}>(
             Any(Space()) >> Opt (
                 Fn<sub_expr>() >> Any(Space())
-            ) >> Opt(Fn<comment>()) >> (Set<";\n">() | NoChars())
+            ) >> Opt(Fn<comment>()) >> (
+                NoChars() | Str<";">() | Fn<line_break>()
+            )
         )
+    ))
+
+    IMP_MAKE_RULE(line_break, (
+        Str<"\n">() /=
+        [] (MemStream& stream, Match m, CaptureView, UserData usr_val) -> Match {
+            if (m) {
+                State*
+                    lpState = (State*)usr_val.ptr;
+                lpState->PushLnBrk(stream.GetPos());
+            }
+
+            return m;
+        }
     ))
 
     IMP_MAKE_RULE(sub_expr,
@@ -143,10 +184,7 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(eval,
-        Any(
-            LookAhead(AnyChar()) >>
-            Fn<full_expr>()
-        ) >> NoChars()
+        NoChars() | (Fn<full_expr>() >> Fn<eval>())
     )
 }
 
@@ -270,9 +308,16 @@ int main() {
         tokens  = {};
     imp::MemStream
         stream  = {mapped_file.GetView()};
-    if (!imp::Eval(imp::Fn<grammar::eval>(), stream, tokens)) {
+    grammar::State
+        state   = { .iLastLnBrk = 0, .iLineCount = 0 };
+
+    if (!imp::Eval(imp::Fn<grammar::eval>(), stream, tokens, &state)) {
+        grammar::SrcPos
+            src_pos = state.GetPos(stream.GetPos());
         std::print(stderr,
-            "parser failed at: {}\n", stream.GetPos());
+            "parser failed at: ln {} col {}\n",
+            src_pos.iLine, src_pos.iColumn
+        );
         return -1;
     }
 
