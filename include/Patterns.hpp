@@ -462,6 +462,42 @@ namespace imp {
         };
     }
 
+    template<FixedString... args>
+        requires (sizeof...(args) != 0)
+    inline constexpr Pattern auto
+    NegDict(const Pattern auto& fn) {
+        static const Dictionary
+            dict = { args... };
+        return [fn]
+        (MemStream& stream, Captures& captures, UserData usr_val) -> Match {
+            Match
+                m   = fn(stream, captures, usr_val);
+            if (m) {
+                std::string_view
+                    strvMatch   = m.GetStringView(stream);
+                const char*
+                    lpLastMatch = nullptr;
+                Dictionary::DictMatch
+                    dm          = dict.StartMatch();
+                for (size_t i = 0; i < strvMatch.size(); ++i) {
+                    dm  = dict.NextMatch(dm, strvMatch[i]);
+                    if (!dm)
+                        return m;
+                    else if (dm.AtLeafSegmentEnd())
+                        lpLastMatch = &strvMatch[i];
+                }
+
+                const char*
+                    lpMatchEnd  = strvMatch.data() + strvMatch.size();
+                if (lpLastMatch + 1 == lpMatchEnd)
+                    m.Toggle();
+            }
+
+            return m;
+        };
+    }
+
+
     namespace __impl {
         template<size_t n>
         struct TaggedFixedString :
