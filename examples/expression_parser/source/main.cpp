@@ -57,10 +57,12 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(full_expr, (
+        Any(Space()) >>
         CaptGr<{TOKTYPE_EXPR, EXPRTYPE_FULL}>(
-            Any(Space()) >> Opt (
+            Opt(
                 Fn<sub_expr>() >> Any(Space())
-            ) >> Opt(Fn<comment>()) >> (
+            ) >>
+            Opt(Fn<comment>()) >> (
                 NoChars() | Str<";">() | Fn<line_break>()
             )
         )
