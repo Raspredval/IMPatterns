@@ -38,7 +38,10 @@ namespace grammar {
     IMP_DECL_RULE(static eval);
     IMP_DECL_RULE(static comment);
     IMP_DECL_RULE(static bin_op);
-    IMP_DECL_RULE(static un_op);
+    IMP_DECL_RULE(static pref_un_op);
+    IMP_DECL_RULE(static post_un_op);
+    IMP_DECL_RULE(static call_op);
+    IMP_DECL_RULE(static index_op);
     IMP_DECL_RULE(static operand);
     IMP_DECL_RULE(static number);
     IMP_DECL_RULE(static boolean);
@@ -89,13 +92,14 @@ namespace grammar {
     )
 
     IMP_MAKE_RULE(operand,
-        Any(Fn<un_op>()) >> (
+        Any(Fn<pref_un_op>() >> Any(Space())) >> (
             Fn<number>()   |
             Fn<boolean>()  |
             Fn<string>()   |
             Fn<variable>() |
             Fn<brkt_expr>()
-        )
+        ) >>
+        Any(Any(Space()) >> Fn<post_un_op>())
     )
 
     IMP_MAKE_RULE(number, (
@@ -116,23 +120,10 @@ namespace grammar {
 
     IMP_MAKE_RULE(variable, (
         NegDict<"if", "else">(
-            Capt<{TOKTYPE_VALUE, VALTYPE_VAR}>(
+            Capt<{TOKTYPE_VALUE, VALTYPE_ID}>(
                 Alpha() >> Any(imp::Alnum())
             )
-        ) >> Opt(
-            Str<"(">() >> ReplaceCaptTag<{TOKTYPE_VALUE, VALTYPE_FUNC}>() >>
-            Opt(
-                Fn<arg_expr>() >> Any(
-                    Str<",">() >> Fn<arg_expr>()
-                )
-            ) >> Str<")">()
         )
-    ))
-
-    IMP_MAKE_RULE(arg_expr, (
-        Any(Space()) >>
-        CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
-        Any(Space())
     ))
 
     IMP_MAKE_RULE(string, (
@@ -177,12 +168,46 @@ namespace grammar {
         >()
     ))
 
-    IMP_MAKE_RULE(un_op, (
+    IMP_MAKE_RULE(pref_un_op, (
         CaptDict<
-            { "+", { TOKTYPE_UNOP, OPTYPE_PLUS  }},
-            { "-", { TOKTYPE_UNOP, OPTYPE_MINUS }},
-            { "!", { TOKTYPE_UNOP, OPTYPE_NOT   }}
+            { "++", { TOKTYPE_UNOP, OPTYPE_PREFINC  }},
+            { "--", { TOKTYPE_UNOP, OPTYPE_PREFDEC  }},
+            { "+",  { TOKTYPE_UNOP, OPTYPE_PLUS     }},
+            { "-",  { TOKTYPE_UNOP, OPTYPE_MINUS    }},
+            { "!",  { TOKTYPE_UNOP, OPTYPE_NOT      }}
         >()
+    ))
+
+    IMP_MAKE_RULE(post_un_op, (
+        CaptDict<
+            { "++", { TOKTYPE_UNOP, OPTYPE_POSTINC  }},
+            { "--", { TOKTYPE_UNOP, OPTYPE_POSTDEC  }}
+        >() | Fn<call_op>() | Fn<index_op>()
+    ))
+
+    IMP_MAKE_RULE(call_op, (
+        CaptGr<{TOKTYPE_UNOP, OPTYPE_CALL}>(
+            Str<"(">() >> Opt(
+                Fn<arg_expr>() >> Any(
+                    Str<",">() >> Fn<arg_expr>()
+                )
+            ) >> Str<")">()
+        )
+    ))
+
+    IMP_MAKE_RULE(index_op, (
+        CaptGr<{TOKTYPE_UNOP, OPTYPE_INDEX}>(
+            Str<"[">() >>
+            Fn<arg_expr>() >> Any(
+                Str<",">() >> Fn<arg_expr>()
+            ) >> Str<"]">()
+        )
+    ))
+
+    IMP_MAKE_RULE(arg_expr, (
+        Any(Space()) >>
+        CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
+        Any(Space())
     ))
 
     IMP_MAKE_RULE(eval,
@@ -258,18 +283,15 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
             break; case VALTYPE_STR:
                 Print(iLevel, "string:\t[ {} ]\n", strvToken);
 
-            break; case VALTYPE_VAR:
-                Print(iLevel, "variable:\t[ {} ]\n", strvToken);
-
-            break; case VALTYPE_FUNC:
-                Print(iLevel, "function:\t[ {} ]\n", strvToken);
+            break; case VALTYPE_ID:
+                Print(iLevel, "identifier:\t[ {} ]\n", strvToken);
             }
         }
 
         break; case TOKTYPE_BINOP: {
             OpType
                 iOpID   = (OpType)iHigh;
-            Print(iLevel, "binary op:\t[ {} ] (opID: 0x{:x}, {})\n",
+            Print(iLevel, "binary op:\t[ {} ] (opID: 0x{:02x}, {})\n",
                 strvToken,
                 (int)iOpID,
                 isLeftAssociable(iOpID)
@@ -281,13 +303,17 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
         break; case TOKTYPE_UNOP: {
             OpType
                 iOpID   = (OpType)iHigh;
-            Print(iLevel, "unary op:\t[ {} ] (opID: 0x{:x}, {})\n",
+            Print(iLevel, "unary op:\t[ {} ] (opID: 0x{:02x}, {})\n",
                 strvToken,
                 (int)iOpID,
                 isLeftAssociable(iOpID)
                     ? "left associable"
                     : "right associable"
             );
+
+            if (iOpID == OPTYPE_CALL || iOpID == OPTYPE_INDEX) {
+                PrintTokens(stream, tkn.children, iLevel + 1);
+            }
         }
 
         }

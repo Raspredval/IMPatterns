@@ -24,14 +24,20 @@ enum ValType {
     VALTYPE_FLOAT,
     VALTYPE_BOOL,
     VALTYPE_STR,
-    VALTYPE_VAR,
-    VALTYPE_FUNC
+    VALTYPE_ID
 };
 
 enum OpType {
+    OPTYPE_POSTINC  = 0x01,
+    OPTYPE_POSTDEC  = 0x02,
+    OPTYPE_CALL     = 0x03,
+    OPTYPE_INDEX    = 0x04,
+
     OPTYPE_PLUS     = 0x10,
     OPTYPE_MINUS    = 0x11,
     OPTYPE_NOT      = 0x12,
+    OPTYPE_PREFINC  = 0x13,
+    OPTYPE_PREFDEC  = 0x14,
 
     OPTYPE_POW      = 0x20,
 
@@ -72,6 +78,11 @@ getOpPrecedence(OpType iType) {
 inline bool
 isLeftAssociable(OpType iType) {
     switch (iType) {
+    case OPTYPE_POSTINC:
+    case OPTYPE_POSTDEC:
+    case OPTYPE_CALL:
+    case OPTYPE_INDEX:
+
     case OPTYPE_MUL:
     case OPTYPE_DIV:
     case OPTYPE_IDIV:
