@@ -31,29 +31,27 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
                 iExprID = (ExprType)iHigh;
             switch (iExprID) {
             break; case EXPRTYPE_FULL:
-                Print(iLevel, "#expression: [ {} ]", strvToken);
+                Print(iLevel, "#expression: <[ {} ]>", strvToken);
                 if (!tkn.children.empty()) {
                     std::print(" {{\n");
                     PrintTokens(stream, tkn.children, iLevel + 1);
-                    Print(iLevel, "}}\n\n");
-                }
-                else
-                    std::print(";\n\n");
+                    Print(iLevel, "}}");
+                } std::print("\n\n");
 
             break; case EXPRTYPE_SUB:
-                Print(iLevel, "#sub expression: [ {} ] {{\n", strvToken);
+                Print(iLevel, "#sub expression: <[ {} ]> {{\n", strvToken);
                 PrintTokens(stream, tkn.children, iLevel + 1);
                 Print(iLevel, "}}\n");
 
             break; case EXPRTYPE_ARG:
-                Print(iLevel, "#argument: [ {} ] {{\n", strvToken);
+                Print(iLevel, "#argument: <[ {} ]> {{\n", strvToken);
                 PrintTokens(stream, tkn.children, iLevel + 1);
                 Print(iLevel, "}}\n");
             }
         }
 
         break; case TOKTYPE_COMMENT: {
-            Print(iLevel, "comment:\t[ {} ]\n", strvToken);
+            Print(iLevel, "comment:\t<[ {} ]>\n", strvToken);
         }
 
         break; case TOKTYPE_VALUE: {
@@ -61,28 +59,29 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
                 iValID  = (ValType)iHigh;
             switch (iValID) {
             break; case VALTYPE_INT:
-                Print(iLevel, "integer:\t[ {} ]\n", strvToken);
+                Print(iLevel, "integer:\t<[ {} ]>\n", strvToken);
 
             break; case VALTYPE_FLOAT:
-                Print(iLevel, "fractional:\t[ {} ]\n", strvToken);
+                Print(iLevel, "fractional:\t<[ {} ]>\n", strvToken);
 
             break; case VALTYPE_BOOL:
-                Print(iLevel, "boolean:\t[ {} ]\n", strvToken);
+                Print(iLevel, "boolean:\t<[ {} ]>\n", strvToken);
 
             break; case VALTYPE_STR:
-                Print(iLevel, "string:\t[ {} ]\n", strvToken);
+                Print(iLevel, "string:\t<[ {} ]>\n", strvToken);
 
             break; case VALTYPE_ID:
-                Print(iLevel, "identifier:\t[ {} ]\n", strvToken);
+                Print(iLevel, "identifier:\t<[ {} ]>\n", strvToken);
             }
         }
 
         break; case TOKTYPE_BINOP: {
             OpType
                 iOpID   = (OpType)iHigh;
-            Print(iLevel, "binary op:\t[ {} ] (opID: 0x{:02x}, {})\n",
+            Print(iLevel, "binary op:\t<[ {} ]> (opID: 0x{:02x}, precedence: {}, {})\n",
                 strvToken,
                 (int)iOpID,
+                getOpPrecedence(iOpID),
                 isLeftAssociable(iOpID)
                     ? "left associable"
                     : "right associable"
@@ -92,17 +91,22 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
         break; case TOKTYPE_UNOP: {
             OpType
                 iOpID   = (OpType)iHigh;
-            Print(iLevel, "unary op:\t[ {} ] (opID: 0x{:02x}, {})\n",
+            Print(iLevel, "unary op:\t<[ {} ]> (opID: 0x{:02x}, precedence: {}, {})",
                 strvToken,
                 (int)iOpID,
+                getOpPrecedence(iOpID),
                 isLeftAssociable(iOpID)
                     ? "left associable"
                     : "right associable"
             );
 
             if (iOpID == OPTYPE_CALL || iOpID == OPTYPE_INDEX) {
-                PrintTokens(stream, tkn.children, iLevel + 1);
-            }
+                if (!tkn.children.empty()) {
+                    std::print(" {{\n");
+                    PrintTokens(stream, tkn.children, iLevel + 1);
+                    Print(iLevel, "}}");
+                }
+            } std::print("\n");
         }
 
         }
