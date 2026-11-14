@@ -7,9 +7,9 @@
 template<typename... Args>
 inline void
 Print(int iLevel, const std::format_string<const Args&...>& strfmt, const Args&... args) {
-    for (int i = 0; i < iLevel; ++i)
-        putchar(' ');
-    std::print(strfmt, args...);
+    for (int i = 0; i < iLevel; ++i) {
+        std::print(" ");
+    } std::print(strfmt, args...);
 }
 
 inline void
@@ -31,7 +31,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
                 iExprID = (ExprType)iHigh;
             switch (iExprID) {
             break; case EXPRTYPE_FULL:
-                Print(iLevel, "#expression: <[ {} ]>", strvToken);
+                Print(iLevel, "expression: <[ {} ]>", strvToken);
                 if (!tkn.children.empty()) {
                     std::print(" {{\n");
                     PrintTokens(stream, tkn.children, iLevel + 1);
@@ -39,12 +39,12 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
                 } std::print("\n\n");
 
             break; case EXPRTYPE_SUB:
-                Print(iLevel, "#sub expression: <[ {} ]> {{\n", strvToken);
+                Print(iLevel, "sub expression: <[ {} ]> {{\n", strvToken);
                 PrintTokens(stream, tkn.children, iLevel + 1);
                 Print(iLevel, "}}\n");
 
             break; case EXPRTYPE_ARG:
-                Print(iLevel, "#argument: <[ {} ]> {{\n", strvToken);
+                Print(iLevel, "argument: <[ {} ]> {{\n", strvToken);
                 PrintTokens(stream, tkn.children, iLevel + 1);
                 Print(iLevel, "}}\n");
             }
