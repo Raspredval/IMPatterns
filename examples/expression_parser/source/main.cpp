@@ -49,7 +49,6 @@ namespace grammar {
     IMP_DECL_RULE(static variable);
     IMP_DECL_RULE(static sub_expr);
     IMP_DECL_RULE(static full_expr);
-    IMP_DECL_RULE(static arg_expr);
     IMP_DECL_RULE(static brkt_expr);
     IMP_DECL_RULE(static line_break);
 
@@ -187,9 +186,13 @@ namespace grammar {
 
     IMP_MAKE_RULE(call_op, (
         CaptGr<{TOKTYPE_UNOP, OPTYPE_CALL}>(
-            Str<"(">() >> Opt(
-                Fn<arg_expr>() >> Any(
-                    Str<",">() >> Fn<arg_expr>()
+            Str<"(">() >> Any(Space()) >>
+            Opt(
+                CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >> Any(Space()) >>
+                Any(
+                    Str<",">() >> Any(Space()) >>
+                    CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
+                    Any(Space())
                 )
             ) >> Str<")">()
         )
@@ -197,17 +200,14 @@ namespace grammar {
 
     IMP_MAKE_RULE(index_op, (
         CaptGr<{TOKTYPE_UNOP, OPTYPE_INDEX}>(
-            Str<"[">() >>
-            Fn<arg_expr>() >> Any(
-                Str<",">() >> Fn<arg_expr>()
+            Str<"[">() >> Any(Space()) >>
+            CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >> Any(Space()) >>
+            Any(
+                Str<",">() >> Any(Space()) >>
+                CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
+                Any(Space())
             ) >> Str<"]">()
         )
-    ))
-
-    IMP_MAKE_RULE(arg_expr, (
-        Any(Space()) >>
-        CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
-        Any(Space())
     ))
 
     IMP_MAKE_RULE(eval,

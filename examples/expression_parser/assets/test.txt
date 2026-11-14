@@ -3,3 +3,4 @@ CircleArea  = Pi * Radius ^^ 2          # calculating circle area
 CirclePerim = 2 * Pi * Radius           # calculating circle perimeter
 
 print("Hello World!", sqrt(3 * 3 + 4 * 4))
+numbers[6] + numbers[7] + foo() + bar()
