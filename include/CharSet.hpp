@@ -35,6 +35,38 @@ namespace imp {
             return (this->lpMap[uc >> 6] & ((uint64_t)1 << (uc & 63))) != 0;
         }
 
+        friend constexpr CharSet&
+        operator+=(CharSet& lhs, const CharSet& rhs) noexcept {
+            for (size_t i = 0; i != 4; ++i) {
+                lhs.lpMap[i] |= rhs.lpMap[i];
+            }
+
+            return lhs;
+        }
+
+        friend constexpr CharSet&
+        operator-=(CharSet& lhs, const CharSet& rhs) noexcept {
+            for (size_t i = 0; i != 4; ++i) {
+                lhs.lpMap[i] &= ~rhs.lpMap[i];
+            }
+
+            return lhs;
+        }
+
+        friend constexpr CharSet
+        operator+(const CharSet& lhs, const CharSet& rhs) noexcept {
+            CharSet
+                result  = lhs;
+            return result += rhs;
+        }
+
+        friend constexpr CharSet
+        operator-(const CharSet& lhs, const CharSet& rhs) noexcept {
+            CharSet
+                result  = lhs;
+            return result -= rhs;
+        }
+
         uint64_t
             lpMap[4] = {0,0,0,0};
     };

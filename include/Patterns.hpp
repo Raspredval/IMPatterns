@@ -1,7 +1,6 @@
 #pragma once
 static_assert(__cplusplus >= 202302L, "requires C++23 minimum version");
 
-#include <cctype>
 #include <concepts>
 
 #include "Match.hpp"
@@ -130,70 +129,29 @@ namespace imp {
         };
     }
 
-    namespace __impl {
-        using CTypeProc =
-            int(*)(int);
+    inline constexpr CharSet
+    Digit       = {"0123456789"};
 
-        template<CTypeProc fnCheck>
-        inline constexpr Pattern auto
-        CType() {
-            return []
-            (MemStream& stream, Captures&, UserData) -> Match {
-                intptr_t
-                    iBegin  = stream.GetPos();
-                auto optc   = stream.Read();
-                if (!optc)
-                    return Match(iBegin, 0uz, false);
+    inline constexpr CharSet
+    HexDigit    = Digit + CharSet{"abcdefABCDEF"};
 
-                Match
-                    mCur    = Match(iBegin, 1uz);
-                if (!fnCheck(*optc))
-                    mCur.Toggle();
+    inline constexpr CharSet
+    Uppercase   = {"ABCDEFGHIJKLMNOPQRSTUVWXYZ"};
 
-                return mCur;
-            };
-        }
-    }
+    inline constexpr CharSet
+    Lowercase   = {"abcdefghijklmnopqrstuvwxyz"};
 
-    inline constexpr Pattern auto
-    Digit() {
-        return __impl::CType<isdigit>();
-    }
+    inline constexpr CharSet
+    Alpha       = Uppercase + Lowercase;
 
-    inline constexpr Pattern auto
-    HexDigit() {
-        return __impl::CType<isxdigit>();
-    }
+    inline constexpr CharSet
+    Alnum       = Alpha + Digit;
 
-    inline constexpr Pattern auto
-    Alpha() {
-        return __impl::CType<isalpha>();
-    }
+    inline constexpr CharSet
+    Space       = {" \t\v\r\f"};
 
-    inline constexpr Pattern auto
-    Alnum() {
-        return __impl::CType<isalnum>();
-    }
-
-    inline constexpr Pattern auto
-    Space() {
-        return __impl::CType<isblank>();
-    }
-
-    inline constexpr Pattern auto
-    SpaceOrNewLine() {
-        return __impl::CType<isspace>();
-    }
-
-    inline constexpr Pattern auto
-    Uppercase() {
-        return __impl::CType<isupper>();
-    }
-
-    inline constexpr Pattern auto
-    Lowercase() {
-        return __impl::CType<islower>();
-    }
+    inline constexpr CharSet
+    NewLine     = {"\n"};
 
     namespace __impl {
         template<bool bAny>
