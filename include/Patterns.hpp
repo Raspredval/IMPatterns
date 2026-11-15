@@ -350,33 +350,23 @@ namespace imp {
 
     template<UserData capt_tag>
     inline Pattern auto
-    ReplaceCaptTag() {
-        return []
-        (MemStream& stream, Captures& captures, UserData) -> Match {
-            Match
-                mDummy  = { stream.GetPos(), 0uz, false };
-            if (!captures.empty()) {
-                captures.back().tag = capt_tag;
-                mDummy.Toggle();
-            }
-
-            return mDummy;
-        };
-    }
-
-    template<UserData capt_tag>
-    inline Pattern auto
     CaptMerge(const Pattern auto& fn) {
         return [fn]
         (MemStream& stream, Captures& captures, UserData usr_val) -> Match {
+            Captures
+                inner   = {};
             Match
-                mCur    = fn(stream, captures, usr_val);
+                mCur    = fn(stream, inner, usr_val);
             if (mCur) {
                 if (!captures.empty()) {
                     Capture&
                         captLast    = captures.back();
                     captLast.tag    = capt_tag;
                     captLast.match  += mCur;
+                    for (auto& c : inner) {
+                        captLast.children
+                            .push_back(std::move(c));
+                    }
                 }
                 else
                     mCur.Toggle();
