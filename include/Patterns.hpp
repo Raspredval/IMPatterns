@@ -133,7 +133,13 @@ namespace imp {
     Digit       = {"0123456789"};
 
     inline constexpr CharSet
-    HexDigit    = Digit + CharSet{"abcdefABCDEF"};
+    HexDigit    = Digit + "abcdefABCDEF";
+
+    inline constexpr CharSet
+    OctDigit    = {"01234567"};
+
+    inline constexpr CharSet
+    BinDigit    = {"01"};
 
     inline constexpr CharSet
     Uppercase   = {"ABCDEFGHIJKLMNOPQRSTUVWXYZ"};
