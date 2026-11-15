@@ -7,6 +7,8 @@
 
 
 namespace grammJSON {
+    using namespace imp;
+
     IMP_DECL_RULE(static spacing);
     IMP_DECL_RULE(static object);
     IMP_DECL_RULE(static array);
@@ -19,82 +21,80 @@ namespace grammJSON {
     IMP_DECL_RULE(static number);
 
     IMP_MAKE_RULE(spacing,
-        imp::Any(imp::SpaceOrNewLine())
+        Any(Set<Space + NewLine>())
     )
 
     IMP_MAKE_RULE(object,
-        imp::Str<"{">() >> imp::Fn<spacing>() >>
-        imp::Opt(
-            imp::Fn<field>() >> imp::Fn<spacing>() >>
-            imp::Any(
-                imp::Str<",">() >> imp::Fn<spacing>() >>
-                imp::Fn<field>() >> imp::Fn<spacing>()
+        Str<"{">() >> Fn<spacing>() >>
+        Opt(
+            Fn<field>() >> Fn<spacing>() >> Any(
+                Str<",">() >> Fn<spacing>() >>
+                Fn<field>() >> Fn<spacing>()
             )
-        ) >> imp::Str<"}">()
+        ) >> Str<"}">()
     )
 
     IMP_MAKE_RULE(array,
-        imp::Str<"[">() >> imp::Fn<spacing>() >>
-        imp::Opt(
-            imp::Fn<value>() >> imp::Fn<spacing>() >>
-            imp::Any(
-                imp::Str<",">() >> imp::Fn<spacing>() >>
-                imp::Fn<value>() >> imp::Fn<spacing>()
+        Str<"[">() >> Fn<spacing>() >> Opt(
+            Fn<value>() >> Fn<spacing>() >>
+            Any(
+                Str<",">() >> Fn<spacing>() >>
+                Fn<value>() >> Fn<spacing>()
             )
-        ) >> imp::Str<"]">()
+        ) >> Str<"]">()
     )
 
     IMP_MAKE_RULE(field,
-        imp::Fn<string>() >> imp::Fn<spacing>() >>
-        imp::Str<":">() >> imp::Fn<spacing>() >>
-        imp::Fn<value>()
+        Fn<string>() >> Fn<spacing>() >>
+        Str<":">() >> Fn<spacing>() >>
+        Fn<value>()
     )
 
     IMP_MAKE_RULE(value,
-        imp::Fn<object>()  | imp::Fn<array>()  |
-        imp::Fn<string>()  | imp::Fn<number>() |
-        imp::Fn<boolean>() | imp::Fn<null>()
+        Fn<object>()  | Fn<array>()  |
+        Fn<string>()  | Fn<number>() |
+        Fn<boolean>() | Fn<null>()
     )
 
     IMP_MAKE_RULE(boolean, (
-        imp::Dict<"true", "false">()
+        Dict<"true", "false">()
     ))
 
     IMP_MAKE_RULE(null,
-        imp::Str<"null">()
+        Str<"null">()
     )
 
     IMP_MAKE_RULE(string,
-        imp::Str<"\"">() >>
-        imp::Any(imp::NegSet<"\"\\">()) >> imp::Any(
-            imp::Fn<escseq>() >> imp::Any(imp::NegSet<"\"\\">())
-        ) >> imp::Str<"\"">()
+        Str<"\"">() >>
+        Any(NegSet<"\"\\">()) >> Any(
+            Fn<escseq>() >> Any(NegSet<"\"\\">())
+        ) >> Str<"\"">()
     )
 
     IMP_MAKE_RULE(escseq,
-        imp::Str<"\\">() >> (
-            imp::Set<"/\"\\bfnrt">() |
-            imp::Str<"u">() >> imp::Exactly<4>(imp::HexDigit()) |
-            imp::Str<"U">() >> imp::Exactly<8>(imp::HexDigit())
+        Str<"\\">() >> (
+            Set<"/\"\\bfnrt">() |
+            Str<"u">() >> Exactly<4>(Set<HexDigit>()) |
+            Str<"U">() >> Exactly<8>(Set<HexDigit>())
         )
     )
 
     IMP_MAKE_RULE(number,
-        imp::Opt(imp::Set<"+-">()) >> imp::Some(imp::Digit()) >>
-        imp::Opt(
-            imp::Str<".">() >> imp::Some(imp::Digit()) >>
-            imp::Opt(
-                imp::Set<"eE">() >>
-                imp::Opt(imp::Set<"+-">()) >> imp::Some(imp::Digit())
+        Opt(Set<"+-">()) >> Some(Set<Digit>()) >>
+        Opt(
+            Str<".">() >> Some(Set<Digit>()) >>
+            Opt(
+                Set<"eE">() >>
+                Opt(Set<"+-">()) >> Some(Set<Digit>())
             )
         )
     )
 
     IMP_MAKE_RULE(eval,
-        imp::Fn<spacing>() >> imp::Opt(
-            imp::Fn<value>() >> imp::Fn<spacing>()
-        ) >> imp::NoChars() /=
-        [] (imp::MemStream& stream, imp::Match m, imp::CaptureView, imp::UserData) -> imp::Match {
+        Fn<spacing>() >> Opt(
+            Fn<value>() >> Fn<spacing>()
+        ) >> NoChars() /=
+        [] (MemStream& stream, Match m, CaptureView, UserData) -> Match {
             if (!m)
                 std::print(stderr, "failed to parse JSON at {}\n", stream.GetPos());
             else

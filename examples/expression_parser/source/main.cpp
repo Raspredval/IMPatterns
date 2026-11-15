@@ -59,11 +59,11 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(full_expr, (
-        Any(Space()) >>
+        Any(Set<Space>()) >>
         CaptGr<{TOKTYPE_EXPR, EXPRTYPE_FULL}>(
             Opt(Fn<sub_expr>())
         ) >>
-        Any(Space()) >> Opt(Fn<comment>()) >> (
+        Any(Set<Space>()) >> Opt(Fn<comment>()) >> (
             NoChars() | Str<";">() | Fn<line_break>()
         )
     ))
@@ -83,28 +83,28 @@ namespace grammar {
 
     IMP_MAKE_RULE(sub_expr,
         Fn<operand>() >> Any(
-            Any(Space()) >> Fn<bin_op>() >>
-            Any(Space()) >> Fn<operand>()
+            Any(Set<Space>()) >> Fn<bin_op>() >>
+            Any(Set<Space>()) >> Fn<operand>()
         )
     )
 
     IMP_MAKE_RULE(operand,
-        Any(Fn<pref_un_op>() >> Any(Space())) >> (
+        Any(Fn<pref_un_op>() >> Any(Set<Space>())) >> (
             Fn<number>()   |
             Fn<boolean>()  |
             Fn<string>()   |
             Fn<variable>() |
             Fn<brkt_expr>()
         ) >>
-        Any(Any(Space()) >> Fn<post_un_op>())
+        Any(Any(Set<Space>()) >> Fn<post_un_op>())
     )
 
     IMP_MAKE_RULE(number, (
         Capt<{TOKTYPE_VALUE, VALTYPE_INT}>(
-            Some(Digit())
+            Some(Set<Digit>())
         ) >> Opt(
             CaptMerge<{TOKTYPE_VALUE, VALTYPE_FLOAT}>(
-                Str<".">() >> Some(Digit())
+                Str<".">() >> Some(Set<Digit>())
             )
         )
     ))
@@ -118,7 +118,7 @@ namespace grammar {
     IMP_MAKE_RULE(variable, (
         NegDict<"if", "else">(
             Capt<{TOKTYPE_VALUE, VALTYPE_ID}>(
-                Alpha() >> Any(imp::Alnum())
+                Set<Alpha + "_">() >> Any(Set<Alnum + "_">())
             )
         )
     ))
@@ -132,9 +132,9 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(brkt_expr, (
-        Str<"(">() >> Any(Space()) >>
+        Str<"(">() >> Any(Set<Space>()) >>
         CaptGr<{TOKTYPE_EXPR, EXPRTYPE_SUB}>(Fn<sub_expr>()) >>
-        Any(Space()) >> Str<")">()
+        Any(Set<Space>()) >> Str<")">()
     ))
 
     IMP_MAKE_RULE(bin_op, (
@@ -184,13 +184,13 @@ namespace grammar {
 
     IMP_MAKE_RULE(call_op, (
         CaptGr<{TOKTYPE_UNOP, OPTYPE_CALL}>(
-            Str<"(">() >> Any(Space()) >>
+            Str<"(">() >> Any(Set<Space>()) >>
             Opt(
-                CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >> Any(Space()) >>
+                CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >> Any(Set<Space>()) >>
                 Any(
-                    Str<",">() >> Any(Space()) >>
+                    Str<",">() >> Any(Set<Space>()) >>
                     CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
-                    Any(Space())
+                    Any(Set<Space>())
                 )
             ) >> Str<")">()
         )
@@ -198,12 +198,12 @@ namespace grammar {
 
     IMP_MAKE_RULE(index_op, (
         CaptGr<{TOKTYPE_UNOP, OPTYPE_INDEX}>(
-            Str<"[">() >> Any(Space()) >>
-            CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >> Any(Space()) >>
+            Str<"[">() >> Any(Set<Space>()) >>
+            CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >> Any(Set<Space>()) >>
             Any(
-                Str<",">() >> Any(Space()) >>
+                Str<",">() >> Any(Set<Space>()) >>
                 CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
-                Any(Space())
+                Any(Set<Space>())
             ) >> Str<"]">()
         )
     ))
