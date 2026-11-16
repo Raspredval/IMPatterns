@@ -157,7 +157,7 @@ namespace imp {
     Space       = {" \t\v\r\f"};
 
     inline constexpr CharSet
-    NewLine     = {"\n"};
+    LineBreak   = {"\n"};
 
     namespace __impl {
         template<bool bAny>
