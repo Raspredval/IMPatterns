@@ -110,6 +110,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
                     Print(iLevel, "}}");
                 }
 
+            [[fallthrough]];
             default:
                 std::print("\n");
             }
