@@ -34,7 +34,7 @@ namespace grammar {
     IMP_DECL_RULE(static sub_expr);
     IMP_DECL_RULE(static full_expr);
     IMP_DECL_RULE(static brkt_expr);
-    IMP_DECL_RULE(static type_expr);
+    IMP_DECL_RULE(static cast_op);
     IMP_DECL_RULE(static line_break);
     IMP_DECL_RULE(static spacing);
 
@@ -162,10 +162,10 @@ namespace grammar {
             { "+",  { TOKTYPE_UNOP, OPTYPE_PLUS     }},
             { "-",  { TOKTYPE_UNOP, OPTYPE_MINUS    }},
             { "!",  { TOKTYPE_UNOP, OPTYPE_NOT      }}
-        >() | Fn<type_expr>()
+        >() | Fn<cast_op>()
     ))
 
-    IMP_MAKE_RULE(type_expr, (
+    IMP_MAKE_RULE(cast_op, (
         Str<"(">() >> Fn<spacing>() >>
         CaptGr<{TOKTYPE_UNOP, OPTYPE_CAST}>(
             Fn<variable>(),
