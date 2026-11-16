@@ -100,13 +100,19 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
                     : "right associable"
             );
 
-            if (iOpID == OPTYPE_CALL || iOpID == OPTYPE_INDEX) {
+            switch (iOpID) {
+            case OPTYPE_CALL:
+            case OPTYPE_INDEX:
+            case OPTYPE_CAST:
                 if (!tkn.children.empty()) {
                     std::print(" {{\n");
                     PrintTokens(stream, tkn.children, iLevel + 1);
                     Print(iLevel, "}}");
                 }
-            } std::print("\n");
+
+            default:
+                std::print("\n");
+            }
         }
 
         }

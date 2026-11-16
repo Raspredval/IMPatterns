@@ -1,6 +1,7 @@
 #include <MappedFile.hpp>
 #include <Patterns.hpp>
 
+#include <set>
 #include <string_view>
 
 #include "Token.hpp"
@@ -15,7 +16,7 @@ namespace grammar {
             iLine, iColumn;
     };
 
-    struct State {
+    struct PosTracker {
         intptr_t
             iLastLnBrk,
             iLineCount;
@@ -35,6 +36,16 @@ namespace grammar {
         }
     };
 
+    struct TypeTracker {
+        std::set<std::string_view>
+            setTypes;
+    };
+
+    struct State {
+        PosTracker  p;
+        TypeTracker t;
+    };
+
     IMP_DECL_RULE(static eval);
     IMP_DECL_RULE(static comment);
     IMP_DECL_RULE(static bin_op);
@@ -50,11 +61,12 @@ namespace grammar {
     IMP_DECL_RULE(static sub_expr);
     IMP_DECL_RULE(static full_expr);
     IMP_DECL_RULE(static brkt_expr);
+    IMP_DECL_RULE(static type_expr);
     IMP_DECL_RULE(static line_break);
 
     IMP_MAKE_RULE(comment, (
         Capt<{TOKTYPE_COMMENT, COMMTYPE_ENDLINE}>(
-            Str<"#">() >> Any(NegSet<"\n">())
+            Str<"//">() >> Any(NegSet<"\n">())
         )
     ))
 
@@ -74,7 +86,7 @@ namespace grammar {
             if (m) {
                 State*
                     lpState = (State*)usr_val.ptr;
-                lpState->PushLnBrk(stream.GetPos());
+                lpState->p.PushLnBrk(stream.GetPos());
             }
 
             return m;
@@ -143,7 +155,6 @@ namespace grammar {
             { "*",   { TOKTYPE_BINOP, OPTYPE_MUL      }},
             { "/",   { TOKTYPE_BINOP, OPTYPE_DIV      }},
             { "%",   { TOKTYPE_BINOP, OPTYPE_MOD      }},
-            { "//",  { TOKTYPE_BINOP, OPTYPE_IDIV     }},
             { "+",   { TOKTYPE_BINOP, OPTYPE_ADD      }},
             { "-",   { TOKTYPE_BINOP, OPTYPE_SUB      }},
             { "<",   { TOKTYPE_BINOP, OPTYPE_LESS     }},
@@ -160,7 +171,6 @@ namespace grammar {
             { "*=",  { TOKTYPE_BINOP, OPTYPE_MULASS   }},
             { "/=",  { TOKTYPE_BINOP, OPTYPE_DIVASS   }},
             { "%=",  { TOKTYPE_BINOP, OPTYPE_MODASS   }},
-            { "//=", { TOKTYPE_BINOP, OPTYPE_IDIVASS  }},
             { "^^=", { TOKTYPE_BINOP, OPTYPE_POWASS   }}
         >()
     ))
@@ -172,7 +182,26 @@ namespace grammar {
             { "+",  { TOKTYPE_UNOP, OPTYPE_PLUS     }},
             { "-",  { TOKTYPE_UNOP, OPTYPE_MINUS    }},
             { "!",  { TOKTYPE_UNOP, OPTYPE_NOT      }}
-        >()
+        >() | Fn<type_expr>()
+    ))
+
+    IMP_MAKE_RULE(type_expr, (
+        Str<"(">() >> Any(Set<Space>()) >>
+        CaptGr<{TOKTYPE_UNOP, OPTYPE_CAST}>(
+            Fn<variable>(),
+            [] (MemStream& stream, Match m, CaptureView, UserData usr_val) -> Match {
+                if (m) {
+                    std::string_view
+                        strvTypename    = m.GetStringView(stream);
+                    State*
+                        lpState         = (State*)usr_val.ptr;
+                    if (!lpState->t.setTypes.contains(strvTypename))
+                        m.Toggle();
+                }
+
+                return m;
+            }
+        ) >> Any(Set<Space>()) >> Str<")">()
     ))
 
     IMP_MAKE_RULE(post_un_op, (
@@ -230,11 +259,14 @@ int main() {
     imp::MemStream
         stream  = {mapped_file.GetView()};
     grammar::State
-        state   = { .iLastLnBrk = 0, .iLineCount = 0 };
+        state   = {
+            .p = { .iLastLnBrk = 0, .iLineCount = 0 },
+            .t = { .setTypes = {"int", "float", "string", "bool"} }
+        };
 
     if (!imp::Eval(imp::Fn<grammar::eval>(), stream, tokens, &state)) {
         grammar::SrcPos
-            src_pos = state.GetPos(stream.GetPos());
+            src_pos = state.p.GetPos(stream.GetPos());
         std::print(stderr,
             "parser failed at: ln {} col {}\n",
             src_pos.iLine, src_pos.iColumn

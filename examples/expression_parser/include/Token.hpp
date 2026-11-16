@@ -32,6 +32,7 @@ enum OpType {
     OPTYPE_POSTDEC  = 0x02,
     OPTYPE_CALL     = 0x03,
     OPTYPE_INDEX    = 0x04,
+    OPTYPE_CAST     = 0x05,
 
     OPTYPE_PLUS     = 0x10,
     OPTYPE_MINUS    = 0x11,
@@ -43,8 +44,7 @@ enum OpType {
 
     OPTYPE_MUL      = 0x30,
     OPTYPE_DIV      = 0x31,
-    OPTYPE_IDIV     = 0x32,
-    OPTYPE_MOD      = 0x33,
+    OPTYPE_MOD      = 0x32,
 
     OPTYPE_ADD      = 0x40,
     OPTYPE_SUB      = 0x41,
@@ -65,9 +65,8 @@ enum OpType {
     OPTYPE_SUBASS   = 0x92,
     OPTYPE_MULASS   = 0x93,
     OPTYPE_DIVASS   = 0x94,
-    OPTYPE_IDIVASS  = 0x95,
-    OPTYPE_MODASS   = 0x96,
-    OPTYPE_POWASS   = 0x97
+    OPTYPE_MODASS   = 0x95,
+    OPTYPE_POWASS   = 0x96
 };
 
 inline int
@@ -82,10 +81,10 @@ isLeftAssociable(OpType iType) {
     case OPTYPE_POSTDEC:
     case OPTYPE_CALL:
     case OPTYPE_INDEX:
+    case OPTYPE_CAST:
 
     case OPTYPE_MUL:
     case OPTYPE_DIV:
-    case OPTYPE_IDIV:
     case OPTYPE_MOD:
     case OPTYPE_ADD:
     case OPTYPE_SUB:
