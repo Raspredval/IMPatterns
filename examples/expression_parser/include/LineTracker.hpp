@@ -1,5 +1,5 @@
 #pragma once
-#include <set>
+#include <flat_set>
 #include <cassert>
 #include <cstdint>
 
@@ -32,6 +32,6 @@ public:
     }
 
 private:
-    std::set<intptr_t>
+    std::flat_set<intptr_t>
         setLines;
 };
