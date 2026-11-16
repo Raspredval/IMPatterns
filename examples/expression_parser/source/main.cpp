@@ -41,7 +41,7 @@ namespace grammar {
 
     IMP_MAKE_RULE(comment, (
         Capt<{TOKTYPE_COMMENT, COMMTYPE_ENDLINE}>(
-            Str<"//">() >> Any(NegSet<"\n">())
+            Str<"//">() >> Any(NegSet<"\n">()) >> Fn<line_break>()
         )
     ))
 
@@ -55,8 +55,8 @@ namespace grammar {
         Fn<spacing>() >> Opt(
             CaptGr<{TOKTYPE_EXPR, EXPRTYPE_FULL}>(Fn<sub_expr>())
         ) >>
-        Fn<spacing>() >> Opt(Fn<comment>()) >> (
-            NoChars() | Str<";">() | Fn<line_break>()
+        Fn<spacing>() >> (
+            NoChars() | Str<";">() | Fn<line_break>() | Fn<comment>()
         )
     ))
 
