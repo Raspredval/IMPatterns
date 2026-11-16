@@ -3,22 +3,26 @@
 #include <print>
 
 #include "Token.hpp"
+#include "LineTracker.hpp"
 
 template<typename... Args>
 inline void
 Print(int iLevel, const std::format_string<const Args&...>& strfmt, const Args&... args) {
     for (int i = 0; i < iLevel; ++i) {
-        std::print(" ");
+        std::print("  ");
     } std::print(strfmt, args...);
 }
 
 inline void
-PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
+PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& l, int iLevel = 0) {
     for (const auto& tkn : tokens) {
         std::string_view
             strvToken   = tkn.match.GetStringView(stream);
-        if (strvToken.ends_with('\n'))
-            strvToken.remove_suffix(1);
+        SrcPos
+            posToken    = l.GetSrcPos(tkn.match.Begin());
+
+        Print(iLevel, "ln {} col {}: ",
+            posToken.iLn, posToken.iCol);
 
         auto [ iLow, iHigh] =
             tkn.tag.ipr;
@@ -31,27 +35,27 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
                 iExprID = (ExprType)iHigh;
             switch (iExprID) {
             break; case EXPRTYPE_FULL:
-                Print(iLevel, "expression: <[ {} ]>", strvToken);
+                std::print("expression: <[ {} ]>", strvToken);
                 if (!tkn.children.empty()) {
                     std::print(" {{\n");
-                    PrintTokens(stream, tkn.children, iLevel + 1);
+                    PrintTokens(stream, tkn.children, l, iLevel + 1);
                     Print(iLevel, "}}");
                 } std::print("\n\n");
 
             break; case EXPRTYPE_SUB:
-                Print(iLevel, "sub expression: <[ {} ]> {{\n", strvToken);
-                PrintTokens(stream, tkn.children, iLevel + 1);
+                std::print("sub expression: <[ {} ]> {{\n", strvToken);
+                PrintTokens(stream, tkn.children, l, iLevel + 1);
                 Print(iLevel, "}}\n");
 
             break; case EXPRTYPE_ARG:
-                Print(iLevel, "argument: <[ {} ]> {{\n", strvToken);
-                PrintTokens(stream, tkn.children, iLevel + 1);
+                std::print("argument: <[ {} ]> {{\n", strvToken);
+                PrintTokens(stream, tkn.children, l, iLevel + 1);
                 Print(iLevel, "}}\n");
             }
         }
 
         break; case TOKTYPE_COMMENT: {
-            Print(iLevel, "comment:\t<[ {} ]>\n", strvToken);
+            std::print("comment: <[ {} ]>\n\n", strvToken);
         }
 
         break; case TOKTYPE_VALUE: {
@@ -59,26 +63,26 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
                 iValID  = (ValType)iHigh;
             switch (iValID) {
             break; case VALTYPE_INT:
-                Print(iLevel, "integer:\t<[ {} ]>\n", strvToken);
+                std::print("integer: <[ {} ]>\n", strvToken);
 
             break; case VALTYPE_FLOAT:
-                Print(iLevel, "fractional:\t<[ {} ]>\n", strvToken);
+                std::print("fractional: <[ {} ]>\n", strvToken);
 
             break; case VALTYPE_BOOL:
-                Print(iLevel, "boolean:\t<[ {} ]>\n", strvToken);
+                std::print("boolean: <[ {} ]>\n", strvToken);
 
             break; case VALTYPE_STR:
-                Print(iLevel, "string:\t<[ {} ]>\n", strvToken);
+                std::print("string: <[ {} ]>\n", strvToken);
 
             break; case VALTYPE_ID:
-                Print(iLevel, "identifier:\t<[ {} ]>\n", strvToken);
+                std::print("identifier: <[ {} ]>\n", strvToken);
             }
         }
 
         break; case TOKTYPE_BINOP: {
             OpType
                 iOpID   = (OpType)iHigh;
-            Print(iLevel, "binary op:\t<[ {} ]> (opID: 0x{:02x}, precedence: {}, {})\n",
+            std::print("binary op: <[ {} ]> (opID: 0x{:02x}, precedence: {}, {})\n",
                 strvToken,
                 (int)iOpID,
                 getOpPrecedence(iOpID),
@@ -91,7 +95,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
         break; case TOKTYPE_UNOP: {
             OpType
                 iOpID   = (OpType)iHigh;
-            Print(iLevel, "unary op:\t<[ {} ]> (opID: 0x{:02x}, precedence: {}, {})",
+            std::print("unary op: <[ {} ]> (opID: 0x{:02x}, precedence: {}, {})",
                 strvToken,
                 (int)iOpID,
                 getOpPrecedence(iOpID),
@@ -106,7 +110,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, int iLevel = 0) {
             case OPTYPE_CAST:
                 if (!tkn.children.empty()) {
                     std::print(" {{\n");
-                    PrintTokens(stream, tkn.children, iLevel + 1);
+                    PrintTokens(stream, tkn.children, l, iLevel + 1);
                     Print(iLevel, "}}");
                 }
 

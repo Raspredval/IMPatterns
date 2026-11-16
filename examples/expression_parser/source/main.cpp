@@ -1,48 +1,21 @@
 #include <MappedFile.hpp>
 #include <Patterns.hpp>
 
-#include <set>
+
+#include <cassert>
 #include <string_view>
 
 #include "Token.hpp"
 #include "Print.hpp"
+#include "LineTracker.hpp"
+#include "TypeTracker.hpp"
 
 
 namespace grammar {
     using namespace imp;
 
-    struct SrcPos {
-        intptr_t
-            iLine, iColumn;
-    };
-
-    struct PosTracker {
-        intptr_t
-            iLastLnBrk,
-            iLineCount;
-
-        SrcPos
-        GetPos(intptr_t iCurPos) const noexcept {
-            return {
-                .iLine      = this->iLineCount + 1,
-                .iColumn    = (iCurPos - this->iLastLnBrk) + 1
-            };
-        }
-
-        void
-        PushLnBrk(intptr_t iCurPos) {
-            this->iLineCount    += 1;
-            this->iLastLnBrk    = iCurPos + 1;
-        }
-    };
-
-    struct TypeTracker {
-        std::set<std::string_view>
-            setTypes;
-    };
-
     struct State {
-        PosTracker  p;
+        LineTracker l;
         TypeTracker t;
     };
 
@@ -63,6 +36,7 @@ namespace grammar {
     IMP_DECL_RULE(static brkt_expr);
     IMP_DECL_RULE(static type_expr);
     IMP_DECL_RULE(static line_break);
+    IMP_DECL_RULE(static spacing);
 
     IMP_MAKE_RULE(comment, (
         Capt<{TOKTYPE_COMMENT, COMMTYPE_ENDLINE}>(
@@ -70,12 +44,18 @@ namespace grammar {
         )
     ))
 
+    IMP_MAKE_RULE(spacing, (
+        Any(Set<Space>()) >> Any(
+            Fn<line_break>() >> Any(Set<Space>())
+        )
+    ))
+
     IMP_MAKE_RULE(full_expr, (
-        Any(Set<Space>()) >>
+        Fn<spacing>() >>
         CaptGr<{TOKTYPE_EXPR, EXPRTYPE_FULL}>(
             Opt(Fn<sub_expr>())
         ) >>
-        Any(Set<Space>()) >> Opt(Fn<comment>()) >> (
+        Fn<spacing>() >> Opt(Fn<comment>()) >> (
             NoChars() | Str<";">() | Fn<line_break>()
         )
     ))
@@ -86,7 +66,7 @@ namespace grammar {
             if (m) {
                 State*
                     lpState = (State*)usr_val.ptr;
-                lpState->p.PushLnBrk(stream.GetPos());
+                lpState->l.InsertLine(stream.GetPos());
             }
 
             return m;
@@ -95,20 +75,20 @@ namespace grammar {
 
     IMP_MAKE_RULE(sub_expr,
         Fn<operand>() >> Any(
-            Any(Set<Space>()) >> Fn<bin_op>() >>
-            Any(Set<Space>()) >> Fn<operand>()
+            Fn<spacing>() >> Fn<bin_op>() >>
+            Fn<spacing>() >> Fn<operand>()
         )
     )
 
     IMP_MAKE_RULE(operand,
-        Any(Fn<pref_un_op>() >> Any(Set<Space>())) >> (
+        Any(Fn<pref_un_op>() >> Fn<spacing>()) >> (
             Fn<number>()   |
             Fn<boolean>()  |
             Fn<string>()   |
             Fn<variable>() |
             Fn<brkt_expr>()
         ) >>
-        Any(Any(Set<Space>()) >> Fn<post_un_op>())
+        Any(Fn<spacing>() >> Fn<post_un_op>())
     )
 
     IMP_MAKE_RULE(number, (
@@ -144,9 +124,9 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(brkt_expr, (
-        Str<"(">() >> Any(Set<Space>()) >>
+        Str<"(">() >> Fn<spacing>() >>
         CaptGr<{TOKTYPE_EXPR, EXPRTYPE_SUB}>(Fn<sub_expr>()) >>
-        Any(Set<Space>()) >> Str<")">()
+        Fn<spacing>() >> Str<")">()
     ))
 
     IMP_MAKE_RULE(bin_op, (
@@ -186,7 +166,7 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(type_expr, (
-        Str<"(">() >> Any(Set<Space>()) >>
+        Str<"(">() >> Fn<spacing>() >>
         CaptGr<{TOKTYPE_UNOP, OPTYPE_CAST}>(
             Fn<variable>(),
             [] (MemStream& stream, Match m, CaptureView, UserData usr_val) -> Match {
@@ -195,13 +175,13 @@ namespace grammar {
                         strvTypename    = m.GetStringView(stream);
                     State*
                         lpState         = (State*)usr_val.ptr;
-                    if (!lpState->t.setTypes.contains(strvTypename))
+                    if (!lpState->t.HasType(strvTypename))
                         m.Toggle();
                 }
 
                 return m;
             }
-        ) >> Any(Set<Space>()) >> Str<")">()
+        ) >> Fn<spacing>() >> Str<")">()
     ))
 
     IMP_MAKE_RULE(post_un_op, (
@@ -213,13 +193,13 @@ namespace grammar {
 
     IMP_MAKE_RULE(call_op, (
         CaptGr<{TOKTYPE_UNOP, OPTYPE_CALL}>(
-            Str<"(">() >> Any(Set<Space>()) >>
+            Str<"(">() >> Fn<spacing>() >>
             Opt(
-                CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >> Any(Set<Space>()) >>
+                CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >> Fn<spacing>() >>
                 Any(
-                    Str<",">() >> Any(Set<Space>()) >>
+                    Str<",">() >> Fn<spacing>() >>
                     CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
-                    Any(Set<Space>())
+                    Fn<spacing>()
                 )
             ) >> Str<")">()
         )
@@ -227,12 +207,12 @@ namespace grammar {
 
     IMP_MAKE_RULE(index_op, (
         CaptGr<{TOKTYPE_UNOP, OPTYPE_INDEX}>(
-            Str<"[">() >> Any(Set<Space>()) >>
-            CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >> Any(Set<Space>()) >>
+            Str<"[">() >> Fn<spacing>() >>
+            CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >> Fn<spacing>() >>
             Any(
-                Str<",">() >> Any(Set<Space>()) >>
+                Str<",">() >> Fn<spacing>() >>
                 CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
-                Any(Set<Space>())
+                Fn<spacing>()
             ) >> Str<"]">()
         )
     ))
@@ -259,21 +239,18 @@ int main() {
     imp::MemStream
         stream  = {mapped_file.GetView()};
     grammar::State
-        state   = {
-            .p = { .iLastLnBrk = 0, .iLineCount = 0 },
-            .t = { .setTypes = {"int", "float", "string", "bool"} }
-        };
+        state   = {};
 
     if (!imp::Eval(imp::Fn<grammar::eval>(), stream, tokens, &state)) {
-        grammar::SrcPos
-            src_pos = state.p.GetPos(stream.GetPos());
+        SrcPos
+            src_pos = state.l.GetSrcPos(stream.GetPos());
         std::print(stderr,
             "parser failed at: ln {} col {}\n",
-            src_pos.iLine, src_pos.iColumn
+            src_pos.iLn, src_pos.iCol
         );
         return -1;
     }
 
-    PrintTokens(stream, tokens);
+    PrintTokens(stream, tokens, state.l);
     return 0;
 }
