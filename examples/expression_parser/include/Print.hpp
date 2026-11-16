@@ -76,6 +76,21 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& 
             }
         }
 
+        break; case TOKTYPE_TERNOP: {
+            OpType
+                iOpID   = (OpType)iHigh;
+            std::print("ternary op: <[ {} ]> (opID: 0x{:02x}, precedence: {}, {}) {{\n",
+                strvToken,
+                (int)iOpID,
+                getOpPrecedence(iOpID),
+                isLeftAssociable(iOpID)
+                    ? "left associable"
+                    : "right associable"
+            );
+            PrintTokens(stream, tkn.children, l, iLevel + 1);
+            Print(iLevel, "}}\n");
+        }
+
         break; case TOKTYPE_BINOP: {
             OpType
                 iOpID   = (OpType)iHigh;

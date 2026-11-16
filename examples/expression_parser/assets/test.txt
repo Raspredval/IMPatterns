@@ -10,5 +10,8 @@ print(
     (float)(int)--foo()[7]
 )
 
+// this also works!
+foo(6 < 7 ? foo() ? true : false : buz() ? false : true)
+
 // also, check the ast for this one ;)
 ---val; - --val

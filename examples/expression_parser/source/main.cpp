@@ -21,6 +21,7 @@ namespace grammar {
 
     IMP_DECL_RULE(static eval);
     IMP_DECL_RULE(static comment);
+    IMP_DECL_RULE(static tern_op);
     IMP_DECL_RULE(static bin_op);
     IMP_DECL_RULE(static pref_un_op);
     IMP_DECL_RULE(static post_un_op);
@@ -74,10 +75,20 @@ namespace grammar {
 
     IMP_MAKE_RULE(sub_expr,
         Fn<operand>() >> Any(
-            Fn<spacing>() >> Fn<bin_op>() >>
-            Fn<spacing>() >> Fn<operand>()
+            Fn<spacing>() >> (
+                Fn<bin_op>() >> Fn<spacing>() >> Fn<operand>() | Fn<tern_op>()
+            )
         )
     )
+
+    IMP_MAKE_RULE(tern_op, (
+        CaptGr<{TOKTYPE_TERNOP, OPTYPE_CONDOP}>(
+            Set<"?">() >> Fn<spacing>() >>
+            CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
+            Fn<spacing>() >> Set<":">() >> Fn<spacing>() >>
+            CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>())
+        )
+    ))
 
     IMP_MAKE_RULE(operand,
         Any(Fn<pref_un_op>() >> Fn<spacing>()) >> (
@@ -86,8 +97,7 @@ namespace grammar {
             Fn<string>()   |
             Fn<variable>() |
             Fn<brkt_expr>()
-        ) >>
-        Any(Fn<spacing>() >> Fn<post_un_op>())
+        ) >> Any(Fn<spacing>() >> Fn<post_un_op>())
     )
 
     IMP_MAKE_RULE(number, (

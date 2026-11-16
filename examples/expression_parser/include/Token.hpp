@@ -3,6 +3,7 @@
 enum TokenType {
     TOKTYPE_VALUE,
     TOKTYPE_EXPR,
+    TOKTYPE_TERNOP,
     TOKTYPE_BINOP,
     TOKTYPE_UNOP,
     TOKTYPE_COMMENT
@@ -66,7 +67,8 @@ enum OpType {
     OPTYPE_MULASS   = 0x93,
     OPTYPE_DIVASS   = 0x94,
     OPTYPE_MODASS   = 0x95,
-    OPTYPE_POWASS   = 0x96
+    OPTYPE_POWASS   = 0x96,
+    OPTYPE_CONDOP   = 0x97
 };
 
 inline int
