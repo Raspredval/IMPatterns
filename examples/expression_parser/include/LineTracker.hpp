@@ -21,12 +21,13 @@ public:
     SrcPos
     GetSrcPos(intptr_t iStreamPos) const {
         auto
+            itBegin = this->setLines.begin(),
             itLine  = this->setLines.upper_bound(iStreamPos);
-        assert(itLine != this->setLines.begin());
+        assert(itLine != itBegin);
 
         itLine--;
         return {
-            (itLine - this->setLines.begin()) + 1,
+            (itLine - itBegin) + 1,
             (iStreamPos - *itLine) + 1
         };
     }
