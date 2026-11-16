@@ -21,7 +21,7 @@ namespace grammJSON {
     IMP_DECL_RULE(static number);
 
     IMP_MAKE_RULE(spacing,
-        Any(Set<Space + NewLine>())
+        Any(Set<Space + LineBreak>())
     )
 
     IMP_MAKE_RULE(object,

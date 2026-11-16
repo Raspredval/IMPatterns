@@ -61,7 +61,7 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(line_break, (
-        Str<"\n">() /=
+        Set<LineBreak>() /=
         [] (MemStream& stream, Match m, CaptureView, UserData usr_val) -> Match {
             if (m) {
                 State*
