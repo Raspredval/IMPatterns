@@ -26,7 +26,7 @@ public:
 
         itLine--;
         return {
-            std::distance(this->setLines.begin(), itLine) + 1,
+            (itLine - this->setLines.begin()) + 1,
             (iStreamPos - *itLine) + 1
         };
     }
