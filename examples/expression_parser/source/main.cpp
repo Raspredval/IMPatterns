@@ -20,7 +20,8 @@ namespace grammar {
     };
 
     IMP_DECL_RULE(static eval);
-    IMP_DECL_RULE(static comment);
+    IMP_DECL_RULE(static endl_comment);
+    IMP_DECL_RULE(static inln_comment);
     IMP_DECL_RULE(static tern_op);
     IMP_DECL_RULE(static bin_op);
     IMP_DECL_RULE(static pref_un_op);
@@ -39,7 +40,7 @@ namespace grammar {
     IMP_DECL_RULE(static line_break);
     IMP_DECL_RULE(static spacing);
 
-    IMP_MAKE_RULE(comment, (
+    IMP_MAKE_RULE(endl_comment, (
         Capt<{TOKTYPE_COMMENT, COMMTYPE_ENDLINE}>(
             Str<"//">() >> Any(NegSet<"\n">()) >> Fn<line_break>()
         )
@@ -47,7 +48,16 @@ namespace grammar {
 
     IMP_MAKE_RULE(spacing, (
         Any(Set<Space>()) >> Any(
-            Fn<line_break>() >> Any(Set<Space>())
+            (Fn<line_break>() | Fn<inln_comment>()) >> Any(Set<Space>())
+        )
+    ))
+
+    IMP_MAKE_RULE(inln_comment, (
+        Capt<{TOKTYPE_COMMENT, COMMTYPE_INLINE}> (
+            Str<"/*">() >> Any(NegSet<"*\n">()) >> Any(
+                (Fn<line_break>() | LookAhead(Not(Str<"*/">())) >> Str<"*">()) >>
+                Any(NegSet<"*\n">())
+            ) >> Str<"*/">()
         )
     ))
 
@@ -56,7 +66,7 @@ namespace grammar {
             CaptGr<{TOKTYPE_EXPR, EXPRTYPE_FULL}>(Fn<sub_expr>())
         ) >>
         Fn<spacing>() >> (
-            NoChars() | Str<";">() | Fn<line_break>() | Fn<comment>()
+            NoChars() | Str<";">() | Fn<line_break>() | Fn<endl_comment>()
         )
     ))
 

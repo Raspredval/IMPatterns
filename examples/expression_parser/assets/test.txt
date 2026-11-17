@@ -14,4 +14,12 @@ print(
 foo(6 < 7 ? foo() ? true : false : buz() ? false : true)
 
 // also, check the ast for this one ;)
----val; - --val
+---val; - --val;
+
+/*
+    big multiline comment
+    could probably write a poem here
+    I wish I was good at poems :(
+*/
+
+var1 = /* *magic* number */ 67; var2 = /* nice */ 69

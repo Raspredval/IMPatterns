@@ -52,7 +52,15 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& 
         }
 
         break; case TOKTYPE_COMMENT: {
-            std::print("comment: <[ {} ]>\n\n", strvToken);
+            CommType
+                iCommID = (CommType)iHigh;
+            switch (iCommID) {
+            break; case COMMTYPE_ENDLINE:
+                std::print("endline comment: <[ {} ]>\n\n", strvToken);
+
+            break; case COMMTYPE_INLINE:
+                std::print("inline comment: <[ {} ]>\n", strvToken);
+            }
         }
 
         break; case TOKTYPE_VALUE: {
