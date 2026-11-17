@@ -71,7 +71,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& 
                 std::print("integer: <[ {} ]>\n", strvToken);
 
             break; case VALTYPE_FLOAT:
-                std::print("fractional: <[ {} ]>\n", strvToken);
+                std::print("float: <[ {} ]>\n", strvToken);
 
             break; case VALTYPE_BOOL:
                 std::print("boolean: <[ {} ]>\n", strvToken);
