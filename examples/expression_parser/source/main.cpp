@@ -42,8 +42,8 @@ namespace grammar {
 
     IMP_MAKE_RULE(endl_comment, (
         Capt<{TOKTYPE_COMMENT, COMMTYPE_ENDLINE}>(
-            Str<"//">() >> Any(NegSet<"\n">()) >> (Fn<line_break>() | NoChars())
-        )
+            Str<"//">() >> Any(NegSet<"\n">())
+        ) >> (Fn<line_break>() | NoChars())
     ))
 
     IMP_MAKE_RULE(spacing, (
