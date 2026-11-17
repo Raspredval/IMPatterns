@@ -42,7 +42,7 @@ namespace grammar {
 
     IMP_MAKE_RULE(endl_comment, (
         Capt<{TOKTYPE_COMMENT, COMMTYPE_ENDLINE}>(
-            Str<"//">() >> Any(NegSet<"\n">()) >> Fn<line_break>()
+            Str<"//">() >> Any(NegSet<"\n">()) >> (Fn<line_break>() | NoChars())
         )
     ))
 
@@ -71,7 +71,7 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(line_break, (
-        (Set<LineBreak>() | NoChars()) /=
+        Set<LineBreak>() /=
         [] (MemStream& stream, Match m, CaptureView, UserData usr_val) -> Match {
             if (m) {
                 State*
