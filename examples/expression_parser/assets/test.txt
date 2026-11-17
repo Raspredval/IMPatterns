@@ -1,6 +1,7 @@
-Pi = 22 / 7; Radius = -(6.9 - (6 + 7))  // setting constants
-CircleArea  = Pi * Radius ^^ 2          // calculating circle area
-CirclePerim = 2 * Pi * Radius           // calculating circle perimeter
+Pi = /* the Greek way */ 22.0 / 7;  // setting
+Radius = -(6.9 - (6 + 7));          //   constants
+CircleArea  = Pi * Radius ^^ 2;     // calculating circle area
+CirclePerim = 2 * Pi * Radius;      // calculating circle perimeter
 
 // this works!
 print(
@@ -8,10 +9,10 @@ print(
     sqrt(3 * 3 + 4 * 4),
     (int)(float)foo()[6]++,
     (float)(int)--foo()[7]
-)
+);
 
 // this also works!
-foo(6 < 7 ? foo() ? true : false : buz() ? false : true)
+foo(6 < 7 ? foo() ? true : false : buz() ? false : true);
 
 // also, check the ast for this one ;)
 ---val; - --val;
@@ -22,4 +23,4 @@ foo(6 < 7 ? foo() ? true : false : buz() ? false : true)
     I wish I was good at poems :(
 */
 
-var1 = /* *magic* number */ 67; var2 = /* nice */ 69
+var1 = /* *magic* number */ 67; var2 = /* nice */ 69;
