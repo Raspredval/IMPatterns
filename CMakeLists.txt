@@ -12,7 +12,7 @@ if (MSVC) # msvc or clang-cl
 
     set(CXX_EXTRA_FLAGS "/W4" "/WX" "/Zc:__cplusplus")
 else()
-    set(CXX_EXTRA_FLAGS "-Wall" "-Wextra" "-Wconversion" "-Werror")
+    set(CXX_EXTRA_FLAGS "-Wall" "-Wextra" "-Wconversion" "-Wnrvo" "-Werror")
 endif()
 
 set(LIBRARY_SOURCES
