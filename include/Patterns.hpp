@@ -49,9 +49,9 @@ namespace imp {
         (MemStream& stream, Captures& captures, UserData usr_val) -> Match {
             Match
                 mLhs    = std::get<0>(tpl)(stream, captures, usr_val);
-            if (!mLhs)
-                return mLhs;
-            return mLhs + std::get<1>(tpl)(stream, captures, usr_val);
+            if (mLhs)
+                mLhs += std::get<1>(tpl)(stream, captures, usr_val);
+            return mLhs;
         };
     }
 
@@ -65,10 +65,12 @@ namespace imp {
                 uCptCnt = captures.size();
             Match
                 mLhs    = std::get<0>(tpl)(stream, captures, usr_val);
-            if (mLhs)
-                return mLhs;
-            __impl::RestoreState(iBegin, uCptCnt, stream, captures);
-            return std::get<1>(tpl)(stream, captures, usr_val);
+            if (!mLhs) {
+                __impl::RestoreState(iBegin, uCptCnt, stream, captures);
+                mLhs    = std::get<1>(tpl)(stream, captures, usr_val);
+            }
+
+            return mLhs;
         };
     }
 
