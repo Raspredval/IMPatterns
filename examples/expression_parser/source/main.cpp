@@ -97,7 +97,7 @@ namespace grammar {
             { "|>", { TOKTYPE_BINOP, OPTYPE_PIPEBK }},
             { "|<", { TOKTYPE_BINOP, OPTYPE_PIPEFR }}
         >() >> Fn<spacing>() >>
-        (Fn<identifier>() | Fn<brkt_expr>()) >>
+        (Fn<brkt_expr>() | Fn<identifier>()) >>
         Fn<spacing>() >> Fn<call_op>()
     ))
 
@@ -190,7 +190,9 @@ namespace grammar {
             { "--", { TOKTYPE_UNOP, OPTYPE_PREFDEC  }},
             { "+",  { TOKTYPE_UNOP, OPTYPE_PLUS     }},
             { "-",  { TOKTYPE_UNOP, OPTYPE_MINUS    }},
-            { "!",  { TOKTYPE_UNOP, OPTYPE_NOT      }}
+            { "!",  { TOKTYPE_UNOP, OPTYPE_NOT      }},
+            { "*",  { TOKTYPE_UNOP, OPTYPE_DEREF    }},
+            { "&",  { TOKTYPE_UNOP, OPTYPE_ADDROF   }}
         >() | Fn<cast_op>()
     ))
 

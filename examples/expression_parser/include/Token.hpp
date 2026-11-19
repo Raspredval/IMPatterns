@@ -40,6 +40,8 @@ enum OpType {
     OPTYPE_NOT      = 0x12,
     OPTYPE_PREFINC  = 0x13,
     OPTYPE_PREFDEC  = 0x14,
+    OPTYPE_DEREF    = 0x15,
+    OPTYPE_ADDROF   = 0x16,
 
     OPTYPE_POW      = 0x20,
 
