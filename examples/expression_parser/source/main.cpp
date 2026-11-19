@@ -22,7 +22,7 @@ namespace grammar {
     IMP_DECL_RULE(static eval);
     IMP_DECL_RULE(static endl_comment);
     IMP_DECL_RULE(static inln_comment);
-    IMP_DECL_RULE(static tern_op);
+    IMP_DECL_RULE(static cond_op);
     IMP_DECL_RULE(static bin_op);
     IMP_DECL_RULE(static pref_un_op);
     IMP_DECL_RULE(static post_un_op);
@@ -32,17 +32,18 @@ namespace grammar {
     IMP_DECL_RULE(static number);
     IMP_DECL_RULE(static boolean);
     IMP_DECL_RULE(static string);
-    IMP_DECL_RULE(static variable);
+    IMP_DECL_RULE(static identifier);
     IMP_DECL_RULE(static sub_expr);
     IMP_DECL_RULE(static full_expr);
     IMP_DECL_RULE(static brkt_expr);
     IMP_DECL_RULE(static cast_op);
     IMP_DECL_RULE(static line_break);
     IMP_DECL_RULE(static spacing);
+    IMP_DECL_RULE(static pipe_op);
 
     IMP_MAKE_RULE(endl_comment, (
         Capt<{TOKTYPE_COMMENT, COMMTYPE_ENDLINE}>(
-            Str<"//">() >> Any(NegSet<"\n">())
+            Str<"//">() >> Any(NegSet<LineBreak>())
         ) >> (Fn<line_break>() | NoChars())
     ))
 
@@ -62,7 +63,7 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(full_expr, (
-        Fn<spacing>() >> Opt(
+        Opt(
             CaptGr<{TOKTYPE_EXPR, EXPRTYPE_FULL}>(Fn<sub_expr>())
         ) >> Fn<spacing>() >> Str<";">()
     ))
@@ -83,12 +84,26 @@ namespace grammar {
     IMP_MAKE_RULE(sub_expr,
         Fn<operand>() >> Any(
             Fn<spacing>() >> (
-                Fn<bin_op>() >> Fn<spacing>() >> Fn<operand>() | Fn<tern_op>()
+                Fn<pipe_op>() | Fn<cond_op>() |
+                Fn<bin_op>() >> Fn<spacing>() >> Fn<operand>()
             )
         )
     )
 
-    IMP_MAKE_RULE(tern_op, (
+    IMP_MAKE_RULE(pipe_op, (
+        CaptDict<
+            { "|>", { TOKTYPE_BINOP, OPTYPE_PIPEBK }},
+            { "|<", { TOKTYPE_BINOP, OPTYPE_PIPEFR }}
+        >() >> Fn<spacing>() >>
+        CaptGr<{ TOKTYPE_EXPR, EXPRTYPE_ARG }>(
+            Fn<identifier>() | Fn<brkt_expr>()
+        ) >> Fn<spacing>() >>
+        CaptGr<{ TOKTYPE_EXPR, EXPRTYPE_ARG }>(
+            Fn<call_op>()
+        )
+    ))
+
+    IMP_MAKE_RULE(cond_op, (
         CaptGr<{TOKTYPE_TERNOP, OPTYPE_CONDOP}>(
             Set<"?">() >> Fn<spacing>() >>
             CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
@@ -99,10 +114,10 @@ namespace grammar {
 
     IMP_MAKE_RULE(operand,
         Any(Fn<pref_un_op>() >> Fn<spacing>()) >> (
-            Fn<number>()   |
-            Fn<boolean>()  |
-            Fn<string>()   |
-            Fn<variable>() |
+            Fn<number>()     |
+            Fn<boolean>()    |
+            Fn<string>()     |
+            Fn<identifier>() |
             Fn<brkt_expr>()
         ) >> Any(Fn<spacing>() >> Fn<post_un_op>())
     )
@@ -123,7 +138,7 @@ namespace grammar {
         )
     ))
 
-    IMP_MAKE_RULE(variable, (
+    IMP_MAKE_RULE(identifier, (
         NegDict<"if", "else">(
             Capt<{TOKTYPE_VALUE, VALTYPE_ID}>(
                 Set<Alpha + "_">() >> Any(Set<Alnum + "_">())
@@ -184,7 +199,7 @@ namespace grammar {
     IMP_MAKE_RULE(cast_op, (
         Str<"(">() >> Fn<spacing>() >>
         CaptGr<{TOKTYPE_UNOP, OPTYPE_CAST}>(
-            Fn<variable>(),
+            Fn<identifier>(),
             [] (MemStream& stream, Match m, CaptureView, UserData usr_val) -> Match {
                 if (m) {
                     std::string_view
@@ -234,7 +249,7 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(eval,
-        NoChars() | (Fn<full_expr>() >> Fn<eval>())
+        NoChars() | Fn<spacing>() >> Fn<full_expr>() >> Fn<spacing>() >> Fn<eval>()
     )
 }
 

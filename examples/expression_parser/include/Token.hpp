@@ -61,14 +61,17 @@ enum OpType {
     OPTYPE_BOOLAND  = 0x70,
     OPTYPE_BOOLOR   = 0x80,
 
-    OPTYPE_ASSIGN   = 0x90,
-    OPTYPE_ADDASS   = 0x91,
-    OPTYPE_SUBASS   = 0x92,
-    OPTYPE_MULASS   = 0x93,
-    OPTYPE_DIVASS   = 0x94,
-    OPTYPE_MODASS   = 0x95,
-    OPTYPE_POWASS   = 0x96,
-    OPTYPE_CONDOP   = 0x97
+    OPTYPE_PIPEBK   = 0x90,
+    OPTYPE_PIPEFR   = 0x91,
+
+    OPTYPE_ASSIGN   = 0xA0,
+    OPTYPE_ADDASS   = 0xA1,
+    OPTYPE_SUBASS   = 0xA2,
+    OPTYPE_MULASS   = 0xA3,
+    OPTYPE_DIVASS   = 0xA4,
+    OPTYPE_MODASS   = 0xA5,
+    OPTYPE_POWASS   = 0xA6,
+    OPTYPE_CONDOP   = 0xA7
 };
 
 inline int
@@ -98,6 +101,8 @@ isLeftAssociable(OpType iType) {
     case OPTYPE_NOTEQUAL:
     case OPTYPE_BOOLAND:
     case OPTYPE_BOOLOR:
+    case OPTYPE_PIPEBK:
+    case OPTYPE_PIPEFR:
         return true;
 
     default:

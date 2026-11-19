@@ -35,17 +35,17 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& 
                 iExprID = (ExprType)iHigh;
             switch (iExprID) {
             break; case EXPRTYPE_FULL:
-                std::print("expression: <[ {} ]> {{\n", strvToken);
+                std::print("expression: [[ {} ]] {{\n", strvToken);
                 PrintTokens(stream, tkn.children, l, iLevel + 1);
                 Print(iLevel, "}}\n\n");
 
             break; case EXPRTYPE_SUB:
-                std::print("sub expression: <[ {} ]> {{\n", strvToken);
+                std::print("sub expression: [[ {} ]] {{\n", strvToken);
                 PrintTokens(stream, tkn.children, l, iLevel + 1);
                 Print(iLevel, "}}\n");
 
             break; case EXPRTYPE_ARG:
-                std::print("argument: <[ {} ]> {{\n", strvToken);
+                std::print("argument: [[ {} ]] {{\n", strvToken);
                 PrintTokens(stream, tkn.children, l, iLevel + 1);
                 Print(iLevel, "}}\n");
             }
@@ -56,10 +56,10 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& 
                 iCommID = (CommType)iHigh;
             switch (iCommID) {
             break; case COMMTYPE_ENDLINE:
-                std::print("endline comment: <[ {} ]>\n\n", strvToken);
+                std::print("endline comment: [[ {} ]]\n", strvToken);
 
             break; case COMMTYPE_INLINE:
-                std::print("inline comment: <[ {} ]>\n", strvToken);
+                std::print("inline comment: [[ {} ]]\n", strvToken);
             }
         }
 
@@ -68,26 +68,26 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& 
                 iValID  = (ValType)iHigh;
             switch (iValID) {
             break; case VALTYPE_INT:
-                std::print("integer: <[ {} ]>\n", strvToken);
+                std::print("integer: [[ {} ]]\n", strvToken);
 
             break; case VALTYPE_FLOAT:
-                std::print("float: <[ {} ]>\n", strvToken);
+                std::print("float: [[ {} ]]\n", strvToken);
 
             break; case VALTYPE_BOOL:
-                std::print("boolean: <[ {} ]>\n", strvToken);
+                std::print("boolean: [[ {} ]]\n", strvToken);
 
             break; case VALTYPE_STR:
-                std::print("string: <[ {} ]>\n", strvToken);
+                std::print("string: [[ {} ]]\n", strvToken);
 
             break; case VALTYPE_ID:
-                std::print("identifier: <[ {} ]>\n", strvToken);
+                std::print("identifier: [[ {} ]]\n", strvToken);
             }
         }
 
         break; case TOKTYPE_TERNOP: {
             OpType
                 iOpID   = (OpType)iHigh;
-            std::print("ternary op: <[ {} ]> (opID: 0x{:02x}, precedence: {}, {}) {{\n",
+            std::print("ternary op: [[ {} ]] (opID: 0x{:02x}, precedence: {}, {}) {{\n",
                 strvToken,
                 (int)iOpID,
                 getOpPrecedence(iOpID),
@@ -102,7 +102,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& 
         break; case TOKTYPE_BINOP: {
             OpType
                 iOpID   = (OpType)iHigh;
-            std::print("binary op: <[ {} ]> (opID: 0x{:02x}, precedence: {}, {})\n",
+            std::print("binary op: [[ {} ]] (opID: 0x{:02x}, precedence: {}, {})\n",
                 strvToken,
                 (int)iOpID,
                 getOpPrecedence(iOpID),
@@ -115,7 +115,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& 
         break; case TOKTYPE_UNOP: {
             OpType
                 iOpID   = (OpType)iHigh;
-            std::print("unary op: <[ {} ]> (opID: 0x{:02x}, precedence: {}, {})",
+            std::print("unary op: [[ {} ]] (opID: 0x{:02x}, precedence: {}, {})",
                 strvToken,
                 (int)iOpID,
                 getOpPrecedence(iOpID),
