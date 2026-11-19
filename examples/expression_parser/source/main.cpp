@@ -63,9 +63,11 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(full_expr, (
-        Opt(
-            CaptGr<{TOKTYPE_EXPR, EXPRTYPE_FULL}>(Fn<sub_expr>())
-        ) >> Fn<spacing>() >> Str<";">()
+        Fn<spacing>() >>
+        Opt(CaptGr<{TOKTYPE_EXPR, EXPRTYPE_FULL}>(
+            Fn<sub_expr>()
+        )) >> Fn<spacing>() >>
+        Str<";">() >> Fn<spacing>()
     ))
 
     IMP_MAKE_RULE(line_break, (
@@ -247,7 +249,7 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(eval,
-        NoChars() | Fn<spacing>() >> Fn<full_expr>() >> Fn<spacing>() >> Fn<eval>()
+        NoChars() | Fn<full_expr>() >> Fn<eval>()
     )
 }
 
