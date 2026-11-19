@@ -18,18 +18,10 @@ foo(6 < 7 ? foo() ? true : false : buz() ? false : true);
 ---val; - --val;
 
 /*
-    big multiline comment
-    could probably write a poem here
-    I wish I was good at poems :(
-*/
-
-var1 = /* *magic* number */ 67; var2 = /* nice */ 69;
-
-/*
     have been cooking this feature for a while,
       parsing rules arent clear yet, but works for now
 */
 
-vec = Vec2(6, 7) /* pipe back */ |> VecAdd(69) /* pipe front */ |< VecSub(420);
+vec = Vec2(6, 7) /* pipe *back* */ |> VecAdd(69) /* pipe *front* */ |< VecSub(420);
 // same as:
 //  VecSub( VecAdd( 69, Vec2(6, 7) ), 420 )
