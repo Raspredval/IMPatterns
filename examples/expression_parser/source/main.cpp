@@ -96,10 +96,8 @@ namespace grammar {
             { "|<", { TOKTYPE_BINOP, OPTYPE_PIPEFR }}
         >() >> Fn<spacing>() >>
         CaptGr<{ TOKTYPE_EXPR, EXPRTYPE_ARG }>(
-            Fn<identifier>() | Fn<brkt_expr>()
-        ) >> Fn<spacing>() >>
-        CaptGr<{ TOKTYPE_EXPR, EXPRTYPE_ARG }>(
-            Fn<call_op>()
+            (Fn<identifier>() | Fn<brkt_expr>()) >>
+            Fn<spacing>() >> Fn<call_op>()
         )
     ))
 
