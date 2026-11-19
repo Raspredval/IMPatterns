@@ -24,4 +24,4 @@ foo(6 < 7 ? foo() ? true : false : buz() ? false : true);
 
 vec = Vec2(6, 7) /* pipe *back* */ |> VecAdd(69) /* pipe *front* */ |< VecSub(420);
 // same as:
-//  VecSub( VecAdd( 69, Vec2(6, 7) ), 420 )
+//  vec = VecSub( VecAdd( 69, Vec2(6, 7) ), 420 )
