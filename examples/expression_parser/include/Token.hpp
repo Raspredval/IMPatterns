@@ -116,3 +116,8 @@ inline bool
 isRightAssociable(OpType iType) {
     return !isLeftAssociable(iType);
 }
+
+struct Token {
+    int
+        iType, iSubType;
+};

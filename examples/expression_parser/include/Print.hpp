@@ -14,7 +14,7 @@ Print(int iLevel, const std::format_string<const Args&...>& strfmt, const Args&.
 }
 
 inline void
-PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& l, int iLevel = 0) {
+PrintTokens(imp::MemStream& stream, imp::CaptureView<Token> tokens, const LineTracker& l, int iLevel = 0) {
     for (const auto& tkn : tokens) {
         std::string_view
             strvToken   = tkn.match.GetStringView(stream);
@@ -24,15 +24,12 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& 
         Print(iLevel, "ln {} col {}: ",
             posToken.iLn, posToken.iCol);
 
-        auto [ iLow, iHigh] =
-            tkn.tag.ipr;
-
         TokenType
-            iTknID  = (TokenType)iLow;
+            iTknID  = (TokenType)tkn.tag.iType;
         switch (iTknID) {
         break; case TOKTYPE_EXPR: {
             ExprType
-                iExprID = (ExprType)iHigh;
+                iExprID = (ExprType)tkn.tag.iSubType;
             switch (iExprID) {
             break; case EXPRTYPE_FULL:
                 std::print("expression: [[ {} ]] {{\n", strvToken);
@@ -53,7 +50,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& 
 
         break; case TOKTYPE_COMMENT: {
             CommType
-                iCommID = (CommType)iHigh;
+                iCommID = (CommType)tkn.tag.iSubType;
             switch (iCommID) {
             break; case COMMTYPE_ENDLINE:
                 std::print("endline comment: [[ {} ]]\n", strvToken);
@@ -65,7 +62,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& 
 
         break; case TOKTYPE_VALUE: {
             ValType
-                iValID  = (ValType)iHigh;
+                iValID  = (ValType)tkn.tag.iSubType;
             switch (iValID) {
             break; case VALTYPE_INT:
                 std::print("integer: [[ {} ]]\n", strvToken);
@@ -86,7 +83,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& 
 
         break; case TOKTYPE_TERNOP: {
             OpType
-                iOpID   = (OpType)iHigh;
+                iOpID   = (OpType)tkn.tag.iSubType;
             std::print("ternary op: [[ {} ]] (opID: 0x{:02x}, precedence: {}, {}) {{\n",
                 strvToken,
                 (int)iOpID,
@@ -101,7 +98,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& 
 
         break; case TOKTYPE_BINOP: {
             OpType
-                iOpID   = (OpType)iHigh;
+                iOpID   = (OpType)tkn.tag.iSubType;
             std::print("binary op: [[ {} ]] (opID: 0x{:02x}, precedence: {}, {})\n",
                 strvToken,
                 (int)iOpID,
@@ -114,7 +111,7 @@ PrintTokens(imp::MemStream& stream, imp::CaptureView tokens, const LineTracker& 
 
         break; case TOKTYPE_UNOP: {
             OpType
-                iOpID   = (OpType)iHigh;
+                iOpID   = (OpType)tkn.tag.iSubType;
             std::print("unary op: [[ {} ]] (opID: 0x{:02x}, precedence: {}, {})",
                 strvToken,
                 (int)iOpID,

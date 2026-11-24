@@ -5,10 +5,11 @@
 #include <Patterns.hpp>
 #include <MappedFile.hpp>
 
+#define IMP_CAPTTAG     int
+#define IMP_USERDATA    int
+using pt = imp::Patterns<IMP_CAPTTAG, IMP_USERDATA>;
 
 namespace grammJSON {
-    using namespace imp;
-
     IMP_DECL_RULE(static spacing);
     IMP_DECL_RULE(static object);
     IMP_DECL_RULE(static array);
@@ -21,86 +22,87 @@ namespace grammJSON {
     IMP_DECL_RULE(static number);
 
     IMP_MAKE_RULE(spacing,
-        Any(Set<Space + LineBreak>())
+        pt::Any(pt::Set<imp::Space + imp::LineBreak>())
     )
 
     IMP_MAKE_RULE(object,
-        Str<"{">() >> Fn<spacing>() >>
-        Opt(
-            Fn<field>() >> Fn<spacing>() >> Any(
-                Str<",">() >> Fn<spacing>() >>
-                Fn<field>() >> Fn<spacing>()
+        pt::Str<"{">() >> pt::Fn<spacing>() >>
+        pt::Opt(
+            pt::Fn<field>() >> pt::Fn<spacing>() >> pt::Any(
+                pt::Str<",">() >> pt::Fn<spacing>() >>
+                pt::Fn<field>() >> pt::Fn<spacing>()
             )
-        ) >> Str<"}">()
+        ) >> pt::Str<"}">()
     )
 
     IMP_MAKE_RULE(array,
-        Str<"[">() >> Fn<spacing>() >> Opt(
-            Fn<value>() >> Fn<spacing>() >>
-            Any(
-                Str<",">() >> Fn<spacing>() >>
-                Fn<value>() >> Fn<spacing>()
+        pt::Str<"[">() >> pt::Fn<spacing>() >> pt::Opt(
+            pt::Fn<value>() >> pt::Fn<spacing>() >>
+            pt::Any(
+                pt::Str<",">() >> pt::Fn<spacing>() >>
+                pt::Fn<value>() >> pt::Fn<spacing>()
             )
-        ) >> Str<"]">()
+        ) >> pt::Str<"]">()
     )
 
     IMP_MAKE_RULE(field,
-        Fn<string>() >> Fn<spacing>() >>
-        Str<":">() >> Fn<spacing>() >>
-        Fn<value>()
+        pt::Fn<string>() >> pt::Fn<spacing>() >>
+        pt::Str<":">() >> pt::Fn<spacing>() >>
+        pt::Fn<value>()
     )
 
     IMP_MAKE_RULE(value,
-        Fn<object>()  | Fn<array>()  |
-        Fn<string>()  | Fn<number>() |
-        Fn<boolean>() | Fn<null>()
+        pt::Fn<object>()    | pt::Fn<array>()  |
+        pt::Fn<string>()    | pt::Fn<number>() |
+        pt::Fn<boolean>()   | pt::Fn<null>()
     )
 
     IMP_MAKE_RULE(boolean, (
-        Dict<"true", "false">()
+        pt::Dict<"true", "false">()
     ))
 
     IMP_MAKE_RULE(null,
-        Str<"null">()
+        pt::Str<"null">()
     )
 
     IMP_MAKE_RULE(string,
-        Str<"\"">() >>
-        Any(NegSet<"\"\\">()) >> Any(
-            Fn<escseq>() >> Any(NegSet<"\"\\">())
-        ) >> Str<"\"">()
+        pt::Str<"\"">() >>
+        pt::Any(pt::NegSet<"\"\\">()) >> pt::Any(
+            pt::Fn<escseq>() >> pt::Any(pt::NegSet<"\"\\">())
+        ) >> pt::Str<"\"">()
     )
 
     IMP_MAKE_RULE(escseq,
-        Str<"\\">() >> (
-            Set<"/\"\\bfnrt">() |
-            Str<"u">() >> Exactly<4>(Set<HexDigit>()) |
-            Str<"U">() >> Exactly<8>(Set<HexDigit>())
+        pt::Str<"\\">() >> (
+            pt::Set<"/\"\\bfnrt">() |
+            pt::Str<"u">() >> pt::Exactly<4>(pt::Set<imp::HexDigit>()) |
+            pt::Str<"U">() >> pt::Exactly<8>(pt::Set<imp::HexDigit>())
         )
     )
 
     IMP_MAKE_RULE(number,
-        Opt(Set<"+-">()) >> Some(Set<Digit>()) >>
-        Opt(
-            Str<".">() >> Some(Set<Digit>()) >>
-            Opt(
-                Set<"eE">() >>
-                Opt(Set<"+-">()) >> Some(Set<Digit>())
+        pt::Opt(pt::Set<"+-">()) >> pt::Some(pt::Set<imp::Digit>()) >>
+        pt::Opt(
+            pt::Str<".">() >> pt::Some(pt::Set<imp::Digit>()) >>
+            pt::Opt(
+                pt::Set<"eE">() >>
+                pt::Opt(pt::Set<"+-">()) >> pt::Some(pt::Set<imp::Digit>())
             )
         )
     )
 
-    IMP_MAKE_RULE(eval,
-        Fn<spacing>() >> Opt(
-            Fn<value>() >> Fn<spacing>()
-        ) >> NoChars() /=
-        [] (MemStream& stream, Match m, CaptureView, UserData) -> Match {
-            if (!m)
+    IMP_MAKE_HANDLER(static eval_handler, {
+        if (!m)
                 std::print(stderr, "failed to parse JSON at {}\n", stream.GetPos());
             else
                 std::print("success\n");
             return m;
-        }
+    });
+
+    IMP_MAKE_RULE(eval,
+        pt::Fn<spacing>() >> pt::Opt(
+            pt::Fn<value>() >> pt::Fn<spacing>()
+        ) >> pt::NoChars() / pt::Fn<eval_handler>()
     )
 }
 
@@ -126,7 +128,7 @@ int main() {
     imp::MemStream
         stream      = mmfileJSON.GetView();
     imp::Match
-        mResult     = imp::Eval(imp::Fn<grammJSON::eval>(), stream);
+        mResult     = pt::Eval(pt::Fn<grammJSON::eval>(), stream);
 
     std::atomic_signal_fence(
         std::memory_order_seq_cst);

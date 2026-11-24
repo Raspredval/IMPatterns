@@ -10,15 +10,16 @@
 #include "LineTracker.hpp"
 #include "TypeTracker.hpp"
 
+struct State {
+    LineTracker l;
+    TypeTracker t;
+};
+
+#define IMP_CAPTTAG     Token
+#define IMP_USERDATA    State&
+using pt = imp::Patterns<IMP_CAPTTAG, IMP_USERDATA>;
 
 namespace grammar {
-    using namespace imp;
-
-    struct State {
-        LineTracker l;
-        TypeTracker t;
-    };
-
     IMP_DECL_RULE(static eval);
     IMP_DECL_RULE(static endl_comment);
     IMP_DECL_RULE(static inln_comment);
@@ -42,124 +43,124 @@ namespace grammar {
     IMP_DECL_RULE(static pipe_op);
 
     IMP_MAKE_RULE(endl_comment, (
-        Capt<{TOKTYPE_COMMENT, COMMTYPE_ENDLINE}>(
-            Str<"//">() >> Any(NegSet<LineBreak>())
-        ) >> (Fn<line_break>() | NoChars())
+        pt::Capt<{TOKTYPE_COMMENT, COMMTYPE_ENDLINE}>(
+            pt::Str<"//">() >> pt::Any(pt::NegSet<imp::LineBreak>())
+        ) >> (pt::Fn<line_break>() | pt::NoChars())
     ))
 
     IMP_MAKE_RULE(spacing, (
-        Any(Set<Space>()) >> Any(
-            (Fn<line_break>() | Fn<inln_comment>() | Fn<endl_comment>()) >> Any(Set<Space>())
+        pt::Any(pt::Set<imp::Space>()) >> pt::Any(
+            (pt::Fn<line_break>() | pt::Fn<inln_comment>() | pt::Fn<endl_comment>()) >> pt::Any(pt::Set<imp::Space>())
         )
     ))
 
     IMP_MAKE_RULE(inln_comment, (
-        Capt<{TOKTYPE_COMMENT, COMMTYPE_INLINE}> (
-            Str<"/*">() >> Any(NegSet<"*\n">()) >> Any(
-                (Fn<line_break>() | LookAhead(Not(Str<"*/">())) >> Str<"*">()) >>
-                Any(NegSet<"*\n">())
-            ) >> Str<"*/">()
+        pt::Capt<{TOKTYPE_COMMENT, COMMTYPE_INLINE}> (
+            pt::Str<"/*">() >> pt::Any(pt::NegSet<"*\n">()) >> pt::Any(
+                (pt::Fn<line_break>() | pt::LookAhead(pt::Not(pt::Str<"*/">())) >> pt::Str<"*">()) >>
+                pt::Any(pt::NegSet<"*\n">())
+            ) >> pt::Str<"*/">()
         )
     ))
 
     IMP_MAKE_RULE(full_expr, (
-        Fn<spacing>() >> Opt(
-            CaptGr<{TOKTYPE_EXPR, EXPRTYPE_FULL}>(
-                Fn<sub_expr>()
-            ) >> Fn<spacing>()
-        ) >> Str<";">() >> Fn<spacing>()
+        pt::Fn<spacing>() >> pt::Opt(
+            pt::CaptGr<{TOKTYPE_EXPR, EXPRTYPE_FULL}>(
+                pt::Fn<sub_expr>()
+            ) >> pt::Fn<spacing>()
+        ) >> pt::Str<";">() >> pt::Fn<spacing>()
     ))
 
-    IMP_MAKE_RULE(line_break, (
-        Set<LineBreak>() /=
-        [] (MemStream& stream, Match m, CaptureView, UserData usr_val) -> Match {
-            if (m) {
-                State*
-                    lpState = (State*)usr_val.ptr;
-                lpState->l.InsertLine(stream.GetPos());
-            }
-
-            return m;
+    IMP_MAKE_HANDLER(static line_break_handler, {
+        if (m) {
+            usr_val.l.InsertLine(stream.GetPos());
         }
+
+        return m;
+    })
+
+    IMP_MAKE_RULE(line_break, (
+        pt::Set<imp::LineBreak>() / pt::Fn<line_break_handler>()
     ))
 
     IMP_MAKE_RULE(sub_expr,
-        Fn<operand>() >> Any(
-            Fn<spacing>() >> (
-                Fn<pipe_op>() | Fn<cond_op>() |
-                Fn<bin_op>() >> Fn<spacing>() >> Fn<operand>()
+        pt::Fn<operand>() >> pt::Any(
+            pt::Fn<spacing>() >> (
+                pt::Fn<pipe_op>() | pt::Fn<cond_op>() |
+                pt::Fn<bin_op>() >> pt::Fn<spacing>() >> pt::Fn<operand>()
             )
         )
     )
 
     IMP_MAKE_RULE(pipe_op, (
-        CaptDict<
+        pt::CaptDict<
             { "|>", { TOKTYPE_BINOP, OPTYPE_PIPEBK }},
             { "|<", { TOKTYPE_BINOP, OPTYPE_PIPEFR }}
-        >() >> Fn<spacing>() >>
-        (Fn<brkt_expr>() | Fn<identifier>()) >>
-        Fn<spacing>() >> Fn<call_op>()
+        >() >> pt::Fn<spacing>() >>
+        (pt::Fn<brkt_expr>() | pt::Fn<identifier>()) >>
+        pt::Fn<spacing>() >> pt::Fn<call_op>()
     ))
 
     IMP_MAKE_RULE(cond_op, (
-        CaptGr<{TOKTYPE_TERNOP, OPTYPE_CONDOP}>(
-            Set<"?">() >> Fn<spacing>() >>
-            CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
-            Fn<spacing>() >> Set<":">() >> Fn<spacing>() >>
-            CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>())
+        pt::CaptGr<{TOKTYPE_TERNOP, OPTYPE_CONDOP}>(
+            pt::Set<"?">() >> pt::Fn<spacing>() >>
+            pt::CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(pt::Fn<sub_expr>()) >>
+            pt::Fn<spacing>() >> pt::Set<":">() >> pt::Fn<spacing>() >>
+            pt::CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(pt::Fn<sub_expr>())
         )
     ))
 
     IMP_MAKE_RULE(operand,
-        Any(Fn<pref_un_op>() >> Fn<spacing>()) >> (
-            Fn<number>()     |
-            Fn<boolean>()    |
-            Fn<string>()     |
-            Fn<identifier>() |
-            Fn<brkt_expr>()
-        ) >> Any(Fn<spacing>() >> Fn<post_un_op>())
+        pt::Any(
+            pt::Fn<pref_un_op>() >> pt::Fn<spacing>()) >> (
+                pt::Fn<number>()     |
+                pt::Fn<boolean>()    |
+                pt::Fn<string>()     |
+                pt::Fn<identifier>() |
+                pt::Fn<brkt_expr>()
+            ) >> pt::Any(pt::Fn<spacing>() >> pt::Fn<post_un_op>())
     )
 
     IMP_MAKE_RULE(number, (
-        Capt<{TOKTYPE_VALUE, VALTYPE_INT}>(
-            Some(Set<Digit>())
-        ) >> Opt(
-            CaptMerge<{TOKTYPE_VALUE, VALTYPE_FLOAT}>(
-                Str<".">() >> Some(Set<Digit>())
+        pt::Capt<{TOKTYPE_VALUE, VALTYPE_INT}>(
+            pt::Some(pt::Set<imp::Digit>())
+        ) >> pt::Opt(
+            pt::CaptMerge<{TOKTYPE_VALUE, VALTYPE_FLOAT}>(
+                pt::Str<".">() >> pt::Some(pt::Set<imp::Digit>())
             )
         )
     ))
 
     IMP_MAKE_RULE(boolean, (
-        Capt<{TOKTYPE_VALUE, VALTYPE_BOOL}>(
-            Dict<"true", "false">()
+        pt::Capt<{TOKTYPE_VALUE, VALTYPE_BOOL}>(
+            pt::Dict<"true", "false">()
         )
     ))
 
     IMP_MAKE_RULE(identifier, (
-        NegDict<"if", "else">(
-            Capt<{TOKTYPE_VALUE, VALTYPE_ID}>(
-                Set<Alpha + "_">() >> Any(Set<Alnum + "_">())
+        pt::NegDict<"if", "else">(
+            pt::Capt<{TOKTYPE_VALUE, VALTYPE_ID}>(
+                pt::Set<imp::Alpha + "_">() >> pt::Any(pt::Set<imp::Alnum + "_">())
             )
         )
     ))
 
     IMP_MAKE_RULE(string, (
-        Capt<{TOKTYPE_VALUE, VALTYPE_STR}>(
-            Str<"\"">() >>
-            Any(NegSet<"\"\n">()) >>
-            Str<"\"">()
+        pt::Capt<{TOKTYPE_VALUE, VALTYPE_STR}>(
+            pt::Str<"\"">() >>
+            pt::Any(pt::NegSet<"\"\n">()) >>
+            pt::Str<"\"">()
         )
     ))
 
     IMP_MAKE_RULE(brkt_expr, (
-        Str<"(">() >> Fn<spacing>() >>
-        CaptGr<{TOKTYPE_EXPR, EXPRTYPE_SUB}>(Fn<sub_expr>()) >>
-        Fn<spacing>() >> Str<")">()
+        pt::Str<"(">() >> pt::Fn<spacing>() >>
+        pt::CaptGr<{TOKTYPE_EXPR, EXPRTYPE_SUB}>(pt::Fn<sub_expr>()) >>
+        pt::Fn<spacing>() >> pt::Str<")">()
     ))
 
     IMP_MAKE_RULE(bin_op, (
-        CaptDict<
+        pt::CaptDict<
             { "^^",  { TOKTYPE_BINOP, OPTYPE_POW      }},
             { "*",   { TOKTYPE_BINOP, OPTYPE_MUL      }},
             { "/",   { TOKTYPE_BINOP, OPTYPE_DIV      }},
@@ -185,7 +186,7 @@ namespace grammar {
     ))
 
     IMP_MAKE_RULE(pref_un_op, (
-        CaptDict<
+        pt::CaptDict<
             { "++", { TOKTYPE_UNOP, OPTYPE_PREFINC  }},
             { "--", { TOKTYPE_UNOP, OPTYPE_PREFDEC  }},
             { "+",  { TOKTYPE_UNOP, OPTYPE_PLUS     }},
@@ -193,63 +194,62 @@ namespace grammar {
             { "!",  { TOKTYPE_UNOP, OPTYPE_NOT      }},
             { "*",  { TOKTYPE_UNOP, OPTYPE_DEREF    }},
             { "&",  { TOKTYPE_UNOP, OPTYPE_ADDROF   }}
-        >() | Fn<cast_op>()
+        >() | pt::Fn<cast_op>()
     ))
 
-    IMP_MAKE_RULE(cast_op, (
-        Str<"(">() >> Fn<spacing>() >>
-        CaptGr<{TOKTYPE_UNOP, OPTYPE_CAST}>(
-            Fn<identifier>(),
-            [] (MemStream& stream, Match m, CaptureView, UserData usr_val) -> Match {
-                if (m) {
-                    std::string_view
-                        strvTypename    = m.GetStringView(stream);
-                    State*
-                        lpState         = (State*)usr_val.ptr;
-                    if (!lpState->t.HasType(strvTypename))
-                        m.Toggle();
-                }
+    IMP_MAKE_HANDLER(cast_op_handler, {
+        if (m) {
+            std::string_view
+                strvTypename    = m.GetStringView(stream);
+            if (!usr_val.t.HasType(strvTypename))
+                m.Toggle();
+        }
 
-                return m;
-            }
-        ) >> Fn<spacing>() >> Str<")">()
+        return m;
+    })
+
+    IMP_MAKE_RULE(cast_op, (
+        pt::Str<"(">() >> pt::Fn<spacing>() >>
+        pt::CaptGr<{TOKTYPE_UNOP, OPTYPE_CAST}>(
+            pt::Fn<identifier>(), pt::Fn<cast_op_handler>()
+        ) >> pt::Fn<spacing>() >> pt::Str<")">()
     ))
 
     IMP_MAKE_RULE(post_un_op, (
-        CaptDict<
+        pt::CaptDict<
             { "++", { TOKTYPE_UNOP, OPTYPE_POSTINC  }},
             { "--", { TOKTYPE_UNOP, OPTYPE_POSTDEC  }}
-        >() | Fn<call_op>() | Fn<index_op>()
+        >() | pt::Fn<call_op>() | pt::Fn<index_op>()
     ))
 
     IMP_MAKE_RULE(call_op, (
-        CaptGr<{TOKTYPE_UNOP, OPTYPE_CALL}>(
-            Str<"(">() >> Fn<spacing>() >>
-            Opt(
-                CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >> Fn<spacing>() >>
-                Any(
-                    Str<",">() >> Fn<spacing>() >>
-                    CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
-                    Fn<spacing>()
+        pt::CaptGr<{TOKTYPE_UNOP, OPTYPE_CALL}>(
+            pt::Str<"(">() >> pt::Fn<spacing>() >>
+            pt::Opt(
+                pt::CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(pt::Fn<sub_expr>()) >>
+                pt::Fn<spacing>() >> pt::Any(
+                    pt::Str<",">() >> pt::Fn<spacing>() >>
+                    pt::CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(pt::Fn<sub_expr>()) >>
+                    pt::Fn<spacing>()
                 )
-            ) >> Str<")">()
+            ) >> pt::Str<")">()
         )
     ))
 
     IMP_MAKE_RULE(index_op, (
-        CaptGr<{TOKTYPE_UNOP, OPTYPE_INDEX}>(
-            Str<"[">() >> Fn<spacing>() >>
-            CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >> Fn<spacing>() >>
-            Any(
-                Str<",">() >> Fn<spacing>() >>
-                CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(Fn<sub_expr>()) >>
-                Fn<spacing>()
-            ) >> Str<"]">()
+        pt::CaptGr<{TOKTYPE_UNOP, OPTYPE_INDEX}>(
+            pt::Str<"[">() >> pt::Fn<spacing>() >>
+            pt::CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(pt::Fn<sub_expr>()) >>
+            pt::Fn<spacing>() >> pt::Any(
+                pt::Str<",">() >> pt::Fn<spacing>() >>
+                pt::CaptGr<{TOKTYPE_EXPR, EXPRTYPE_ARG}>(pt::Fn<sub_expr>()) >>
+                pt::Fn<spacing>()
+            ) >> pt::Str<"]">()
         )
     ))
 
     IMP_MAKE_RULE(eval,
-        NoChars() | Fn<full_expr>() >> Fn<eval>()
+        pt::NoChars() | pt::Fn<full_expr>() >> pt::Fn<eval>()
     )
 }
 
@@ -265,14 +265,14 @@ int main() {
         return -1;
     }
 
-    imp::Captures
+    imp::Captures<Token>
         tokens  = {};
     imp::MemStream
         stream  = {mapped_file.GetView()};
-    grammar::State
+    State
         state   = {};
 
-    if (!imp::Eval(imp::Fn<grammar::eval>(), stream, tokens, &state)) {
+    if (!pt::Eval(pt::Fn<grammar::eval>(), stream, tokens, state)) {
         SrcPos
             src_pos = state.l.GetSrcPos(stream.GetPos());
         std::print(stderr,
