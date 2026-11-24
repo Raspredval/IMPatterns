@@ -94,8 +94,8 @@ namespace grammar {
 
     IMP_MAKE_RULE(pipe_op, (
         pt::CaptDict<
-            { "|>", { TOKTYPE_BINOP, OPTYPE_PIPEBK }},
-            { "|<", { TOKTYPE_BINOP, OPTYPE_PIPEFR }}
+            { "|>", Token{ TOKTYPE_BINOP, OPTYPE_PIPEBK }},
+            { "|<", Token{ TOKTYPE_BINOP, OPTYPE_PIPEFR }}
         >() >> pt::Fn<spacing>() >>
         (pt::Fn<brkt_expr>() | pt::Fn<identifier>()) >>
         pt::Fn<spacing>() >> pt::Fn<call_op>()
@@ -161,39 +161,39 @@ namespace grammar {
 
     IMP_MAKE_RULE(bin_op, (
         pt::CaptDict<
-            { "^^",  { TOKTYPE_BINOP, OPTYPE_POW      }},
-            { "*",   { TOKTYPE_BINOP, OPTYPE_MUL      }},
-            { "/",   { TOKTYPE_BINOP, OPTYPE_DIV      }},
-            { "%",   { TOKTYPE_BINOP, OPTYPE_MOD      }},
-            { "+",   { TOKTYPE_BINOP, OPTYPE_ADD      }},
-            { "-",   { TOKTYPE_BINOP, OPTYPE_SUB      }},
-            { "<",   { TOKTYPE_BINOP, OPTYPE_LESS     }},
-            { "<=",  { TOKTYPE_BINOP, OPTYPE_LESSEQ   }},
-            { ">",   { TOKTYPE_BINOP, OPTYPE_GREAT    }},
-            { ">=",  { TOKTYPE_BINOP, OPTYPE_GREATEQ  }},
-            { "==",  { TOKTYPE_BINOP, OPTYPE_EQUAL    }},
-            { "!=",  { TOKTYPE_BINOP, OPTYPE_NOTEQUAL }},
-            { "&&",  { TOKTYPE_BINOP, OPTYPE_BOOLAND  }},
-            { "||",  { TOKTYPE_BINOP, OPTYPE_BOOLOR   }},
-            { "=",   { TOKTYPE_BINOP, OPTYPE_ASSIGN   }},
-            { "+=",  { TOKTYPE_BINOP, OPTYPE_ADDASS   }},
-            { "-=",  { TOKTYPE_BINOP, OPTYPE_SUBASS   }},
-            { "*=",  { TOKTYPE_BINOP, OPTYPE_MULASS   }},
-            { "/=",  { TOKTYPE_BINOP, OPTYPE_DIVASS   }},
-            { "%=",  { TOKTYPE_BINOP, OPTYPE_MODASS   }},
-            { "^^=", { TOKTYPE_BINOP, OPTYPE_POWASS   }}
+            { "^^",  Token{ TOKTYPE_BINOP, OPTYPE_POW      }},
+            { "*",   Token{ TOKTYPE_BINOP, OPTYPE_MUL      }},
+            { "/",   Token{ TOKTYPE_BINOP, OPTYPE_DIV      }},
+            { "%",   Token{ TOKTYPE_BINOP, OPTYPE_MOD      }},
+            { "+",   Token{ TOKTYPE_BINOP, OPTYPE_ADD      }},
+            { "-",   Token{ TOKTYPE_BINOP, OPTYPE_SUB      }},
+            { "<",   Token{ TOKTYPE_BINOP, OPTYPE_LESS     }},
+            { "<=",  Token{ TOKTYPE_BINOP, OPTYPE_LESSEQ   }},
+            { ">",   Token{ TOKTYPE_BINOP, OPTYPE_GREAT    }},
+            { ">=",  Token{ TOKTYPE_BINOP, OPTYPE_GREATEQ  }},
+            { "==",  Token{ TOKTYPE_BINOP, OPTYPE_EQUAL    }},
+            { "!=",  Token{ TOKTYPE_BINOP, OPTYPE_NOTEQUAL }},
+            { "&&",  Token{ TOKTYPE_BINOP, OPTYPE_BOOLAND  }},
+            { "||",  Token{ TOKTYPE_BINOP, OPTYPE_BOOLOR   }},
+            { "=",   Token{ TOKTYPE_BINOP, OPTYPE_ASSIGN   }},
+            { "+=",  Token{ TOKTYPE_BINOP, OPTYPE_ADDASS   }},
+            { "-=",  Token{ TOKTYPE_BINOP, OPTYPE_SUBASS   }},
+            { "*=",  Token{ TOKTYPE_BINOP, OPTYPE_MULASS   }},
+            { "/=",  Token{ TOKTYPE_BINOP, OPTYPE_DIVASS   }},
+            { "%=",  Token{ TOKTYPE_BINOP, OPTYPE_MODASS   }},
+            { "^^=", Token{ TOKTYPE_BINOP, OPTYPE_POWASS   }}
         >()
     ))
 
     IMP_MAKE_RULE(pref_un_op, (
         pt::CaptDict<
-            { "++", { TOKTYPE_UNOP, OPTYPE_PREFINC  }},
-            { "--", { TOKTYPE_UNOP, OPTYPE_PREFDEC  }},
-            { "+",  { TOKTYPE_UNOP, OPTYPE_PLUS     }},
-            { "-",  { TOKTYPE_UNOP, OPTYPE_MINUS    }},
-            { "!",  { TOKTYPE_UNOP, OPTYPE_NOT      }},
-            { "*",  { TOKTYPE_UNOP, OPTYPE_DEREF    }},
-            { "&",  { TOKTYPE_UNOP, OPTYPE_ADDROF   }}
+            { "++", Token{ TOKTYPE_UNOP, OPTYPE_PREFINC  }},
+            { "--", Token{ TOKTYPE_UNOP, OPTYPE_PREFDEC  }},
+            { "+",  Token{ TOKTYPE_UNOP, OPTYPE_PLUS     }},
+            { "-",  Token{ TOKTYPE_UNOP, OPTYPE_MINUS    }},
+            { "!",  Token{ TOKTYPE_UNOP, OPTYPE_NOT      }},
+            { "*",  Token{ TOKTYPE_UNOP, OPTYPE_DEREF    }},
+            { "&",  Token{ TOKTYPE_UNOP, OPTYPE_ADDROF   }}
         >() | pt::Fn<cast_op>()
     ))
 
@@ -217,8 +217,8 @@ namespace grammar {
 
     IMP_MAKE_RULE(post_un_op, (
         pt::CaptDict<
-            { "++", { TOKTYPE_UNOP, OPTYPE_POSTINC  }},
-            { "--", { TOKTYPE_UNOP, OPTYPE_POSTDEC  }}
+            { "++", Token{ TOKTYPE_UNOP, OPTYPE_POSTINC  }},
+            { "--", Token{ TOKTYPE_UNOP, OPTYPE_POSTDEC  }}
         >() | pt::Fn<call_op>() | pt::Fn<index_op>()
     ))
 
