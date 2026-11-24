@@ -8,7 +8,7 @@ namespace imp {
     template<size_t n>
         requires (n > 1)
     struct FixedString {
-        constexpr FixedString(const char (&szData)[n]) {
+        consteval FixedString(const char (&szData)[n]) {
             std::ranges::copy(szData, this->lpcData);
         }
 

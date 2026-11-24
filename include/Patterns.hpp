@@ -57,11 +57,11 @@ namespace imp {
         struct TaggedFixedString :
             public FixedString<n>
         {
-            constexpr TaggedFixedString(const char (&szData)[n], const CaptTag& capt_tag) :
+            consteval TaggedFixedString(const char (&szData)[n], const CaptTag& capt_tag) :
                 FixedString<n>(szData),
                 capt_tag(capt_tag) {}
 
-            constexpr const CaptTag&
+            consteval const CaptTag&
             tag() const noexcept {
                 return this->capt_tag;
             }
