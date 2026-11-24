@@ -2,7 +2,7 @@
 static_assert(__cplusplus >= 202302L, "requires C++23 minimum version");
 
 #include "FixedString.hpp"
-#include "UserData.hpp"
+#include "SizedTypes.hpp"
 #include "Vector.hpp"
 
 #include <string_view>
