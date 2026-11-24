@@ -70,4 +70,34 @@ namespace imp {
         uint64_t
             lpMap[4] = {0,0,0,0};
     };
+
+    static constexpr CharSet
+    Digit       = {"0123456789"};
+
+    static constexpr CharSet
+    HexDigit    = Digit + "abcdefABCDEF";
+
+    static constexpr CharSet
+    OctDigit    = {"01234567"};
+
+    static constexpr CharSet
+    BinDigit    = {"01"};
+
+    static constexpr CharSet
+    Uppercase   = {"ABCDEFGHIJKLMNOPQRSTUVWXYZ"};
+
+    static constexpr CharSet
+    Lowercase   = {"abcdefghijklmnopqrstuvwxyz"};
+
+    static constexpr CharSet
+    Alpha       = Uppercase + Lowercase;
+
+    static constexpr CharSet
+    Alnum       = Alpha + Digit;
+
+    static constexpr CharSet
+    Space       = {" \t\v\r\f"};
+
+    static constexpr CharSet
+    LineBreak   = {"\n"};
 }
