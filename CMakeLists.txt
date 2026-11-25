@@ -6,11 +6,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (MSVC) # msvc or clang-cl
-    if (${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
-        message(WARNING "MSVC produced executable is much slower than clangs for some reason, try fiddling with compiler flags")
-    endif()
-
-    set(CXX_EXTRA_FLAGS "/W4" "/WX" "/Zc:__cplusplus")
+    message(FATAL_ERROR "MSVC has the most dumbest bugs and most non-compliant standard support ever, not supported")
 else()
     set(CXX_EXTRA_FLAGS "-Wall" "-Wextra" "-Wconversion" "-Wnrvo" "-Werror")
 endif()
