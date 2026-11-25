@@ -53,19 +53,13 @@ namespace imp {
                 captures.pop_back();
         }
 
-        template<typename CaptTag, size_t n>
-        struct TaggedFixedString :
-            public FixedString<n>
-        {
-            consteval TaggedFixedString(const char (&szData)[n], const CaptTag& capt_tag) :
-                FixedString<n>(szData),
-                capt_tag(capt_tag) {}
+        template<size_t n, typename CaptTag>
+        struct TaggedFixedString {
+            consteval TaggedFixedString(const char (&szData)[n], const CaptTag& tag) :
+                capt_str{szData}, capt_tag{tag} {}
 
-            consteval const CaptTag&
-            tag() const noexcept {
-                return this->capt_tag;
-            }
-
+            const FixedString<n>
+                capt_str;
             const CaptTag
                 capt_tag;
         };
@@ -462,16 +456,16 @@ namespace imp {
 
         template<size_t n>
         using TaggedFixedString =
-            __impl::TaggedFixedString<CaptTag, n>;
+            __impl::TaggedFixedString<n, CaptTag>;
 
         template<TaggedFixedString... args>
             requires (sizeof...(args) != 0)
         static Pattern<CaptTag, UserData> auto
         constexpr CaptDict() {
             static constexpr CaptTag
-                lpCaptTags[]    = { args.tag()... };
+                lpCaptTags[]    = { args.capt_tag... };
             static const Dictionary
-                dict            = { args... };
+                dict            = { args.capt_str... };
 
             return __wrapper{[]
             (MemStream& stream, Captures<CaptTag>& captures, UserData) -> Match {
