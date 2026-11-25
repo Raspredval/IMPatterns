@@ -464,7 +464,7 @@ namespace imp {
         using TaggedFixedString =
             __impl::TaggedFixedString<CaptTag, n>;
 
-        template<TaggedFixedString... args>
+        template<Patterns<CaptTag, UserData>::TaggedFixedString... args>
             requires (sizeof...(args) != 0)
         static Pattern<CaptTag, UserData> auto
         constexpr CaptDict() {
