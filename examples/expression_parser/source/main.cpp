@@ -15,7 +15,7 @@ struct State {
     TypeTracker t;
 };
 
-#define IMP_CAPTURETAG     Token
+#define IMP_CAPTURETAG  Token
 #define IMP_USERDATA    State&
 using pt = imp::Patterns<IMP_CAPTURETAG, IMP_USERDATA>;
 

@@ -5,7 +5,7 @@
 #include <Patterns.hpp>
 #include <MappedFile.hpp>
 
-#define IMP_CAPTURETAG     int
+#define IMP_CAPTURETAG  int
 #define IMP_USERDATA    int
 using pt = imp::Patterns<IMP_CAPTURETAG, IMP_USERDATA>;
 
