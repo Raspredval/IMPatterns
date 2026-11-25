@@ -31,7 +31,7 @@ namespace imp {
 
         constexpr const char*
         c_str() const noexcept {
-            return this->arrData;
+            return this->arrData.data();
         }
 
         constexpr const char*
