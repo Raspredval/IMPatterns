@@ -1,16 +1,28 @@
 #pragma once
 static_assert(__cplusplus >= 202302L, "requires C++23 minimum version");
 
-#include <algorithm>
+#include <array>
 #include <string_view>
 
 namespace imp {
+    namespace __impl {
+        template<size_t n>
+        inline std::array<char, n>
+        constexpr makeArray(const char (&szData)[n]) noexcept {
+            std::array<char, n>
+                arrResult;
+            for (size_t i = 0; i != n; ++i)
+                arrResult[i] = szData[i];
+
+            return arrResult;
+        }
+    }
+
     template<size_t n>
         requires (n > 1)
     struct FixedString {
-        consteval FixedString(const char (&szData)[n]) {
-            std::ranges::copy(szData, this->lpcData);
-        }
+        consteval FixedString(const char (&szData)[n]) :
+            arrData{__impl::makeArray(szData)} {}
 
         static constexpr size_t
         size() noexcept {
@@ -19,7 +31,7 @@ namespace imp {
 
         constexpr const char*
         c_str() const noexcept {
-            return this->lpcData;
+            return this->arrData;
         }
 
         constexpr const char*
@@ -35,7 +47,7 @@ namespace imp {
         constexpr bool
         contains(char c) const noexcept {
             for (size_t i = 0; i != FixedString::size(); ++i) {
-                if (this->lpcData[i] == c)
+                if (this->arrData[i] == c)
                     return true;
             }
 
@@ -49,10 +61,10 @@ namespace imp {
 
         constexpr char
         operator[](size_t uIndex) const noexcept {
-            return this->lpcData[uIndex];
+            return this->arrData[uIndex];
         }
 
-        char
-            lpcData[n];
+        const std::array<char, n>
+            arrData;
     };
 }
