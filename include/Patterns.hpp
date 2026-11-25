@@ -66,7 +66,7 @@ namespace imp {
                 return this->capt_tag;
             }
 
-            CaptTag
+            const CaptTag
                 capt_tag;
         };
     }
