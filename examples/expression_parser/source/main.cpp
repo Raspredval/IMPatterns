@@ -17,7 +17,7 @@ struct State {
 
 #define IMP_CAPTURETAG  Token
 #define IMP_USERDATA    State&
-using pt = imp::Patterns<IMP_CAPTURETAG, IMP_USERDATA>;
+using pt = IMP_PATTERNS();
 
 namespace grammar {
     IMP_DECL_RULE(static eval);

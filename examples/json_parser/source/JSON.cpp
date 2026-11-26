@@ -7,7 +7,7 @@
 
 #define IMP_CAPTURETAG  int
 #define IMP_USERDATA    int
-using pt = imp::Patterns<IMP_CAPTURETAG, IMP_USERDATA>;
+using pt = IMP_PATTERNS();
 
 namespace grammJSON {
     IMP_DECL_RULE(static spacing);
