@@ -14,6 +14,7 @@ static_assert(__cplusplus >= 202302L, "requires C++23 minimum version");
 #define IMP_MAKE_RULE(NAME, FN) IMP_DECL_RULE(NAME) { return (FN)(s, c, d); }
 #define IMP_DECL_HANDLER(NAME) imp::Match NAME ([[maybe_unused]] imp::MemStream& stream, [[maybe_unused]] imp::Match m, [[maybe_unused]] imp::CaptureView<IMP_CAPTURETAG> captures, [[maybe_unused]] IMP_USERDATA usr_val)
 #define IMP_MAKE_HANDLER(NAME, DEF) IMP_DECL_HANDLER(NAME) DEF
+#define IMP_PATTERNS() imp::Patterns<IMP_CAPTURETAG, IMP_USERDATA>
 
 namespace imp {
     template<typename CaptTag>
