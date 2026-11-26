@@ -17,10 +17,10 @@ set(LIBRARY_SOURCES
 set(LIBRARY_HEADERS
     "${CMAKE_SOURCE_DIR}/include/FixedString.hpp"
     "${CMAKE_SOURCE_DIR}/include/Dictionary.hpp"
+    "${CMAKE_SOURCE_DIR}/include/SizedTypes.hpp"
     "${CMAKE_SOURCE_DIR}/include/MappedFile.hpp"
     "${CMAKE_SOURCE_DIR}/include/MemStream.hpp"
     "${CMAKE_SOURCE_DIR}/include/Patterns.hpp"
-    "${CMAKE_SOURCE_DIR}/include/UserData.hpp"
     "${CMAKE_SOURCE_DIR}/include/CharSet.hpp"
     "${CMAKE_SOURCE_DIR}/include/Vector.hpp"
     "${CMAKE_SOURCE_DIR}/include/Match.hpp")
