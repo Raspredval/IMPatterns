@@ -1,6 +1,6 @@
 #include <print>
-#include <chrono>
 #include <atomic>
+#include <chrono>
 
 #include <Patterns.hpp>
 #include <MappedFile.hpp>
@@ -110,39 +110,49 @@ int main() {
     static constexpr std::string_view
         strvFile    = "./assets/test.json";
 
-    imp::MappedFile
-        mmfileJSON  = {strvFile};
+    try {
+        imp::MappedFile
+            mapped_file = {strvFile};
+        std::span<const char>
+            file_view   = mapped_file.GetView();
 
-    if (!mmfileJSON) {
-        std::print(stderr, "failed to open file: {}\n",
-            strvFile);
+        if (file_view.empty())
+            throw std::runtime_error("empty file view");
 
+        std::atomic_signal_fence(
+            std::memory_order_seq_cst);
+        auto
+            tmStart     = std::chrono::high_resolution_clock::now();
+
+        imp::MemStream
+            stream      = {file_view};
+        imp::Match
+            mResult     = pt::Eval(pt::Fn<grammJSON::eval>(), stream);
+
+        std::atomic_signal_fence(
+            std::memory_order_seq_cst);
+        auto
+            tmEnd       = std::chrono::high_resolution_clock::now();
+
+        size_t
+            uFileSize   = file_view.size_bytes();
+        double
+            secParseTm  = std::chrono::duration<double>{tmEnd - tmStart}.count(),
+            fParseSpeed = (double)uFileSize / (1024 * 1024) / secParseTm;
+        std::print("parse time: {:.3f} sec ({:.2f} MB/s)\n",
+            secParseTm, fParseSpeed);
+
+        return (bool)mResult
+            ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+    catch (const std::exception& err) {
+        std::print(stderr, "Error: {}\n",
+            err.what());
         return EXIT_FAILURE;
     }
-
-    std::atomic_signal_fence(
-        std::memory_order_seq_cst);
-    auto
-        tmStart     = std::chrono::high_resolution_clock::now();
-
-    imp::MemStream
-        stream      = mmfileJSON.GetView();
-    imp::Match
-        mResult     = pt::Eval(pt::Fn<grammJSON::eval>(), stream);
-
-    std::atomic_signal_fence(
-        std::memory_order_seq_cst);
-    auto
-        tmEnd       = std::chrono::high_resolution_clock::now();
-
-    size_t
-        uFileSize   = mmfileJSON.GetView().size_bytes();
-    double
-        secParseTm  = std::chrono::duration<double>{tmEnd - tmStart}.count(),
-        fParseSpeed = (double)uFileSize / (1024 * 1024) / secParseTm;
-    std::print("parse time: {:.3f} sec ({:.2f} MB/s)\n",
-        secParseTm, fParseSpeed);
-
-    return (bool)mResult
-        ? EXIT_SUCCESS : EXIT_FAILURE;
+    catch (const boost::exception& err) {
+        std::print(stderr, "Error: {}\n",
+            boost::diagnostic_information(err));
+        return EXIT_FAILURE;
+    }
 }

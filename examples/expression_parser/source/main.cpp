@@ -1,7 +1,6 @@
 #include <MappedFile.hpp>
 #include <Patterns.hpp>
 
-
 #include <cassert>
 #include <string_view>
 
@@ -257,31 +256,43 @@ int main() {
     std::string_view
         strvFilename    = "./assets/test.txt";
 
-    imp::MappedFile
-        mapped_file     = {strvFilename};
-    if (!mapped_file) {
-        std::print(stderr,
-            "failed to open file: {}", strvFilename);
-        return -1;
+    try {
+        imp::MappedFile
+            mapped_file     = {strvFilename};
+        std::span<const char>
+            file_view       = mapped_file.GetView();
+
+        if (file_view.empty())
+            throw std::runtime_error("empty file view");
+
+        imp::Captures<Token>
+            tokens  = {};
+        imp::MemStream
+            stream  = {file_view};
+        State
+            state   = {};
+
+        if (!pt::Eval(pt::Fn<grammar::eval>(), stream, tokens, state)) {
+            SrcPos
+                src_pos = state.l.GetSrcPos(stream.GetPos());
+            std::print(stderr,
+                "parser failed at: ln {} col {}\n",
+                src_pos.iLn, src_pos.iCol
+            );
+            return -1;
+        }
+
+        PrintTokens(stream, tokens, state.l);
+        return EXIT_SUCCESS;
     }
-
-    imp::Captures<Token>
-        tokens  = {};
-    imp::MemStream
-        stream  = {mapped_file.GetView()};
-    State
-        state   = {};
-
-    if (!pt::Eval(pt::Fn<grammar::eval>(), stream, tokens, state)) {
-        SrcPos
-            src_pos = state.l.GetSrcPos(stream.GetPos());
-        std::print(stderr,
-            "parser failed at: ln {} col {}\n",
-            src_pos.iLn, src_pos.iCol
-        );
-        return -1;
+    catch (const std::exception& err) {
+        std::print(stderr, "Error: {}\n",
+            err.what());
+        return EXIT_FAILURE;
     }
-
-    PrintTokens(stream, tokens, state.l);
-    return 0;
+    catch (const boost::exception& err) {
+        std::print(stderr, "Error: {}\n",
+            boost::diagnostic_information(err));
+        return EXIT_FAILURE;
+    }
 }
