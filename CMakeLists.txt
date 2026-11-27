@@ -12,15 +12,26 @@ else()
 endif()
 
 set(LIBRARY_HEADERS
-    "${CMAKE_SOURCE_DIR}/include/FixedString.hpp"
-    "${CMAKE_SOURCE_DIR}/include/Dictionary.hpp"
-    "${CMAKE_SOURCE_DIR}/include/SizedTypes.hpp"
-    "${CMAKE_SOURCE_DIR}/include/MappedFile.hpp"
-    "${CMAKE_SOURCE_DIR}/include/MemStream.hpp"
-    "${CMAKE_SOURCE_DIR}/include/Patterns.hpp"
-    "${CMAKE_SOURCE_DIR}/include/CharSet.hpp"
-    "${CMAKE_SOURCE_DIR}/include/Vector.hpp"
-    "${CMAKE_SOURCE_DIR}/include/Match.hpp")
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/FixedString.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/Dictionary.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/SizedTypes.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/MappedFile.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/MemStream.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/Patterns.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/CharSet.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/Vector.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/Match.hpp")
+
+find_package(Boost REQUIRED)
+
+add_library(impatterns INTERFACE)
+target_link_libraries(impatterns
+    INTERFACE Boost::headers)
+target_sources(impatterns
+    INTERFACE
+        FILE_SET HEADERS
+            BASE_DIRS   "${CMAKE_CURRENT_SOURCE_DIR}/include"
+            FILES       ${LIBRARY_HEADERS})
 
 if (NOT WIN32)
 install(

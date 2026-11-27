@@ -7,8 +7,6 @@ set(ASSETS_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/assets")
 set(ASSETS_LINK "${CMAKE_CURRENT_BINARY_DIR}/assets")
 file (CREATE_LINK ${ASSETS_DIR} ${ASSETS_LINK} SYMBOLIC)
 
-find_package(Boost REQUIRED)
-
 add_executable(json_parser
     "source/JSON.cpp")
 target_include_directories(json_parser
@@ -18,7 +16,7 @@ target_include_directories(json_parser
 target_compile_options(json_parser
     PRIVATE ${CXX_EXTRA_FLAGS})
 target_link_libraries(json_parser
-    PRIVATE Boost::headers)
+    PRIVATE impatterns)
 
 add_executable(make_json
     "source/MakeJSON.cpp")
