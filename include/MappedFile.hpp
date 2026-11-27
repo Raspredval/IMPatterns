@@ -3,6 +3,7 @@ static_assert(__cplusplus >= 202302L, "requires C++23 minimum version");
 
 #include <span>
 #include <string_view>
+#include <boost/exception/all.hpp>
 #include <boost/interprocess/file_mapping.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 
@@ -30,15 +31,6 @@ namespace imp {
                 (const char*)this->mview.get_address(),
                 this->mview.get_size()
             };
-        }
-
-        bool
-        Bad() const noexcept {
-            return this->GetView().empty();
-        }
-
-        operator bool() const noexcept {
-            return !this->Bad();
         }
 
     private:
