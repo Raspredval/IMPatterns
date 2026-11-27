@@ -3,4 +3,8 @@
 # IMPatterns
 an immediate mode text-pattern recognition library, heavily inspired by LPeg, reworked from classy-patterns
 
+## depends on:
+- boost.interprocess
+
+## examples:
 usage examples can be found in [examples](/examples).
