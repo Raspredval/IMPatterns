@@ -7,8 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (MSVC) # msvc or clang-cl
     message(FATAL_ERROR "MSVC has the most dumbest bugs and most non-compliant standard support ever, not supported")
-else()
-    set(CXX_EXTRA_FLAGS "-Wall" "-Wextra" "-Wconversion" "-Wnrvo" "-Werror")
 endif()
 
 set(LIBRARY_HEADERS
