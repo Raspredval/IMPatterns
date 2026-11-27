@@ -3,111 +3,59 @@ static_assert(__cplusplus >= 202302L, "requires C++23 minimum version");
 
 #include <span>
 #include <string_view>
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
 
 namespace imp {
-    namespace __impl {
-        template<typename Fn>
-            requires std::same_as<std::invoke_result_t<Fn>, void>
-        class [[maybe_unused]] defer {
-        public:
-            defer(const Fn& fn) :
-                fn(fn) {}
-
-            defer(Fn&& fn) :
-                fn(std::move(fn)) {}
-
-            ~defer() {
-                fn();
-            }
-
-        private:
-            std::remove_reference_t<Fn>
-                fn;
-        };
+    namespace ipc = boost::interprocess;
+    class MappedFile {
+    public:
+        MappedFile(std::string_view strvFilename) :
+            mfile(strvFilename.data(), ipc::read_only)
+        {
+            this->initMappedRegion();
+        }
 
         #ifdef _WIN32
-        struct mmap_windows {
-            static std::span<const char>
-            map_file(std::string_view strvFilename) noexcept;
-
-            static std::span<const char>
-            map_file(std::wstring_view strvFilename) noexcept;
-
-            static bool
-            unmap_file(std::span<const char> spnFileView) noexcept;
-        };
-        #else
-        struct mmap_posix {
-            static std::span<const char>
-            map_file(std::string_view strvFilename) noexcept;
-
-            static bool
-            unmap_file(std::span<const char> spnFileView) noexcept;
-        };
+        MappedFile(std::wstring_view strvFilename) :
+            mfile(strvFilename.data(), ipc::read_only)
+        {
+            this->initMappedRegion();
+        }
         #endif
 
-        template<typename impl>
-        class MappedFile {
-        public:
-            inline
-            MappedFile(std::string_view strvFilename) noexcept {
-                this->spnData   = impl::map_file(strvFilename);
+        std::span<const char>
+        GetView() const noexcept {
+            return {
+                (const char*)this->mview.get_address(),
+                this->mview.get_size()
+            };
+        }
+
+        bool
+        Bad() const noexcept {
+            return this->GetView().empty();
+        }
+
+        operator bool() const noexcept {
+            return !this->Bad();
+        }
+
+    private:
+        void
+        initMappedRegion() {
+            ipc::offset_t
+                iFileSize   = -1;
+            if (this->mfile.get_size(iFileSize)) {
+                this->mview = ipc::mapped_region(
+                                this->mfile, ipc::read_only,
+                                0, (size_t)iFileSize);
             }
+        }
 
-            #ifdef _WIN32
-            inline
-            MappedFile(std::wstring_view strvFilename) noexcept {
-                this->spnData   = impl::map_file(strvFilename);
-            }
-            #endif
-
-            inline
-            ~MappedFile() noexcept {
-                impl::unmap_file(this->spnData);
-            }
-
-            MappedFile(const MappedFile&) = delete;
-            MappedFile&
-            operator=(const MappedFile&) = delete;
-
-            inline
-            MappedFile(MappedFile&& obj) noexcept {
-                this->spnData   = obj.spnData;
-                obj.spnData     = {};
-            }
-
-            inline MappedFile&
-            operator=(MappedFile&& obj) noexcept {
-                MappedFile
-                    temp    = std::move(obj);
-                std::swap(temp.spnData, this->spnData);
-                return *this;
-            }
-
-            inline std::span<const char>
-            GetView() const noexcept {
-                return this->spnData;
-            }
-
-            inline bool
-            Bad() const noexcept {
-                return this->spnData.data() == nullptr;
-            }
-
-            inline
-            operator bool() const noexcept {
-                return !this->Bad();
-            }
-
-        private:
-            std::span<const char>
-                spnData;
-        };
-    }
-
-    #ifdef _WIN32
-    using MappedFile = __impl::MappedFile<__impl::mmap_windows>;
-    #else
-    using MappedFile = __impl::MappedFile<__impl::mmap_posix>;
-    #endif
+        ipc::file_mapping
+            mfile;
+        ipc::mapped_region
+            mview;
+    };
 }

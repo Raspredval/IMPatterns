@@ -7,6 +7,8 @@ set(ASSETS_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/assets")
 set(ASSETS_LINK "${CMAKE_CURRENT_BINARY_DIR}/assets")
 file (CREATE_LINK ${ASSETS_DIR} ${ASSETS_LINK} SYMBOLIC)
 
+find_package(Boost REQUIRED)
+
 add_executable(expression_parser
     "source/main.cpp")
 target_include_directories(expression_parser
@@ -16,4 +18,4 @@ target_include_directories(expression_parser
 target_compile_options(expression_parser
     PRIVATE ${CXX_EXTRA_FLAGS})
 target_link_libraries(expression_parser
-    IMPatterns)
+    PRIVATE Boost::headers)

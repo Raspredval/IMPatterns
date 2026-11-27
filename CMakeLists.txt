@@ -11,9 +11,6 @@ else()
     set(CXX_EXTRA_FLAGS "-Wall" "-Wextra" "-Wconversion" "-Wnrvo" "-Werror")
 endif()
 
-set(LIBRARY_SOURCES
-    "${CMAKE_SOURCE_DIR}/source/mmap_windows.cpp"
-    "${CMAKE_SOURCE_DIR}/source/mmap_posix.cpp")
 set(LIBRARY_HEADERS
     "${CMAKE_SOURCE_DIR}/include/FixedString.hpp"
     "${CMAKE_SOURCE_DIR}/include/Dictionary.hpp"
@@ -25,26 +22,11 @@ set(LIBRARY_HEADERS
     "${CMAKE_SOURCE_DIR}/include/Vector.hpp"
     "${CMAKE_SOURCE_DIR}/include/Match.hpp")
 
-add_library(IMPatterns
-    STATIC  ${LIBRARY_SOURCES})
-target_compile_options(IMPatterns
-    PRIVATE ${CXX_EXTRA_FLAGS})
-target_include_directories(IMPatterns
-    PRIVATE "include/")
-set_target_properties(IMPatterns
-    PROPERTIES
-        OUTPUT_NAME         "impatterns"
-        OUTPUT_NAME_DEBUG   "impatterns-debug")
-
 if (NOT WIN32)
 install(
     FILES       ${LIBRARY_HEADERS}
     DESTINATION "include/IMPatterns"
     COMPONENT   imp-headers)
-install(
-    TARGETS     IMPatterns
-    DESTINATION "lib/"
-    COMPONENT   imp-binaries)
 
 include(CPack)
 
@@ -55,8 +37,6 @@ set(CPACK_INSTALL_PREFIX "/usr/local/")
 
 cpack_add_component(imp-headers
     DISPLAY "Header files")
-cpack_add_component(imp-binaries
-    DISPLAY "Binary files")
 endif()
 
 add_subdirectory("examples/json_parser/")

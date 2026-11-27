@@ -7,6 +7,8 @@ set(ASSETS_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/assets")
 set(ASSETS_LINK "${CMAKE_CURRENT_BINARY_DIR}/assets")
 file (CREATE_LINK ${ASSETS_DIR} ${ASSETS_LINK} SYMBOLIC)
 
+find_package(Boost REQUIRED)
+
 add_executable(json_parser
     "source/JSON.cpp")
 target_include_directories(json_parser
@@ -16,7 +18,7 @@ target_include_directories(json_parser
 target_compile_options(json_parser
     PRIVATE ${CXX_EXTRA_FLAGS})
 target_link_libraries(json_parser
-    IMPatterns)
+    PRIVATE Boost::headers)
 
 add_executable(make_json
     "source/MakeJSON.cpp")
@@ -26,8 +28,3 @@ target_include_directories(make_json
         "${CMAKE_SOURCE_DIR}/include")
 target_compile_options(make_json
     PRIVATE ${CXX_EXTRA_FLAGS})
-
-if (MSVC) # using 'unsafe' fopen instead of un-portable fopen_s
-    target_compile_definitions(make_json
-        PRIVATE _CRT_SECURE_NO_WARNINGS)
-endif()
