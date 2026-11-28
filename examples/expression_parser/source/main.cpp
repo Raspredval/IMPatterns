@@ -43,13 +43,13 @@ namespace grammar {
 
     IMP_MAKE_RULE(endl_comment, (
         pt::Capt<{TOKTYPE_COMMENT, COMMTYPE_ENDLINE}>(
-            pt::Str<"//">() >> pt::Any(pt::NegSet<imp::LineBreak>())
+            pt::Str<"//">() >> pt::Any(pt::NegSet<pt::LineBreak>())
         ) >> (pt::Fn<line_break>() | pt::NoChars())
     ))
 
     IMP_MAKE_RULE(spacing, (
-        pt::Any(pt::Set<imp::Space>()) >> pt::Any(
-            (pt::Fn<line_break>() | pt::Fn<inln_comment>() | pt::Fn<endl_comment>()) >> pt::Any(pt::Set<imp::Space>())
+        pt::Any(pt::Set<pt::Space>()) >> pt::Any(
+            (pt::Fn<line_break>() | pt::Fn<inln_comment>() | pt::Fn<endl_comment>()) >> pt::Any(pt::Set<pt::Space>())
         )
     ))
 
@@ -79,7 +79,7 @@ namespace grammar {
     })
 
     IMP_MAKE_RULE(line_break, (
-        pt::Set<imp::LineBreak>() / pt::Fn<line_break_handler>()
+        pt::Set<pt::LineBreak>() / pt::Fn<line_break_handler>()
     ))
 
     IMP_MAKE_RULE(sub_expr,
@@ -122,10 +122,10 @@ namespace grammar {
 
     IMP_MAKE_RULE(number, (
         pt::Capt<{TOKTYPE_VALUE, VALTYPE_INT}>(
-            pt::Some(pt::Set<imp::Digit>())
+            pt::Some(pt::Set<pt::Digit>())
         ) >> pt::Opt(
             pt::CaptMerge<{TOKTYPE_VALUE, VALTYPE_FLOAT}>(
-                pt::Str<".">() >> pt::Some(pt::Set<imp::Digit>())
+                pt::Str<".">() >> pt::Some(pt::Set<pt::Digit>())
             )
         )
     ))
@@ -139,7 +139,7 @@ namespace grammar {
     IMP_MAKE_RULE(identifier, (
         pt::NegDict<"if", "else">(
             pt::Capt<{TOKTYPE_VALUE, VALTYPE_ID}>(
-                pt::Set<imp::Alpha + "_">() >> pt::Any(pt::Set<imp::Alnum + "_">())
+                pt::Set<pt::Alpha + "_">() >> pt::Any(pt::Set<pt::Alnum + "_">())
             )
         )
     ))

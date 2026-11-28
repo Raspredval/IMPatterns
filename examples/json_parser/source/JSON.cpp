@@ -22,7 +22,7 @@ namespace grammJSON {
     IMP_DECL_RULE(static number);
 
     IMP_MAKE_RULE(spacing,
-        pt::Any(pt::Set<imp::Space + imp::LineBreak>())
+        pt::Any(pt::Set<pt::Space + pt::LineBreak>())
     )
 
     IMP_MAKE_RULE(object,
@@ -75,18 +75,18 @@ namespace grammJSON {
     IMP_MAKE_RULE(escseq,
         pt::Str<"\\">() >> (
             pt::Set<"/\"\\bfnrt">() |
-            pt::Str<"u">() >> pt::Exactly<4>(pt::Set<imp::HexDigit>()) |
-            pt::Str<"U">() >> pt::Exactly<8>(pt::Set<imp::HexDigit>())
+            pt::Str<"u">() >> pt::Exactly<4>(pt::Set<pt::HexDigit>()) |
+            pt::Str<"U">() >> pt::Exactly<8>(pt::Set<pt::HexDigit>())
         )
     )
 
     IMP_MAKE_RULE(number,
-        pt::Opt(pt::Set<"+-">()) >> pt::Some(pt::Set<imp::Digit>()) >>
+        pt::Opt(pt::Set<"+-">()) >> pt::Some(pt::Set<pt::Digit>()) >>
         pt::Opt(
-            pt::Str<".">() >> pt::Some(pt::Set<imp::Digit>()) >>
+            pt::Str<".">() >> pt::Some(pt::Set<pt::Digit>()) >>
             pt::Opt(
                 pt::Set<"eE">() >>
-                pt::Opt(pt::Set<"+-">()) >> pt::Some(pt::Set<imp::Digit>())
+                pt::Opt(pt::Set<"+-">()) >> pt::Some(pt::Set<pt::Digit>())
             )
         )
     )
