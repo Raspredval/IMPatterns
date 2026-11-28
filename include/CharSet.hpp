@@ -71,33 +71,33 @@ namespace imp {
             lpMap[4] = {0,0,0,0};
     };
 
-    static constexpr CharSet
+    inline constexpr CharSet
     Digit       = {"0123456789"};
 
-    static constexpr CharSet
+    inline constexpr CharSet
     HexDigit    = Digit + "abcdefABCDEF";
 
-    static constexpr CharSet
+    inline constexpr CharSet
     OctDigit    = {"01234567"};
 
-    static constexpr CharSet
+    inline constexpr CharSet
     BinDigit    = {"01"};
 
-    static constexpr CharSet
+    inline constexpr CharSet
     Uppercase   = {"ABCDEFGHIJKLMNOPQRSTUVWXYZ"};
 
-    static constexpr CharSet
+    inline constexpr CharSet
     Lowercase   = {"abcdefghijklmnopqrstuvwxyz"};
 
-    static constexpr CharSet
+    inline constexpr CharSet
     Alpha       = Uppercase + Lowercase;
 
-    static constexpr CharSet
+    inline constexpr CharSet
     Alnum       = Alpha + Digit;
 
-    static constexpr CharSet
+    inline constexpr CharSet
     Space       = {" \t\v\r\f"};
 
-    static constexpr CharSet
+    inline constexpr CharSet
     LineBreak   = {"\n"};
 }

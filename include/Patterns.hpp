@@ -68,6 +68,36 @@ namespace imp {
 
     template<typename CaptTag, typename UserData>
     struct Patterns {
+        static constexpr const CharSet&
+        Digit       = imp::Digit;
+
+        static constexpr const CharSet&
+        HexDigit    = imp::HexDigit;
+
+        static constexpr const CharSet&
+        OctDigit    = imp::OctDigit;
+
+        static constexpr const CharSet&
+        BinDigit    = imp::BinDigit;
+
+        static constexpr const CharSet&
+        Uppercase   = imp::Uppercase;
+
+        static constexpr const CharSet&
+        Lowercase   = imp::Lowercase;
+
+        static constexpr const CharSet&
+        Alpha       = imp::Alpha;
+
+        static constexpr const CharSet&
+        Alnum       = imp::Alnum;
+
+        static constexpr const CharSet&
+        Space       = imp::Space;
+
+        static constexpr const CharSet&
+        LineBreak   = imp::LineBreak;
+
         template<typename Fn>
         struct __wrapper : public Fn {};
 
